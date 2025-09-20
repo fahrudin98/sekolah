@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - {{ username }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f8f9fa; 
+        }
+        .container { 
+            margin-top: 50px; 
+        }
+        .logout-btn { 
+            margin-bottom: 0px; 
+        }
+        .tab-content { 
+            background: #fff; 
+            padding: 10px 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+        }
+        .flash-message { 
+            margin-bottom: 10px; 
+        }
+        
+        /* Perbaikan khusus untuk tab siswa */
+        #siswa {
+            padding-top: 0 !important;
+        }
+        #siswa .alert {
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        #siswa h4 {
+            margin-bottom: 15px;
+        }
+        #siswa .form-label {
+            margin-bottom: 5px;
+        }
+        #siswa .mb-3 {
+            margin-bottom: 15px !important;
+        }
+        .nav-tabs {
+            margin-bottom: 0;
+        }
+        .tab-content.mt-1 {
+            margin-top: 0 !important;
+            padding-top: 15px;
+        }
+    
+        /* Hilangkan panah spinner pada input number */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+    
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Selamat datang, {{ username }}!</h2>
+        <div class="d-flex align-items-center gap-2">
+            <!-- Tombol Change Password -->
+            <button class="btn btn-warning btn-sm" style="height: 38px;" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                Change Password
+            </button>
+            <!-- Tombol Logout -->
+            <a href="{{ url_for('logout') }}" class="btn btn-danger logout-btn align-self-center" style="height: 38px;">Logout</a>
+        </div>
+    </div>
+  
+
+
+    <!-- Navbar untuk navigasi halaman -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3 rounded shadow-sm">
+      <div class="container-fluid">
+        <!--a class="navbar-brand" href="#">MyApp</a-->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('pegawai_bp.update_pegawai', pegawai_id=current_user.pegawai.id) }}">Update Profile</a>
+            </li>
+            <!-- Dropdown Laporan -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="laporanDropdown" role="button" 
+                data-bs-toggle="dropdown" aria-expanded="false">
+                Laporan
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="laporanDropdown">
+                <li>
+                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#laporanBulananModal">
+                    Laporan Bulanan
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#laporanSemesterModal">
+                    Laporan Semester
+                    </a>
+                </li>
+
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#laporanTahunanModal">
+                    <i class="fas fa-calendar-alt me-2"></i>Laporan Tahunan
+                </a></li>
+                <!-- nanti bisa ditambah lagi di sini: laporan semesteran, tahunan -->
+                </ul>
+            </li>
+
+            {% if current_user.is_superadmin %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('tahun_ajaran.dashboard') }}">Settings</a>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Dashboard Tabs -->
+    <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tahun-tab" data-bs-toggle="tab" data-bs-target="#tahun" type="button" role="tab">Sekolah Tahun Ajaran</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="kelas-tab" data-bs-toggle="tab" data-bs-target="#kelas" type="button" role="tab">Kelas Tahun Ajaran</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="siswa-tab" data-bs-toggle="tab" data-bs-target="#siswa" type="button" role="tab">Data Siswa</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="penilaian-tab" data-bs-toggle="tab" data-bs-target="#Penilaian" type="button" role="tab">Penilaian</button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content mt-1" id="dashboardTabsContent">
+        <!-- TAB TAHUN AJARAN -->
+        <div class="tab-pane fade" id="tahun" role="tabpanel">
+            <h4 class="mb-2">Tahun Ajaran</h4>
+
+            <!-- Info Sekolah & Tahun Ajaran -->
+            <div class="alert alert-info mb-2">
+                <div class="row mb-1">
+                    <!-- Kolom kiri -->
+                    <div class="col-md-6">
+                        <strong>Sekolah:</strong> {{ sekolah.nama_sekolah if sekolah and sekolah.nama_sekolah else '-' }} <br>
+                        <strong>Kecamatan:</strong> {{ sekolah.kecamatan.nama if sekolah and sekolah.kecamatan else '-' }} <br>
+                        <strong>Kabupaten:</strong> {{ sekolah.kecamatan.kabupaten.nama if sekolah and sekolah.kecamatan and sekolah.kecamatan.kabupaten else '-' }} <br>
+                        <strong>Provinsi:</strong> {{ sekolah.kecamatan.kabupaten.provinsi.nama if sekolah and sekolah.kecamatan and sekolah.kecamatan.kabupaten and sekolah.kecamatan.kabupaten.provinsi else '-' }}
+                    </div>
+
+                    <!-- Kolom kanan -->
+                    <div class="col-md-6">
+                        <strong>Tahun Ajaran:</strong> {{ active_tahun_ajaran.tahun_ajaran if active_tahun_ajaran else '-' }} <br>
+                        <strong>Semester:</strong> {{ active_tahun_ajaran.semester|capitalize if active_tahun_ajaran else '-' }} <br>
+                        <strong>Kepala Sekolah:</strong>
+                        {% if active_tahun_ajaran and active_tahun_ajaran.kepala_sekolah %}
+                            {{ active_tahun_ajaran.kepala_sekolah.nama }}
+                        {% else %}
+                            -
+                        {% endif %} <br>
+                        <strong>NIP:</strong>
+                        {% if active_tahun_ajaran and active_tahun_ajaran.kepala_sekolah %}
+                            {{ active_tahun_ajaran.kepala_sekolah.nip }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Tahun Ajaran -->
+            {% if not active_tahun_ajaran or not active_tahun_ajaran.aktif %}
+            <form id="formTahunAjaran" class="mb-3">
+                <div class="mb-2">
+                    <label class="form-label">Tahun Ajaran</label>
+                    <input type="text" class="form-control" name="tahun_ajaran" placeholder="2025/2026" required>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Semester</label>
+                    <select class="form-control" name="semester" required>
+                        <option value="">-- Pilih Semester --</option>
+                        <option value="ganjil">Ganjil</option>
+                        <option value="genap">Genap</option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Kepala Sekolah</label>
+                    {% if pegawai_dengan_profil and pegawai_dengan_profil|length > 0 %}
+                        <select class="form-select" id="kepalaSelect" name="kepala_sekolah_id" required>
+                            {% for p in pegawai_dengan_profil %}
+                            <option value="{{ p.id }}" data-nip="{{ p.nip }}"
+                                {% if current_user.pegawai and p.id == current_user.pegawai.id %}selected{% endif %}>
+                                {{ p.nama }} (NIP: {{ p.nip }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            Belum ada pegawai yang mengisi profil. Silakan minta pegawai mengisi profil terlebih dahulu.
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">NIP</label>
+                    <input type="text" class="form-control" id="kepalaNip" readonly>
+                </div>
+
+                <button type="submit" class="btn btn-primary"
+                    {% if not pegawai_dengan_profil or pegawai_dengan_profil|length==0 %} disabled {% endif %}>
+                    Tambah Tahun Ajaran
+                </button>
+            </form>
+            {% endif %}
+
+            <!-- Status Tahun Ajaran -->
+            {% if active_tahun_ajaran %}
+            <div class="mt-3">
+                <p>
+                    {% if active_tahun_ajaran.aktif %}
+                        <span class="badge bg-success fs-5 px-3 py-2">Status Aktif</span>
+                    {% else %}
+                        <span class="badge bg-secondary fs-6 px-2 py-1 opacity-70">Nonaktif</span>
+                    {% endif %}
+                </p>
+
+                <form id="formToggleAktif">
+                    <input type="hidden" name="id" value="{{ active_tahun_ajaran.id }}">
+                    <button type="submit" class="btn btn-warning">
+                        {% if active_tahun_ajaran.aktif %} Nonaktifkan {% else %} Aktifkan {% endif %}
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Tabel Tahun Ajaran Nonaktif -->
+            {% if nonaktif_tahun_ajaran and nonaktif_tahun_ajaran|length > 0 %}
+                <h5 class="mt-4">Tahun Ajaran Nonaktif</h5>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Tahun Ajaran</th>
+                            <th>Semester</th>
+                            <th>Kepala Sekolah</th>
+                            <th>NIP</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in nonaktif_tahun_ajaran %}
+                        <tr>
+                            <td>{{ t.tahun_ajaran }}</td>
+                            <td>{{ t.semester|capitalize }}</td>
+                            <td>{{ t.kepala_sekolah.nama }}</td>
+                            <td>{{ t.kepala_sekolah.nip }}</td>
+                            <td>
+                                <form class="formToggleAktif d-inline" method="post" action="/tahun_ajaran/toggle_tahun_ajaran">
+                                    <input type="hidden" name="id" value="{{ t.id }}">
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        Aktifkan
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-muted">Belum ada tahun ajaran nonaktif</p>
+            {% endif %}
+        </div>
+
+        <!-- TAB TAMBAH KELAS TAHUN AJARAN -->
+        <div class="tab-pane fade" id="kelas" role="tabpanel">
+            <h4>Kelas Tahun Ajaran</h4>
+
+            {% if active_tahun_ajaran %}
+                <div class="alert alert-info">
+                    <div class="row">
+                        <!-- Kolom kiri -->
+                        <div class="col-md-6">
+                            <strong>Sekolah:</strong> {{ sekolah.nama_sekolah }} <br>
+                            <strong>Kecamatan:</strong> {{ sekolah.kecamatan.nama if sekolah.kecamatan else '-' }} <br>
+                            <strong>Kabupaten:</strong> {{ sekolah.kecamatan.kabupaten.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten else '-' }} <br>
+                            <strong>Provinsi:</strong> {{ sekolah.kecamatan.kabupaten.provinsi.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten and sekolah.kecamatan.kabupaten.provinsi else '-' }}
+                        </div>
+
+                        <!-- Kolom kanan -->
+                        <div class="col-md-6">
+                            <strong>Tahun Ajaran:</strong> {{ active_tahun_ajaran.tahun_ajaran }} <br>
+                            <strong>Semester:</strong> {{ active_tahun_ajaran.semester|capitalize }} <br>
+                            <strong>Wali Kelas:</strong> {{ current_user.pegawai.nama }} <br>
+                            <strong>NIP:</strong> {{ current_user.pegawai.nip }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Tambah Kelas -->
+                <form id="formKelas" class="mb-3">
+                    <div class="mb-2">
+                        <label class="form-label">Nama Kelas</label>
+                        <input type="text" class="form-control" name="nama_kelas" placeholder="Misal: X IPA 1" required>
+                    </div>
+
+                    <!-- Wali kelas otomatis -->
+                    <input type="hidden" name="wali_kelas_id" value="{{ current_user.pegawai.id }}">
+
+                    <button type="submit" class="btn btn-primary">Tambah Kelas</button>
+                </form>
+            {% else %}
+                <div class="alert alert-warning">
+                    Belum ada tahun ajaran aktif. Silakan atur tahun ajaran terlebih dahulu.
+                </div>
+            {% endif %}
+
+            <!-- DAFTAR KELAS -->
+            <h5>Daftar Kelas</h5>
+            <table class="table table-striped" id="kelasTable">
+                <thead>
+                    <tr>
+                        <th>Nama Kelas</th>
+                        <th>Wali Kelas</th>
+                        <th>NIP</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for k in kelas_list %}
+                    <tr data-id="{{ k.id }}">
+                        <td class="nama-kelas">{{ k.nama_kelas }}</td>
+                        <td>{{ k.wali_kelas.nama }}</td>
+                        <td>{{ k.wali_kelas.nip }}</td>
+                        <td>
+                            {% if k.wali_kelas_id == current_user.pegawai.id %}
+                                <button class="btn btn-sm btn-warning edit-btn" data-id="{{ k.id }}">Edit</button>
+                                <button class="btn btn-sm btn-danger delete-btn" data-id="{{ k.id }}">Hapus</button>
+                            {% else %}
+                                <span class="text-muted">Tidak ada akses</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center">Belum ada kelas</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TAB SISWA - YANG DIPERBAIKI -->
+        <div class="tab-pane fade" id="siswa" role="tabpanel">
+            <h4 class="mb-3">Data Siswa</h4>
+
+            <!-- Wrapper untuk info sekolah + form -->
+            <div class="mb-3">
+                <!-- Row Info Sekolah dan Wali Kelas -->
+                <div class="row mb-2">
+                    <!-- Kolom Kiri: Info Sekolah -->
+                    <div class="col-md-6">
+                        <div class="alert alert-info mb-2 p-2">
+                            <strong>Sekolah:</strong> {{ sekolah.nama_sekolah }} <br>
+                            <strong>Kecamatan:</strong> {{ sekolah.kecamatan.nama if sekolah.kecamatan else '-' }} <br>
+                            <strong>Kabupaten:</strong> {{ sekolah.kecamatan.kabupaten.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten else '-' }} <br>
+                            <strong>Provinsi:</strong> {{ sekolah.kecamatan.kabupaten.provinsi.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten and sekolah.kecamatan.kabupaten.provinsi else '-' }}
+                        </div>
+                    </div>
+
+                    <!-- Kolom Kanan: Info Wali Kelas -->
+                    <div class="col-md-6">
+                        <div class="alert alert-secondary mb-2 p-2">
+                            <strong>Wali Kelas:</strong> {{ current_user.pegawai.nama if current_user.pegawai else '-' }} <br>
+                            <strong>NIP:</strong> {{ current_user.pegawai.nip if current_user.pegawai else '-' }}
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Pilih Kelas</label>
+                            <select id="kelasDropdown" class="form-select">
+                                <option value="">-- Pilih Kelas --</option>
+                                {% for k in kelas_list if k.wali_kelas_id == current_user.pegawai.id %}
+                                    <option value="{{ k.id }}">{{ k.nama_kelas }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Tambah Siswa (tampil setelah pilih kelas) -->
+                <form id="formSiswa" class="mt-2 d-none">
+                    <input type="hidden" name="kelas_id" id="kelasIdInput">
+                    <h5 class="mb-2">Tambah Siswa</h5>
+                    <table class="table table-bordered align-middle" id="tambahSiswaTable">
+                        <thead>
+                            <tr>
+                                <th>Nama Siswa</th>
+                                <th>Jenis Kelamin</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="siswaFormBody">
+                            <tr>
+                                <td><input type="text" name="nama_siswa[]" class="form-control" required></td>
+                                <td>
+                                    <select name="jenis_kelamin[]" class="form-select" required>
+                                        <option value="">-- Pilih --</option>
+                                        <option value="L">Laki-laki</option>
+                                        <option value="P">Perempuan</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" name="status[]" class="form-control" value="Aktif"></td>
+                                <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="d-flex gap-2 mb-2">
+                        <button type="button" id="addRow" class="btn btn-success btn-sm">+ Tambah Baris</button>
+                        <button type="submit" class="btn btn-primary">Simpan Semua</button>
+                    </div>
+                </form>
+
+                <!-- Tabel Daftar Siswa -->
+                <h5 class="mt-3">Daftar Siswa</h5>
+                <table class="table table-striped" id="siswaTable">
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Jenis Kelamin</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="4" class="text-center">Pilih kelas terlebih dahulu</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+<!-- Modal Edit Siswa UNTUK EDIT SISWA-->
+<div class="modal fade" id="editSiswaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="editSiswaForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Siswa</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="id" id="editId">
+          <div class="mb-2">
+            <label class="form-label">Nama Siswa</label>
+            <input type="text" class="form-control" name="nama_siswa" id="editNama" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Jenis Kelamin</label>
+            <select class="form-select" name="jenis_kelamin" id="editJK" required>
+              <option value="">-- Pilih --</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Status</label>
+            <input type="text" class="form-control" name="status" id="editStatus">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+<!-- TAB PENILAIAN -->
+<div class="tab-pane fade" id="Penilaian" role="tabpanel">
+    <h4>Penilaian Kebiasaan Siswa</h4>
+
+    {% if active_tahun_ajaran %}
+    <div class="alert alert-info">
+        <div class="row">
+            <div class="col-md-6">
+                <strong>Sekolah:</strong> {{ sekolah.nama_sekolah }} <br>
+                <strong>Kecamatan:</strong> {{ sekolah.kecamatan.nama if sekolah.kecamatan else '-' }} <br>
+                <strong>Kabupaten:</strong> {{ sekolah.kecamatan.kabupaten.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten else '-' }} <br>
+                <strong>Provinsi:</strong> {{ sekolah.kecamatan.kabupaten.provinsi.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten.provinsi else '-' }}
+            </div>
+            <div class="col-md-6">
+                <strong>Tahun Ajaran:</strong> {{ active_tahun_ajaran.tahun_ajaran }} <br>
+                <strong>Semester:</strong> {{ active_tahun_ajaran.semester|capitalize }} <br>
+                <strong>Wali Kelas:</strong> {{ current_user.pegawai.nama }} <br>
+                <strong>NIP:</strong> {{ current_user.pegawai.nip }} <br>
+
+                <label for="kelasSelectPenilaian" class="form-label">Kelas</label>
+                <select class="form-select" id="kelasSelectPenilaian" data-tahun="{{ active_tahun_ajaran.id if active_tahun_ajaran else '' }}">
+                    <option value="">-- Pilih Kelas --</option>
+                    <!-- Options akan diisi via JS AJAX -->
+                </select>
+                
+                <label for="bulanSelectPenilaian" class="form-label mt-2">Pilih Bulan</label>
+                <select class="form-select" id="bulanSelectPenilaian" name="bulan">
+                    <option value="">-- Pilih Bulan --</option>
+                    {% for b in bulan_list %}
+                        <option value="{{ b.value }}">{{ b.label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn btn-success mt-2" id="btnGenerateReport">
+                    📄 Generate Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th rowspan="2" class="align-middle text-center">No</th>
+                <th rowspan="2" class="align-middle text-center">Nama Siswa</th>
+                <th colspan="7" class="text-center">Nilai Kebiasaan</th>
+                <th rowspan="2" class="align-middle text-center">Catatan</th>
+                <th rowspan="2" class="align-middle text-center">Aksi</th>
+            </tr>
+            <tr>
+                <th>Bangun Pagi</th>
+                <th>Beribadah</th>
+                <th>Berolahraga</th>
+                <th>Makan Sehat &amp; Bergizi</th>
+                <th>Belajar</th>
+                <th>Bermasyarakat</th>
+                <th>Tidur Cepat</th>
+            </tr>
+        </thead>
+        <tbody id="siswaTableBody">
+            <tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td></tr>
+        </tbody>
+    </table>
+
+    {% else %}
+    <div class="alert alert-warning">
+        Tidak ada tahun ajaran aktif. Silakan buat / aktifkan tahun ajaran dulu.
+    </div>
+    {% endif %}
+</div>
+
+<!-- MODAL CHANGE PASSWORD -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="changePasswordForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">Ganti Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Password Saat Ini</label>
+                        <input type="password" class="form-control" id="currentPassword" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">Password Baru</label>
+                        <input type="password" class="form-control" id="newPassword" name="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Konfirmasi Password Baru</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+                    </div>
+                    <div id="changePasswordMessage" class="text-danger"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+  
+<!--MODAL LAPORAN BULANAN-->
+<div class="modal fade" id="laporanBulananModal" tabindex="-1" aria-labelledby="laporanBulananModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="laporanForm" method="get" target="_blank">
+          <div class="modal-header">
+            <h5 class="modal-title" id="laporanBulananModalLabel">Pilih Laporan Bulanan</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Pilih Tahun Ajaran -->
+            <label for="tahunAjaranSelect" class="form-label">Tahun Ajaran</label>
+            <select class="form-select" id="tahunAjaranSelect" name="tahun_ajaran_id" required>
+              <option value="">-- Pilih Tahun Ajaran --</option>
+            </select>
+
+            <!-- Pilih Kelas -->
+            <label for="kelasSelect" class="form-label mt-3">Kelas</label>
+            <select class="form-select" id="kelasSelect" name="kelas_id" required>
+              <option value="">-- Pilih Kelas --</option>
+            </select>
+
+            <!-- Pilih Bulan -->
+            <label for="bulanSelect" class="form-label mt-3">Bulan</label>
+            <select class="form-select" id="bulanSelect" name="bulan" required>
+              <option value="">-- Pilih Bulan --</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Lihat Laporan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+<!-- MODAL LAPORAN SEMESTER -->
+<div class="modal fade" id="laporanSemesterModal" tabindex="-1" aria-labelledby="laporanSemesterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="laporanSemesterForm" method="get" target="_blank">
+          <div class="modal-header">
+            <h5 class="modal-title" id="laporanSemesterModalLabel">Pilih Laporan Semester</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+  
+            <!-- Pilih Tahun Ajaran (sudah termasuk semester) -->
+            <label for="tahunAjaranSemesterSelect" class="form-label">Tahun Ajaran (Semester)</label>
+            <select class="form-select" id="tahunAjaranSemesterSelect" required>
+              <option value="">-- Pilih Tahun Ajaran --</option>
+            </select>
+  
+            <!-- Pilih Kelas -->
+            <label for="kelasSemesterSelect" class="form-label mt-3">Kelas</label>
+            <select class="form-select" id="kelasSemesterSelect" required>
+              <option value="">-- Pilih Kelas --</option>
+            </select>
+  
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Lihat Laporan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<!-- MODAL LAPORAN TAHUNAN -->
+<div class="modal fade" id="laporanTahunanModal" tabindex="-1" aria-labelledby="laporanTahunanModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="laporanTahunanForm" method="get" target="_blank">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="laporanTahunanModalLabel">Pilih Laporan Tahunan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <!-- Pilih Tahun Ajaran (tanpa info semester) -->
+                    <label for="tahunAjaranTahunanSelect" class="form-label">Tahun Ajaran</label>
+                    <select class="form-select" id="tahunAjaranTahunanSelect" required>
+                        <option value="">-- Pilih Tahun Ajaran --</option>
+                    </select>
+
+                    <!-- Pilih Kelas -->
+                    <label for="kelasTahunanSelect" class="form-label mt-3">Kelas</label>
+                    <select class="form-select" id="kelasTahunanSelect" required>
+                        <option value="">-- Pilih Kelas --</option>
+                    </select>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success">Lihat Laporan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--SCRIPT SCRIPT SCRIPT -->
+     
+<!-- script TAMBAH SEKOLAH TAHUN AJARAN-->   
+        <script>
+        document.getElementById("formTahunAjaran")?.addEventListener("submit", async function(e){
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            const response = await fetch("{{ url_for('tahun_ajaran.add_tahun_ajaran') }}", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+            if(result.success){
+                location.reload();
+            } else {
+                alert(result.message);
+            }
+        });
+
+        document.getElementById("formToggleAktif")?.addEventListener("submit", async function(e){
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            const response = await fetch("{{ url_for('tahun_ajaran.toggle_tahun_ajaran') }}", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+            if(result.success){
+                location.reload();
+            } else {
+                alert(result.message);
+            }
+        });
+        </script>
+
+        <script>
+            document.getElementById("kepalaSelect")?.addEventListener("change", function() {
+                const selected = this.options[this.selectedIndex];
+                document.getElementById("kepalaNip").value = selected.getAttribute("data-nip") || "";
+            });
+            
+            // trigger awal kalau default sudah ada
+            document.getElementById("kepalaSelect")?.dispatchEvent(new Event("change"));
+        </script>
+
+<script>
+    document.querySelectorAll(".formToggleAktif").forEach(form => {
+        form.addEventListener("submit", async function(e){
+            e.preventDefault();
+            const formData = new FormData(this);
+            const resp = await fetch(this.action, {
+                method: "POST",
+                body: formData
+            });
+            const data = await resp.json();
+            if(data.success){
+                alert("Status tahun ajaran diperbarui");
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    });
+    </script>
+
+
+<!-- script TAMBAH  KELAS TAHUN AJARAN-->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const formKelas = document.getElementById("formKelas");
+    const tbody = document.querySelector("#kelasTable tbody");
+
+    // Tambah Kelas
+    formKelas?.addEventListener("submit", async function(e){
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch("{{ url_for('kelas.create_kelas') }}", {
+                method: "POST",
+                body: formData
+            });
+            const result = await response.json();
+
+            if(result.success){
+                alert(result.message);
+
+                // Hapus pesan "Belum ada kelas"
+                const kosongRow = tbody.querySelector("tr td[colspan]");
+                if (kosongRow) kosongRow.parentElement.remove();
+
+                const row = document.createElement("tr");
+                row.setAttribute("data-id", result.kelas.id);
+                row.innerHTML = `
+                    <td class="nama-kelas">${result.kelas.nama_kelas}</td>
+                    <td>${result.kelas.wali_kelas.nama}</td>
+                    <td>${result.kelas.wali_kelas.nip}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning edit-btn" data-id="${result.kelas.id}">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${result.kelas.id}">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+                this.reset();
+            } else {
+                alert(result.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Terjadi kesalahan saat menyimpan kelas.");
+        }
+    });
+
+    // Delegasi Event untuk Edit & Hapus
+    tbody.addEventListener("click", async function(e){
+        const target = e.target;
+        const row = target.closest("tr");
+        const id = row?.dataset.id;
+
+        if(target.classList.contains("delete-btn")){
+            if (!confirm("Hapus kelas ini?")) return;
+
+            try {
+                const resp = await fetch(`/kelas/delete/${id}`, { method: "POST" });
+                const delResult = await resp.json();
+                if(delResult.success){
+                    row.remove();
+                } else {
+                    alert(delResult.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Gagal menghapus kelas.");
+            }
+        }
+
+        if(target.classList.contains("edit-btn")){
+            const currentNama = row.querySelector(".nama-kelas").innerText;
+            const newNama = prompt("Ubah Nama Kelas:", currentNama);
+            if(!newNama || newNama === currentNama) return;
+
+            try {
+                const resp = await fetch(`/kelas/edit/${id}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nama_kelas: newNama })
+                });
+                const editResult = await resp.json();
+                if(editResult.success){
+                    row.querySelector(".nama-kelas").innerText = newNama;
+                } else {
+                    alert(editResult.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Gagal mengedit kelas.");
+            }
+        }
+    });
+});
+</script>
+
+
+<!-- script TAMBAH SISWA-->
+<script>
+    const kelasDropdown = document.getElementById("kelasDropdown");
+    const formSiswa = document.getElementById("formSiswa");
+    const kelasIdInput = document.getElementById("kelasIdInput");
+    const siswaTableBody = document.querySelector("#siswaTable tbody");
+    
+    // Saat pilih kelas
+    kelasDropdown?.addEventListener("change", async function() {
+        const kelasId = this.value;
+        if (!kelasId) {
+            formSiswa.classList.add("d-none");
+            siswaTableBody.innerHTML = `<tr><td colspan="4" class="text-center">Pilih kelas terlebih dahulu</td></tr>`;
+            return;
+        }
+    
+        formSiswa.classList.remove("d-none");
+        kelasIdInput.value = kelasId;
+        await loadSiswa(kelasId);
+    });
+    
+    // ambil daftar siswa
+    async function loadSiswa(kelasId) {
+        const resp = await fetch(`/siswa/list/${kelasId}`);
+        const data = await resp.json();
+        if (data.success) {
+            renderSiswaTable(data.siswa);
+        } else {
+            alert(data.message);
+        }
+    }
+    
+    // render daftar siswa
+    function renderSiswaTable(siswaList) {
+        siswaTableBody.innerHTML = "";
+        if (siswaList.length === 0) {
+            siswaTableBody.innerHTML = `<tr><td colspan="4" class="text-center">Belum ada siswa</td></tr>`;
+            return;
+        }
+        siswaList.forEach(s => addSiswaRow(s));
+    }
+    
+    // tambahkan baris siswa di tabel daftar
+    function addSiswaRow(s) {
+        const row = document.createElement("tr");
+        row.setAttribute("data-id", s.id);
+        row.innerHTML = `
+            <td>${s.nama_siswa}</td>
+            <td>${s.jenis_kelamin === "L" ? "Laki-laki" : "Perempuan"}</td>
+            <td>${s.status}</td>
+            <td>
+                <button class="btn btn-sm btn-warning edit-btn" data-id="${s.id}">Edit</button>
+                <button class="btn btn-sm btn-danger delete-btn" data-id="${s.id}">Hapus</button>
+            </td>
+        `;
+        siswaTableBody.appendChild(row);
+    
+    // EDIT  HANDLER   
+
+
+        row.querySelector(".edit-btn").addEventListener("click", function() {
+            openEditModal(s);
+        });
+
+    // DELETE HANDLER   
+        row.querySelector(".delete-btn").addEventListener("click", async function() {
+            if (!confirm("Hapus siswa ini?")) return;
+            const resp = await fetch(`/siswa/delete/${s.id}`, { method: "POST" });
+            const del = await resp.json();
+            if (del.success) row.remove();
+            else alert(del.message);
+        });
+    }
+    
+    // simpan form (loop setiap siswa)
+    formSiswa?.addEventListener("submit", async function(e) {
+        e.preventDefault();
+    
+        const rows = document.querySelectorAll("#siswaFormBody tr");
+        const kelasId = kelasDropdown.value;
+        let successCount = 0;
+    
+        for (let row of rows) {
+            const nama = row.querySelector('input[name="nama_siswa[]"]').value;
+            const jk = row.querySelector('select[name="jenis_kelamin[]"]').value;
+            const status = row.querySelector('input[name="status[]"]').value;
+    
+            if (!nama || !jk) continue;
+    
+            const formData = new FormData();
+            formData.append("kelas_id", kelasId);
+            formData.append("nama_siswa", nama);
+            formData.append("jenis_kelamin", jk);
+            formData.append("status", status);
+    
+            const resp = await fetch(`/siswa/create`, {
+                method: "POST",
+                body: formData
+            });
+            const result = await resp.json();
+            if (result.success) {
+                successCount++;
+            } else {
+                alert("Gagal tambah siswa: " + result.message);
+            }
+        }
+    
+        if (successCount > 0) {
+            alert(successCount + " siswa berhasil ditambahkan.");
+            await loadSiswa(kelasId); // refresh daftar siswa
+            // reset form baris input
+            document.getElementById("siswaFormBody").innerHTML = `
+                <tr>
+                    <td><input type="text" name="nama_siswa[]" class="form-control" required></td>
+                    <td>
+                        <select name="jenis_kelamin[]" class="form-select" required>
+                            <option value="">-- Pilih --</option>
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </td>
+                    <td><input type="text" name="status[]" class="form-control" value="Aktif"></td>
+                    <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
+                </tr>
+            `;
+        }
+    });
+    
+    // tambah baris input siswa
+    document.getElementById("addRow")?.addEventListener("click", function() {
+        let tbody = document.getElementById("siswaFormBody");
+        let row = document.createElement("tr");
+        row.innerHTML = `
+            <td><input type="text" name="nama_siswa[]" class="form-control" required></td>
+            <td>
+                <select name="jenis_kelamin[]" class="form-select" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="L">Laki-laki</option>
+                    <option value="P">Perempuan</option>
+                </select>
+            </td>
+            <td><input type="text" name="status[]" class="form-control" value="Aktif"></td>
+            <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    // hapus baris input
+    document.addEventListener("click", function(e) {
+        if (e.target.classList.contains("remove-row")) {
+            e.target.closest("tr").remove();
+        }
+    });
+
+
+        // buka modal edit
+        function openEditModal(siswa) {
+            document.getElementById("editId").value = siswa.id;
+            document.getElementById("editNama").value = siswa.nama_siswa;
+            document.getElementById("editJK").value = siswa.jenis_kelamin;
+            document.getElementById("editStatus").value = siswa.status;
+
+            const modal = new bootstrap.Modal(document.getElementById("editSiswaModal"));
+            modal.show();
+        }
+
+        // submit form edit
+        document.getElementById("editSiswaForm")?.addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const id = formData.get("id");
+
+            const resp = await fetch(`/siswa/update/${id}`, {
+                method: "POST",
+                body: formData
+            });
+            const result = await resp.json();
+
+            if (result.success) {
+                alert("Data siswa berhasil diupdate");
+                const modalEl = document.getElementById("editSiswaModal");
+                bootstrap.Modal.getInstance(modalEl).hide();
+
+                // update baris langsung di tabel
+                const row = document.querySelector(`#siswaTable tr[data-id="${id}"]`);
+                if (row) {
+                    row.children[0].textContent = result.siswa.nama_siswa;
+                    row.children[1].textContent = result.siswa.jenis_kelamin === "L" ? "Laki-laki" : "Perempuan";
+                    row.children[2].textContent = result.siswa.status;
+                }
+            } else {
+                alert(result.message);
+            }
+        });
+
+    </script>
+
+<!-- PENILAIAN KEBIASAAN -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const kelasSelect = document.getElementById("kelasSelectPenilaian");
+        const bulanSelect = document.getElementById("bulanSelectPenilaian");
+        const tbody = document.getElementById("siswaTableBody");
+    
+        // --- LOAD KELAS ---
+        async function loadKelas() {
+            try {
+                const res = await fetch("/penilaian/get_kelas");
+                const data = await res.json();
+                kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+                data.kelas_list.forEach(k => {
+                    const opt = document.createElement("option");
+                    opt.value = k.id;
+                    opt.textContent = k.nama_kelas;
+                    kelasSelect.appendChild(opt);
+                });
+            } catch (err) {
+                console.error("Gagal load kelas:", err);
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center text-danger">Gagal memuat kelas</td></tr>`;
+            }
+        }
+        loadKelas();
+    
+        // --- LOAD SISWA per KELAS ---
+        async function loadSiswa(kelasId) {
+            tbody.innerHTML = "";
+            if (!kelasId) {
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td></tr>`;
+                return;
+            }
+            try {
+                const res = await fetch(`/penilaian/siswa/list/${kelasId}`);
+                const siswaList = await res.json();
+                if (!siswaList.length) {
+                    tbody.innerHTML = `<tr><td colspan="11" class="text-center">Belum ada siswa di kelas ini</td></tr>`;
+                    return;
+                }
+    
+                siswaList.forEach((siswa, idx) => {
+                    const row = document.createElement("tr");
+                    row.dataset.siswaId = siswa.id;
+                    row.dataset.kelasId = kelasId;
+                    row.innerHTML = `
+                        <td class="text-center">${idx+1}</td>
+                        <td>${siswa.nama_siswa}
+                            <input type="hidden" name="siswa_id" value="${siswa.id}">
+                            <input type="hidden" name="kelas_id" value="${kelasId}">
+                        </td>
+                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="bangun_pagi"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="beribadah"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="berolahraga"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="sehat_dan_lemar"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="belajar"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="bermasyarakat"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="tidur_cepat"></td>
+                        <td><input type="text" class="form-control nilai-input" name="catatan"></td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button type="button" class="btn btn-primary btn-sm btn-save">Simpan</button>
+                                <button type="button" class="btn btn-warning btn-sm btn-update" style="display:none;">Update</button>
+                                <button type="button" class="btn btn-danger btn-sm btn-delete">Hapus Isi</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+    
+                // kalau bulan sudah dipilih → load nilai lama
+                if (bulanSelect.value) {
+                    loadNilai(kelasId, bulanSelect.value);
+                }
+    
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center text-danger">Gagal memuat data siswa</td></tr>`;
+            }
+        }
+    
+        kelasSelect.addEventListener("change", () => loadSiswa(kelasSelect.value));
+        bulanSelect.addEventListener("change", () => {
+            if (!kelasSelect.value || !bulanSelect.value) return;
+            loadNilai(kelasSelect.value, bulanSelect.value);
+        });
+    
+        // --- LOAD NILAI ---
+        async function loadNilai(kelasId, bulan) {
+    try {
+        const res = await fetch(`/penilaian/kebiasaan/get/${kelasId}/${bulan}`);
+        const data = await res.json();
+
+        tbody.querySelectorAll("tr").forEach(tr => {
+            tr.querySelectorAll("input").forEach(i => {
+                if (!["siswa_id","kelas_id"].includes(i.name)) i.value = "";
+                i.removeAttribute("readonly");
+            });
+            tr.querySelector(".btn-save").style.display = "inline-block";
+            tr.querySelector(".btn-update").style.display = "none";
+        });
+
+        data.forEach(row => {
+            const tr = tbody.querySelector(`tr[data-siswa-id="${row.siswa_id}"]`);
+            if (!tr) return;
+
+            tr.querySelector('[name="bangun_pagi"]').value = row.bangun_pagi || "";
+            tr.querySelector('[name="beribadah"]').value = row.beribadah || "";
+            tr.querySelector('[name="berolahraga"]').value = row.berolahraga || "";
+            tr.querySelector('[name="sehat_dan_lemar"]').value = row.sehat_dan_lemar || "";
+            tr.querySelector('[name="belajar"]').value = row.belajar || "";
+            tr.querySelector('[name="bermasyarakat"]').value = row.bermasyarakat || "";
+            tr.querySelector('[name="tidur_cepat"]').value = row.tidur_cepat || "";
+            tr.querySelector('[name="catatan"]').value = row.catatan || "";
+
+            // ✅ cek apakah ada data di baris tsb
+            const hasData = row.bangun_pagi || row.beribadah || row.berolahraga ||
+                            row.sehat_dan_lemar || row.belajar || 
+                            row.bermasyarakat || row.tidur_cepat || row.catatan;
+
+            if (hasData) {
+                tr.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
+                tr.querySelector(".btn-save").style.display = "none";
+                tr.querySelector(".btn-update").style.display = "inline-block";
+            } else {
+                tr.querySelector(".btn-save").style.display = "inline-block";
+                tr.querySelector(".btn-update").style.display = "none";
+            }
+        });
+    } catch (err) {
+        console.error("Gagal load nilai:", err);
+    }
+}
+    
+        // --- SAVE / UPDATE / DELETE ---
+        tbody.addEventListener("click", async (e) => {
+            const row = e.target.closest("tr");
+            if (!row) return;
+            const siswaId = row.dataset.siswaId;
+            const kelasId = row.dataset.kelasId;
+            const bulan = bulanSelect.value;
+            if (!bulan) { alert("Pilih bulan terlebih dahulu"); return; }
+    
+            // SAVE / UPDATE
+            if (e.target.classList.contains("btn-save") || e.target.classList.contains("btn-update")) {
+                const formData = new FormData();
+                formData.append("siswa_id", siswaId);
+                formData.append("kelas_id", kelasId);
+                formData.append("bulan", bulan);
+                row.querySelectorAll("input").forEach(i => {
+                    if (!["siswa_id","kelas_id"].includes(i.name)) formData.append(i.name, i.value);
+                });
+    
+                try {
+                    const res = await fetch("/penilaian/kebiasaan/save_row", {method:"POST", body:formData});
+                    const result = await res.json();
+                    alert(result.message);
+                    if (result.success) {
+                        row.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
+                        row.querySelector(".btn-save").style.display = "none";
+                        row.querySelector(".btn-update").style.display = "inline-block";
+                    }
+                } catch(err){ console.error(err); alert("Terjadi kesalahan saat menyimpan"); }
+            }
+    
+            // DELETE
+            if (e.target.classList.contains("btn-delete")) {
+                if (!confirm("Hapus semua nilai kebiasaan siswa ini?")) return;
+                try {
+                    const res = await fetch(`/penilaian/kebiasaan/delete_row/${siswaId}/${bulan}`, {method:"POST"});
+                    const result = await res.json();
+                    alert(result.message);
+                    if (result.success) {
+                        row.querySelectorAll("input").forEach(i => { if(!["siswa_id","kelas_id"].includes(i.name)) i.value=""; });
+                        row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
+                        row.querySelector(".btn-save").style.display = "inline-block";
+                        row.querySelector(".btn-update").style.display = "none";
+                    }
+                } catch(err){ console.error(err); alert("Terjadi kesalahan saat hapus data"); }
+            }
+    
+            // UNLOCK untuk UPDATE
+            if (e.target.classList.contains("btn-update")) {
+                row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
+                row.querySelector(".btn-save").style.display = "inline-block";
+                e.target.style.display = "none";
+            }
+        });
+    
+        // --- VALIDASI INPUT NILAI 0-25 ---
+        document.addEventListener("input", (e) => {
+            if (e.target.classList.contains("nilai-input")) {
+                let val = parseInt(e.target.value);
+                if (isNaN(val)) return;
+                if (val > 25) e.target.value = 25;
+                if (val < 0) e.target.value = 0;
+            }
+        });
+    });
+    </script>
+    
+    
+
+<!-- SCRIPT AJAX CHANGE PASSWORD -->
+<script>
+    document.getElementById("changePasswordForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+    
+        const current_password = document.getElementById("currentPassword").value;
+        const new_password = document.getElementById("newPassword").value;
+        const confirm_password = document.getElementById("confirmPassword").value;
+        const msgDiv = document.getElementById("changePasswordMessage");
+        msgDiv.textContent = "";
+    
+        if (new_password !== confirm_password) {
+            msgDiv.textContent = "Password baru dan konfirmasi tidak cocok!";
+            return;
+        }
+    
+        try {
+            const res = await fetch("{{ url_for('change_password') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ current_password, new_password })
+            });
+            const result = await res.json();
+    
+            if (result.success) {
+                alert(result.message || "Password berhasil diubah!");
+                const modal = bootstrap.Modal.getInstance(document.getElementById("changePasswordModal"));
+                modal.hide();
+                document.getElementById("changePasswordForm").reset();
+            } else {
+                msgDiv.textContent = result.message || "Terjadi kesalahan!";
+            }
+        } catch (err) {
+            console.error(err);
+            msgDiv.textContent = "Terjadi kesalahan saat mengubah password!";
+        }
+    });
+    </script>
+
+<!-- SCRIPT AJAX LAPORAN BULANAN -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tahunSelect = document.getElementById("tahunAjaranSelect");
+        const kelasSelect = document.getElementById("kelasSelect");
+        const bulanSelect = document.getElementById("bulanSelect");
+        const laporanForm = document.getElementById("laporanForm");
+    
+        // Ambil data filter dari backend
+        fetch("/laporan/data_filter")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Populate Tahun Ajaran
+                    data.tahun.forEach(ta => {
+                        const opt = document.createElement("option");
+                        opt.value = ta.id;
+                        opt.text = ta.name;
+                        tahunSelect.appendChild(opt);
+                    });
+    
+                    // Saat tahun ajaran dipilih
+                    tahunSelect.addEventListener("change", function () {
+                        const taId = this.value;
+                        updateKelasBulan(taId, data.kelas, data.bulan);
+                    });
+                } else {
+                    alert("Gagal mengambil data filter: " + data.message);
+                }
+            });
+    
+        function updateKelasBulan(taId, kelasDict, bulanDict) {
+            // Update Kelas
+            kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            if (taId && kelasDict[taId]) {
+                kelasDict[taId].forEach(k => {
+                    const opt = document.createElement("option");
+                    opt.value = k.id;
+                    opt.text = k.nama;
+                    kelasSelect.appendChild(opt);
+                });
+            }
+    
+            // Update Bulan
+            bulanSelect.innerHTML = '<option value="">-- Pilih Bulan --</option>';
+            if (taId && bulanDict[taId]) {
+                bulanDict[taId].forEach(b => {
+                    const opt = document.createElement("option");
+                    opt.value = b.value;
+                    opt.text = b.label;
+                    bulanSelect.appendChild(opt);
+                });
+            }
+        }
+    
+        // Ubah action form sebelum submit agar sesuai kelas & bulan
+        laporanForm.addEventListener("submit", function (e) {
+            const kelasId = kelasSelect.value;
+            const bulan = bulanSelect.value;
+    
+            if (!kelasId || !bulan) {
+                alert("Tolong pilih kelas dan bulan terlebih dahulu.");
+                e.preventDefault();
+                return;
+            }
+    
+            // Set action sesuai route backend
+            this.action = `/laporan/rchk/${kelasId}/${bulan}`;
+        });
+    });
+    </script>
+
+<!-- SCRIPT AJAX LAPORAN SEMESTER -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const tahunSemesterSelect = document.getElementById("tahunAjaranSemesterSelect");
+      const kelasSemesterSelect = document.getElementById("kelasSemesterSelect");
+      const laporanSemesterForm = document.getElementById("laporanSemesterForm");
+    
+      // Ambil data filter dari backend
+      fetch("/laporan/data_filter")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Populate Tahun Ajaran
+            data.tahun.forEach(ta => {
+              const opt = document.createElement("option");
+              opt.value = ta.id;
+              opt.text = ta.name;
+              tahunSemesterSelect.appendChild(opt);
+            });
+    
+            // Update kelas berdasarkan tahun ajaran
+            tahunSemesterSelect.addEventListener("change", function () {
+              const taId = this.value;
+              updateKelasSemester(taId, data.kelas);
+            });
+          } else {
+            alert("Gagal mengambil data filter: " + data.message);
+          }
+        });
+    
+      function updateKelasSemester(taId, kelasDict) {
+        kelasSemesterSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+        if (taId && kelasDict[taId]) {
+          kelasDict[taId].forEach(k => {
+            const opt = document.createElement("option");
+            opt.value = k.id;
+            opt.text = k.nama;
+            kelasSemesterSelect.appendChild(opt);
+          });
+        }
+      }
+    
+      // Set action form sebelum submit
+      laporanSemesterForm.addEventListener("submit", function (e) {
+        const kelasId = kelasSemesterSelect.value;
+        const tahunAjaranId = tahunSemesterSelect.value;
+    
+        if (!kelasId || !tahunAjaranId) {
+          alert("Tolong pilih tahun ajaran dan kelas terlebih dahulu.");
+          e.preventDefault();
+          return;
+        }
+    
+        // Inject ke action → tanpa query string
+        this.action = `/laporan/semester/${kelasId}/${tahunAjaranId}`;
+      });
+    });
+    </script>
+
+<script>
+    // Tambahkan di script form penilaian
+document.getElementById('btnGenerateReport').addEventListener('click', function() {
+    const kelasId = document.getElementById('kelasSelectPenilaian').value;
+    const bulan = document.getElementById('bulanSelectPenilaian').value;
+    
+    if (!kelasId || !bulan) {
+        alert('Silakan pilih kelas dan bulan terlebih dahulu');
+        return;
+    }
+    
+    window.open(`/laporan/penilaian/${kelasId}/${bulan}`, '_blank');
+});
+</script>
+
+<!-- SCRIPT AJAX LAPORAN TAHUNAN -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const tahunTahunanSelect = document.getElementById("tahunAjaranTahunanSelect");
+      const kelasTahunanSelect = document.getElementById("kelasTahunanSelect");
+      const laporanTahunanForm = document.getElementById("laporanTahunanForm");
+    
+      // Ambil data filter dari backend
+      fetch("/laporan/data_filter")
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Populate Tahun Ajaran (tanpa info semester)
+            data.tahun.forEach(ta => {
+              const opt = document.createElement("option");
+              opt.value = ta.id;
+              
+              // Hanya tampilkan tahun ajaran saja, tanpa semester
+              // Contoh: "2025/2026" instead of "2025/2026 (Ganjil)"
+              const tahunAjaranOnly = ta.name.split(' (')[0];
+              opt.text = tahunAjaranOnly;
+              
+              tahunTahunanSelect.appendChild(opt);
+            });
+    
+            // Update kelas berdasarkan tahun ajaran
+            tahunTahunanSelect.addEventListener("change", function () {
+              const taId = this.value;
+              updateKelasTahunan(taId, data.kelas);
+            });
+          } else {
+            alert("Gagal mengambil data filter: " + data.message);
+          }
+        });
+    
+      function updateKelasTahunan(taId, kelasDict) {
+        kelasTahunanSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+        if (taId && kelasDict[taId]) {
+          kelasDict[taId].forEach(k => {
+            const opt = document.createElement("option");
+            opt.value = k.id;
+            opt.text = k.nama;
+            kelasTahunanSelect.appendChild(opt);
+          });
+        }
+      }
+    
+      // Set action form sebelum submit
+      laporanTahunanForm.addEventListener("submit", function (e) {
+        const kelasId = kelasTahunanSelect.value;
+        const tahunAjaranId = tahunTahunanSelect.value;
+    
+        if (!kelasId || !tahunAjaranId) {
+          alert("Tolong pilih tahun ajaran dan kelas terlebih dahulu.");
+          e.preventDefault();
+          return;
+        }
+    
+        // Inject ke action → tanpa query string
+        this.action = `/laporan/tahunan/${kelasId}/${tahunAjaranId}`;
+      });
+    });
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

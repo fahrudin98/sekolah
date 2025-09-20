@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Laporan RCHK - {{ data.nama_kelas }} - {{ data.bulan }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 5mm 10mm 10mm 10mm;
+            font-size: 11px;
+            width: 180mm; /* lebih dekat ke ukuran A4 */
+            max-width: 180mm;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 0px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 0 0 8px 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 16px;
+        }
+        .header h2 {
+            margin: 2px 0 0 0;
+            font-size: 13px;
+            font-weight: normal;
+        }
+
+        .info-sekolah {
+            margin: 10px 0 15px 0;
+            line-height: 1.4;
+        }
+        .info-sekolah p {
+            margin: 3px 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            width: 100%;
+            page-break-inside: avoid; /* hindari terpotong */
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            text-align: center;
+            font-size: 10px;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .text-left { text-align: left; }
+        .bold { font-weight: bold; }
+
+        .row-flex {
+            display: table; /* ganti flex agar stabil di PDF */
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .column-left,
+        .column-right {
+            display: table-cell;
+            vertical-align: top;
+            width: 50%;
+            padding-right: 10px;
+        }
+
+        .summary {
+            font-size: 10px;
+            background-color: #f8f9fa;
+            border-left: 3px solid #007bff;
+            padding: 8px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 10px;
+            text-align: center;
+            color: #666;
+        }
+
+        .no-print {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .no-print button {
+            padding: 8px 15px;
+            margin: 0 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .no-print button:hover {
+            background-color: #0056b3;
+        }
+
+        @media print {
+            body { margin: 10mm; }
+            .no-print { display: none; }
+            table { font-size: 9.5px; }
+            .summary { font-size: 9.5px; }
+        }
+
+        .info-grid {
+            display: table;
+            width: 100%;
+        }
+        .info-row {
+            display: table-row;
+        }
+        .info-label, .info-colon, .info-value {
+            display: table-cell;
+            padding: 2px 5px;
+            font-size: 10px;
+        }
+        .info-label { white-space: nowrap; font-weight: bold; width: 120px; }
+        .info-colon { width: 10px; }
+    </style>
+
+    <!-- html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>REKAPITULASI CATATAN HARIAN KELAS (RCHK)</h1>
+        <h2>TAHUN AJARAN {{ data.tahun_ajaran }} - BULAN: <span id="bulan-display">{{ data.bulan | format_bulan }}</span></h2>
+    </div>
+
+    <div class="info-sekolah">
+        <div class="info-grid">
+            <div class="info-row">
+                <div class="info-label">Nama Sekolah (NPSN)</div>
+                <div class="info-colon">:</div>
+                <div class="info-value">{{ data.sekolah.nama }} ({{ data.sekolah.npsn }})</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Kota/Kab, Provinsi</div>
+                <div class="info-colon">:</div>
+                <div class="info-value">{{ data.sekolah.kabupaten }}, {{ data.sekolah.provinsi }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Kepala Sekolah</div>
+                <div class="info-colon">:</div>
+                <div class="info-value">{{ data.kepala_sekolah.nama }} (NIP. {{ data.kepala_sekolah.nip }})</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Guru Wali Kelas {{ data.nama_kelas }}</div>
+                <div class="info-colon">:</div>
+                <div class="info-value">{{ data.wali_kelas.nama }} (NIP. {{ data.wali_kelas.nip }})</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row-flex">
+        <div class="column-left">
+            <table>
+                <tr>
+                    <th rowspan="2">No</th>
+                    <th rowspan="2">Jenis Kelamin</th>
+                    <th rowspan="2">Jml Siswa</th>
+                    <th colspan="2">Status</th>
+                </tr>
+                <tr>
+                    <th>Terbiasa</th>
+                    <th>Belum Terbiasa</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td class="text-left">Perempuan</td>
+                    <td>{{ data.rekap_siswa.perempuan.total }}</td>
+                    <td>{{ data.rekap_siswa.perempuan.terbiasa }}</td>
+                    <td>{{ data.rekap_siswa.perempuan.belum }}</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td class="text-left">Laki-laki</td>
+                    <td>{{ data.rekap_siswa.laki.total }}</td>
+                    <td>{{ data.rekap_siswa.laki.terbiasa }}</td>
+                    <td>{{ data.rekap_siswa.laki.belum }}</td>
+                </tr>
+                <tr class="bold">
+                    <td colspan="2">Total</td>
+                    <td>{{ data.rekap_siswa.total.total }}</td>
+                    <td>{{ data.rekap_siswa.total.terbiasa }}</td>
+                    <td>{{ data.rekap_siswa.total.belum }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="column-right">
+            <div class="summary">
+                <p>Dari total <strong>{{ data.rekap_siswa.total.total }} murid</strong>,
+                {% if data.rekap_siswa.total.terbiasa == 0 %}
+                    <strong>tidak ada murid</strong> yang sudah terbiasa
+                {% else %}
+                    <strong>{{ data.rekap_siswa.total.terbiasa }} murid</strong> sudah terbiasa
+                    dan <strong>{{ data.rekap_siswa.total.belum }} murid</strong> belum terbiasa
+                {% endif %}
+                dalam menerapkan Gerakan 7 Kebiasaan Anak Indonesia Hebat (G7KAIH)
+                pada Bulan <strong>{{ data.bulan | format_bulan }}</strong> Tahun Ajaran <strong>{{ data.tahun_ajaran }}</strong>.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabel Rekap Umum -->
+    <h3>Rekap Umum</h3>
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2">No</th>
+                <th rowspan="2">Kebiasaan</th>
+                <th colspan="2">Terbiasa</th>
+                <th colspan="2">Belum</th>
+            </tr>
+            <tr>
+                <th>Jumlah</th>
+                <th>%</th>
+                <th>Jumlah</th>
+                <th>%</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for field in data.field_labels.keys() %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="text-left">{{ data.field_labels[field] }}</td>
+                <td>{{ data.rekap_umum[field].terbiasa }}</td>
+                <td>{{ data.rekap_umum[field].terbiasa_pct }}%</td>
+                <td>{{ data.rekap_umum[field].belum }}</td>
+                <td>{{ data.rekap_umum[field].belum_pct }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Tabel Per Jenis Kelamin -->
+    <h3>Rekap Per Jenis Kelamin</h3>
+    <table>
+        <tr>
+            <th rowspan="2">No</th>
+            <th rowspan="2">Kebiasaan</th>
+            <th colspan="4">Perempuan</th>
+            <th colspan="4">Laki-laki</th>
+        </tr>
+        <tr>
+            <!-- Header Perempuan -->
+            <th>Sudah</th>
+            <th>%</th>
+            <th>Belum</th>
+            <th>%</th>
+            <!-- Header Laki-laki -->
+            <th>Sudah</th>
+            <th>%</th>
+            <th>Belum</th>
+            <th>%</th>
+        </tr>
+
+        {% for field, name in data.field_labels.items() %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td class="text-left">{{ name }}</td>
+            
+            <!-- Data Perempuan -->
+            <td>{{ data.rekap_jk.P[field].terbiasa }}</td>
+            <td>{{ data.rekap_jk.P[field].terbiasa_pct }}%</td>
+            <td>{{ data.rekap_jk.P[field].belum }}</td>
+            <td>{{ data.rekap_jk.P[field].belum_pct }}%</td>
+            
+            <!-- Data Laki-laki -->
+            <td>{{ data.rekap_jk.L[field].terbiasa }}</td>
+            <td>{{ data.rekap_jk.L[field].terbiasa_pct }}%</td>
+            <td>{{ data.rekap_jk.L[field].belum }}</td>
+            <td>{{ data.rekap_jk.L[field].belum_pct }}%</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div class="footer">
+        <p>Dicetak pada: <span id="print-date"></span></p>
+    </div>
+
+    <div class="no-print">
+        <button onclick="window.print()">🖨️ Cetak Laporan</button>
+        <button onclick="exportToPDF()">📄 Export PDF</button>
+        <button onclick="window.history.back()">↩️ Kembali</button>
+    </div>
+
+    <script>
+        function exportToPDF() {
+            const element = document.body;
+            const options = {
+                margin: [10, 10, 10, 10],
+                filename: `RCHK_${'{{ data.nama_kelas }}'}_${'{{ data.bulan }}'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(options).from(element).save();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var now = new Date();
+            document.getElementById('print-date').textContent = now.toLocaleDateString('id-ID', {
+                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+        });
+    </script>
+</body>
+</html>
