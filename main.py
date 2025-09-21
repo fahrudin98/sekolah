@@ -288,15 +288,3 @@ if __name__ == "__main__":
         print("🔧 Running in DEVELOPMENT mode")
         app.run(debug=True, host="0.0.0.0", port=5000)
 
-
-
-@app.route("/admin/reset-password/<username>/<new_password>")
-def reset_password_admin(username, new_password):
-    """Route untuk reset password secara paksa"""
-    user = User.query.filter_by(username=username).first()
-    if user:
-        user.password = generate_password_hash(new_password)
-        db.session.commit()
-        return f"✅ Password untuk {username} telah direset ke: {new_password}"
-    else:
-        return f"❌ User {username} tidak ditemukan"
