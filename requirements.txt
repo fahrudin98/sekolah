@@ -7,3 +7,4 @@ flask-wtf
 pymysql
 pandas
 openpyxl
+email-validator

@@ -1,0 +1,16 @@
+# .gitignore
+.env
+.env.*
+*.env
+config.py  # 🔥 JANGAN commit config.py yang sebenarnya!
+instance/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.DS_Store

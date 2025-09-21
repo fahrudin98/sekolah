@@ -9,12 +9,24 @@
         Silakan masukkan password baru Anda.
       </p>
 
+      <!-- [OPTIONAL] Tempat untuk menampilkan error global (e.g., token invalid) -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for category, message in messages %}
+                  <div class="alert alert-{{ category if category != 'message' else 'danger' }} alert-dismissible fade show" role="alert">
+                      {{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+              {% endfor %}
+          {% endif %}
+      {% endwith %}
+
       <form method="POST">
         {{ form.hidden_tag() }}
 
         <div class="mb-3">
           {{ form.password.label(class="form-label") }}
-          {{ form.password(class="form-control", placeholder="Password baru") }}
+          {{ form.password(class="form-control", placeholder="Min. 8 karakter", autofocus=true) }}
           {% for error in form.password.errors %}
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
@@ -22,7 +34,7 @@
 
         <div class="mb-3">
           {{ form.confirm_password.label(class="form-label") }}
-          {{ form.confirm_password(class="form-control", placeholder="Ulangi password") }}
+          {{ form.confirm_password(class="form-control", placeholder="Ketik ulang password baru") }}
           {% for error in form.confirm_password.errors %}
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
