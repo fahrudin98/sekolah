@@ -125,7 +125,7 @@ def create_app(config_name="default"):
                 # Verifikasi password dengan bcrypt
                 if check_password_hash(user.password, password):
                     login_user(user)
-                    flash(f"Selamat datang, {user.nama_lengkap}!", "success")
+                   # flash(f"Selamat datang, {user.nama_lengkap}!", "success")
                     
                     if hasattr(user, 'pegawai') and user.pegawai:
                         return redirect(url_for("tahun_ajaran.dashboard"))
@@ -163,7 +163,7 @@ def create_app(config_name="default"):
     @login_required
     def logout():
         logout_user()
-        flash("Anda berhasil logout!", "info")
+        #flash("Anda berhasil logout!", "info")
         return redirect(url_for("index"))
     
     @app.route("/change-password", methods=["POST"])

@@ -36,16 +36,30 @@ class User(UserMixin, db.Model):
         return s.dumps({"user_id": self.id}, salt="password-reset-salt")
 
     # 🔹 verifikasi token dan kembalikan user
-    @staticmethod
-    def verify_reset_token(token, max_age=None):
-        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
-        max_age = max_age or current_app.config.get("PASSWORD_RESET_TOKEN_EXPIRATION", 3600)
-        try:
-            data = s.loads(token, salt="password-reset-salt", max_age=max_age)
-        except Exception:
-            return None
+@staticmethod
+def verify_reset_token(token, max_age=None):
+    from flask import current_app
+    from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+    
+    s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    max_age = max_age or current_app.config.get("PASSWORD_RESET_TOKEN_EXPIRATION", 3600)
+    
+    try:
+        data = s.loads(token, salt="password-reset-salt", max_age=max_age)
         user_id = data.get("user_id")
-        return User.query.get(user_id)
+        if user_id:
+            return User.query.get(user_id)
+    except SignatureExpired:
+        current_app.logger.warning("Token reset password expired")
+        return None
+    except BadSignature:
+        current_app.logger.warning("Token reset password invalid")
+        return None
+    except Exception as e:
+        current_app.logger.error(f"Error verifying token: {str(e)}")
+        return None
+    
+    return None
 #TAMBAHAN UNTUK RESET PASSWORD
 
 class LogMixin:

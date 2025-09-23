@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from penilaiansiswa.models.users import Pegawai, User
 from penilaiansiswa.models.sekolah import Sekolah, Kabupaten, Kecamatan, Provinsi
 from flask_login import current_user, login_required
+from penilaiansiswa import db
 
 
 pegawai_bp = Blueprint("pegawai_bp", __name__, url_prefix="/pegawai")
