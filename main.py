@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from penilaiansiswa import db
 from penilaiansiswa.models.users import User
-from werkzeug.security import generate_password_hash
+
 
 # Load environment variables first
 load_dotenv()
@@ -91,7 +91,7 @@ def create_app(config_name="default"):
             nama_lengkap=nama,
             email=email,
             username=username,
-            password=generate_password_hash(password),
+            password=bcrypt.hash(password),
             role="user"
         )
         
@@ -183,7 +183,7 @@ def create_app(config_name="default"):
             if not check_password_hash(current_user.password, current_pw):
                 return jsonify({"success": False, "message": "Password saat ini salah"})
 
-            current_user.password = generate_password_hash(new_pw)
+            current_user.password = bcrypt.hash(new_pw)
             db.session.commit()
             
             return jsonify({"success": True, "message": "Password berhasil diubah"})
@@ -207,7 +207,7 @@ def create_app(config_name="default"):
                 bcrypt.verify("dummy", user.password)
             except:
                 # Hash rusak, reset ke default
-                user.password = generate_password_hash("default123")
+                user.password = bcrypt.hash("default123")
                 migrated_count += 1
                 app.logger.info(f"Migrated user: {user.username}")
         
@@ -250,9 +250,11 @@ def create_app(config_name="default"):
     except ImportError as e:
         app.logger.warning(f"Penilaian blueprint not found: {e}")
     
+    # ✅ FIXED: HAPUS return prematur dan pindahkan ke bawah
     try:
         from penilaiansiswa.routes.lupa_password_routes import lupa_password_bp
         app.register_blueprint(lupa_password_bp)
+        app.logger.info("Lupa password blueprint registered successfully")
     except ImportError as e:
         app.logger.warning(f"Lupa password blueprint not found: {e}")
     
@@ -272,10 +274,13 @@ def create_app(config_name="default"):
         except (ValueError, IndexError):
             return ""
     
-    return app
+    return app  # ✅ RETURN YANG BENAR - di akhir fungsi
 
 # Create application instance
 app = create_app()
+
+# ✅ TAMBAHKAN INI UNTUK PASSENGER WSGI - EKSPOR application
+application = app  # Alias untuk passenger_wsgi.py
 
 if __name__ == "__main__":
     env = os.environ.get("FLASK_ENV", "development")
@@ -287,4 +292,4 @@ if __name__ == "__main__":
     else:
         print("🔧 Running in DEVELOPMENT mode")
         app.run(debug=True, host="0.0.0.0", port=5000)
-
+        

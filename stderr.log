@@ -1,0 +1,9 @@
+[2025-09-24 15:25:45,556] ERROR in main: Login error for user fahrudin: not a valid bcrypt hash
+[2025-09-24 15:25:57,911] ERROR in main: Login error for user fahrudin: not a valid bcrypt hash
+[2025-09-24 15:26:15,203] ERROR in main: Login error for user fahrudin: not a valid bcrypt hash
+[2025-09-24 15:26:26,965] ERROR in main: Login error for user fahrudin: not a valid bcrypt hash
+[2025-09-24 15:26:39,628] ERROR in main: Login error for user fahrudin: not a valid bcrypt hash
+[2025-09-24 15:27:29,265] ERROR in main: Login error for user fahrudin: not a valid bcrypt hash
+[2025-09-24 15:32:47,929] ERROR in main: Login error for user fahrudin: not a valid bcrypt hash
+[2025-09-24 15:34:18,345] ERROR in main: Login error for user fahrudin: not a valid bcrypt hash
+OSError: LSAPI: File error

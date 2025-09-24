@@ -4,19 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lupa Password</title>
-  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 
   <div class="container mt-5">
     <div class="row justify-content-center">
-      <div class="col-md-6">
+      <div class="col-md-8">  <!-- Changed to col-md-8 for wider layout -->
 
         <h3 class="mb-4 text-center">Lupa Password</h3>
         <p class="text-muted text-center">
-          Masukkan alamat email Anda yang terdaftar. Kami akan mengirimkan tautan untuk mereset kata sandi Anda.
+          Masukkan email Anda untuk mendapatkan link reset password.
         </p>
+
+        <!-- Display Reset Link if Available -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              {% if 'http' in message or '://' in message %}
+                <div class="alert alert-info">
+                  <strong>Reset Link:</strong><br>
+                  <a href="{{ message }}" target="_blank" class="btn btn-success btn-sm mt-2">Klik di sini untuk Reset Password</a>
+                  <br><br>
+                  <small>Atau copy link ini: <code>{{ message }}</code></small>
+                </div>
+              {% else %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
         <form method="POST">
           {{ form.hidden_tag() }}
@@ -34,6 +51,17 @@
           </div>
         </form>
 
+        <!-- Additional Instructions -->
+        <div class="mt-4 p-3 bg-light border rounded">
+          <h6>📋 Petunjuk Reset Password:</h6>
+          <ol class="small">
+            <li>Masukkan email Anda dan klik "Kirim Link Reset"</li>
+            <li>Reset link akan muncul di atas form ini</li>
+            <li>Klik link tersebut atau copy ke browser</li>
+            <li>Setel password baru Anda</li>
+          </ol>
+        </div>
+
         <!-- Link kembali ke login -->
         <div class="text-center mt-3">
           <a href="{{ url_for('login') }}">&laquo; Kembali ke Halaman Login</a>
@@ -43,7 +71,6 @@
     </div>
   </div>
 
-  <!-- Bootstrap JS (opsional untuk alert/komponen interaktif) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
