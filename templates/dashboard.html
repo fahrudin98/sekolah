@@ -60,6 +60,7 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+        
     </style>
     
 </head>
@@ -1124,6 +1125,33 @@ document.addEventListener("DOMContentLoaded", function() {
         const bulanSelect = document.getElementById("bulanSelectPenilaian");
         const tbody = document.getElementById("siswaTableBody");
     
+        // --- FUNGSI UNTUK MENDAPATKAN JUMLAH HARI DALAM BULAN ---
+        function getDaysInMonth(bulanTahun) {
+            // Format: "YYYY-MM" contoh: "2024-02"
+            const [tahun, bulan] = bulanTahun.split('-').map(Number);
+            return new Date(tahun, bulan, 0).getDate(); // Hari terakhir bulan sebelumnya = jumlah hari bulan ini
+        }
+    
+        // --- FUNGSI UPDATE MAX VALUE BERDASARKAN BULAN ---
+        function updateMaxValues() {
+            const bulanTahun = bulanSelect.value;
+            if (!bulanTahun) return;
+            
+            const maxHari = getDaysInMonth(bulanTahun);
+            const inputs = document.querySelectorAll('.nilai-input[type="number"]');
+            
+            inputs.forEach(input => {
+                input.max = maxHari;
+                input.title = `Nilai maksimal: ${maxHari} (sesuai jumlah hari dalam bulan)`;
+            });
+            
+            // Update placeholder atau info
+            const infoElement = document.getElementById('max-value-info');
+            if (infoElement) {
+                infoElement.textContent = `Nilai maksimal: 0-${maxHari} (sesuai jumlah hari dalam bulan ${bulanTahun})`;
+            }
+        }
+    
         // --- LOAD KELAS ---
         async function loadKelas() {
             try {
@@ -1168,14 +1196,14 @@ document.addEventListener("DOMContentLoaded", function() {
                             <input type="hidden" name="siswa_id" value="${siswa.id}">
                             <input type="hidden" name="kelas_id" value="${kelasId}">
                         </td>
-                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="bangun_pagi"></td>
-                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="beribadah"></td>
-                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="berolahraga"></td>
-                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="sehat_dan_lemar"></td>
-                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="belajar"></td>
-                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="bermasyarakat"></td>
-                        <td><input type="number" class="form-control nilai-input" min="0" max="25" name="tidur_cepat"></td>
-                        <td><input type="text" class="form-control nilai-input" name="catatan"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" name="bangun_pagi" placeholder="0-31"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" name="beribadah" placeholder="0-31"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" name="berolahraga" placeholder="0-31"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" name="sehat_dan_lemar" placeholder="0-31"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" name="belajar" placeholder="0-31"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" name="bermasyarakat" placeholder="0-31"></td>
+                        <td><input type="number" class="form-control nilai-input" min="0" name="tidur_cepat" placeholder="0-31"></td>
+                        <td><input type="text" class="form-control" name="catatan" placeholder="Catatan..."></td>
                         <td>
                             <div class="d-flex gap-1">
                                 <button type="button" class="btn btn-primary btn-sm btn-save">Simpan</button>
@@ -1186,6 +1214,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     `;
                     tbody.appendChild(row);
                 });
+    
+                // Update max values berdasarkan bulan yang dipilih
+                updateMaxValues();
     
                 // kalau bulan sudah dipilih → load nilai lama
                 if (bulanSelect.value) {
@@ -1199,57 +1230,61 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     
         kelasSelect.addEventListener("change", () => loadSiswa(kelasSelect.value));
+        
         bulanSelect.addEventListener("change", () => {
+            // Update max values ketika bulan berubah
+            updateMaxValues();
+            
             if (!kelasSelect.value || !bulanSelect.value) return;
             loadNilai(kelasSelect.value, bulanSelect.value);
         });
     
         // --- LOAD NILAI ---
         async function loadNilai(kelasId, bulan) {
-    try {
-        const res = await fetch(`/penilaian/kebiasaan/get/${kelasId}/${bulan}`);
-        const data = await res.json();
-
-        tbody.querySelectorAll("tr").forEach(tr => {
-            tr.querySelectorAll("input").forEach(i => {
-                if (!["siswa_id","kelas_id"].includes(i.name)) i.value = "";
-                i.removeAttribute("readonly");
-            });
-            tr.querySelector(".btn-save").style.display = "inline-block";
-            tr.querySelector(".btn-update").style.display = "none";
-        });
-
-        data.forEach(row => {
-            const tr = tbody.querySelector(`tr[data-siswa-id="${row.siswa_id}"]`);
-            if (!tr) return;
-
-            tr.querySelector('[name="bangun_pagi"]').value = row.bangun_pagi || "";
-            tr.querySelector('[name="beribadah"]').value = row.beribadah || "";
-            tr.querySelector('[name="berolahraga"]').value = row.berolahraga || "";
-            tr.querySelector('[name="sehat_dan_lemar"]').value = row.sehat_dan_lemar || "";
-            tr.querySelector('[name="belajar"]').value = row.belajar || "";
-            tr.querySelector('[name="bermasyarakat"]').value = row.bermasyarakat || "";
-            tr.querySelector('[name="tidur_cepat"]').value = row.tidur_cepat || "";
-            tr.querySelector('[name="catatan"]').value = row.catatan || "";
-
-            // ✅ cek apakah ada data di baris tsb
-            const hasData = row.bangun_pagi || row.beribadah || row.berolahraga ||
-                            row.sehat_dan_lemar || row.belajar || 
-                            row.bermasyarakat || row.tidur_cepat || row.catatan;
-
-            if (hasData) {
-                tr.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
-                tr.querySelector(".btn-save").style.display = "none";
-                tr.querySelector(".btn-update").style.display = "inline-block";
-            } else {
-                tr.querySelector(".btn-save").style.display = "inline-block";
-                tr.querySelector(".btn-update").style.display = "none";
+            try {
+                const res = await fetch(`/penilaian/kebiasaan/get/${kelasId}/${bulan}`);
+                const data = await res.json();
+    
+                tbody.querySelectorAll("tr").forEach(tr => {
+                    tr.querySelectorAll("input").forEach(i => {
+                        if (!["siswa_id","kelas_id"].includes(i.name)) i.value = "";
+                        i.removeAttribute("readonly");
+                    });
+                    tr.querySelector(".btn-save").style.display = "inline-block";
+                    tr.querySelector(".btn-update").style.display = "none";
+                });
+    
+                data.forEach(row => {
+                    const tr = tbody.querySelector(`tr[data-siswa-id="${row.siswa_id}"]`);
+                    if (!tr) return;
+    
+                    tr.querySelector('[name="bangun_pagi"]').value = row.bangun_pagi || "";
+                    tr.querySelector('[name="beribadah"]').value = row.beribadah || "";
+                    tr.querySelector('[name="berolahraga"]').value = row.berolahraga || "";
+                    tr.querySelector('[name="sehat_dan_lemar"]').value = row.sehat_dan_lemar || "";
+                    tr.querySelector('[name="belajar"]').value = row.belajar || "";
+                    tr.querySelector('[name="bermasyarakat"]').value = row.bermasyarakat || "";
+                    tr.querySelector('[name="tidur_cepat"]').value = row.tidur_cepat || "";
+                    tr.querySelector('[name="catatan"]').value = row.catatan || "";
+    
+                    // ✅ cek apakah ada data di baris tsb
+                    const hasData = row.bangun_pagi || row.beribadah || row.berolahraga ||
+                                    row.sehat_dan_lemar || row.belajar || 
+                                    row.bermasyarakat || row.tidur_cepat || row.catatan;
+    
+                    if (hasData) {
+                        tr.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
+                        tr.querySelector(".btn-save").style.display = "none";
+                        tr.querySelector(".btn-update").style.display = "inline-block";
+                    } else {
+                        tr.querySelector(".btn-save").style.display = "inline-block";
+                        tr.querySelector(".btn-update").style.display = "none";
+                    }
+                });
+            } catch (err) {
+                console.error("Gagal load nilai:", err);
             }
-        });
-    } catch (err) {
-        console.error("Gagal load nilai:", err);
-    }
-}
+        }
     
         // --- SAVE / UPDATE / DELETE ---
         tbody.addEventListener("click", async (e) => {
@@ -1260,6 +1295,22 @@ document.addEventListener("DOMContentLoaded", function() {
             const bulan = bulanSelect.value;
             if (!bulan) { alert("Pilih bulan terlebih dahulu"); return; }
     
+            // Validasi nilai sebelum simpan
+            const maxHari = getDaysInMonth(bulan);
+            const inputs = row.querySelectorAll('.nilai-input[type="number"]');
+            let valid = true;
+            
+            inputs.forEach(input => {
+                const value = parseInt(input.value) || 0;
+                if (value > maxHari) {
+                    alert(`Nilai ${input.name} tidak boleh lebih dari ${maxHari} (jumlah hari dalam bulan)`);
+                    input.focus();
+                    valid = false;
+                }
+            });
+            
+            if (!valid) return;
+    
             // SAVE / UPDATE
             if (e.target.classList.contains("btn-save") || e.target.classList.contains("btn-update")) {
                 const formData = new FormData();
@@ -1267,7 +1318,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 formData.append("kelas_id", kelasId);
                 formData.append("bulan", bulan);
                 row.querySelectorAll("input").forEach(i => {
-                    if (!["siswa_id","kelas_id"].includes(i.name)) formData.append(i.name, i.value);
+                    if (!["siswa_id","kelas_id"].includes(i.name)) {
+                        formData.append(i.name, i.value || "");
+                    }
                 });
     
                 try {
@@ -1290,7 +1343,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     const result = await res.json();
                     alert(result.message);
                     if (result.success) {
-                        row.querySelectorAll("input").forEach(i => { if(!["siswa_id","kelas_id"].includes(i.name)) i.value=""; });
+                        row.querySelectorAll("input").forEach(i => { 
+                            if(!["siswa_id","kelas_id"].includes(i.name)) i.value=""; 
+                        });
                         row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
                         row.querySelector(".btn-save").style.display = "inline-block";
                         row.querySelector(".btn-update").style.display = "none";
@@ -1306,15 +1361,47 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     
-        // --- VALIDASI INPUT NILAI 0-25 ---
+        // --- VALIDASI INPUT REAL-TIME ---
         document.addEventListener("input", (e) => {
-            if (e.target.classList.contains("nilai-input")) {
+            if (e.target.classList.contains("nilai-input") && e.target.type === "number") {
+                const bulanTahun = bulanSelect.value;
+                if (!bulanTahun) {
+                    alert("Pilih bulan terlebih dahulu");
+                    e.target.value = "";
+                    return;
+                }
+                
+                const maxHari = getDaysInMonth(bulanTahun);
                 let val = parseInt(e.target.value);
-                if (isNaN(val)) return;
-                if (val > 25) e.target.value = 25;
-                if (val < 0) e.target.value = 0;
+                
+                if (isNaN(val)) {
+                    e.target.value = "";
+                    return;
+                }
+                
+                if (val > maxHari) {
+                    e.target.value = maxHari;
+                    alert(`Nilai maksimal untuk bulan ini adalah ${maxHari} hari`);
+                }
+                
+                if (val < 0) {
+                    e.target.value = 0;
+                }
             }
         });
+    
+        // --- TAMPILKAN INFO MAX VALUE ---
+        function createMaxValueInfo() {
+            const existingInfo = document.getElementById('max-value-info');
+            if (existingInfo) existingInfo.remove();
+            
+            const infoDiv = document.createElement('div');
+
+            const container = document.querySelector('.container-fluid');
+            container.insertBefore(infoDiv, container.firstChild);
+        }
+        
+        createMaxValueInfo();
     });
     </script>
     
