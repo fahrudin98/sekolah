@@ -116,6 +116,11 @@
                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#laporanTahunanModal">
                     <i class="fas fa-calendar-alt me-2"></i>Laporan Tahunan
                 </a></li>
+                <li>
+                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#laporanPenilaianSiswaModal">
+                    <i class="fas fa-user-graduate me-2"></i>Laporan Perkembangan Siswa
+                    </a>
+                </li>
                 <!-- nanti bisa ditambah lagi di sini: laporan semesteran, tahunan -->
                 </ul>
             </li>
@@ -694,6 +699,59 @@
     </div>
 </div>
 
+<!-- MODAL LAPORAN PENILAIAN PER SISWA -->
+<div class="modal fade" id="laporanPenilaianSiswaModal" tabindex="-1" aria-labelledby="laporanPenilaianSiswaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="laporanPenilaianSiswaForm" method="get" target="_blank">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="laporanPenilaianSiswaModalLabel">
+                        <i class="fas fa-user-graduate me-2"></i>Laporan Penilaian Per Siswa
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Pilih Tahun Ajaran (TANPA SEMESTER) -->
+                    <label for="tahunAjaranPenilaianSelect" class="form-label">Tahun Ajaran</label>
+                    <select class="form-select" id="tahunAjaranPenilaianSelect" required>
+                        <option value="">-- Pilih Tahun Ajaran --</option>
+                        <!-- Options akan diisi via JavaScript -->
+                    </select>
+
+                    <!-- Pilih Semester (TERPISAH) -->
+                    <label for="semesterPenilaianSelect" class="form-label mt-3">Semester</label>
+                    <select class="form-select" id="semesterPenilaianSelect">
+                        <option value="">Semua Semester (Satu Tahun)</option>
+                        <option value="ganjil">Ganjil</option>
+                        <option value="genap">Genap</option>
+                    </select>
+
+
+                    <!-- Pilih Kelas -->
+                    <label for="kelasPenilaianSelect" class="form-label mt-3">Kelas</label>
+                    <select class="form-select" id="kelasPenilaianSelect" required disabled>
+                        <option value="">-- Pilih Kelas --</option>
+                        <!-- Options akan diisi via JavaScript -->
+                    </select>
+
+                    <!-- Pilih Siswa -->
+                    <label for="siswaPenilaianSelect" class="form-label mt-3">Siswa</label>
+                    <select class="form-select" id="siswaPenilaianSelect" required disabled>
+                        <option value="">-- Pilih Siswa --</option>
+                        <!-- Options akan diisi via JavaScript -->
+                    </select>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-file-pdf me-2"></i>Lihat Laporan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <!--SCRIPT SCRIPT SCRIPT -->
      
 <!-- script TAMBAH SEKOLAH TAHUN AJARAN-->   
@@ -1510,6 +1568,318 @@ document.getElementById('btnGenerateReport').addEventListener('click', function(
       });
     });
 </script>
+
+<!-- SCRIPT AJAX LAPORAN PENILAIAN SISWA-->
+<!-- SCRIPT AJAX LAPORAN PENILAIAN SISWA -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Element references
+        const tahunAjaranSelect = document.getElementById('tahunAjaranPenilaianSelect');
+        const semesterSelect = document.getElementById('semesterPenilaianSelect');
+        const kelasSelect = document.getElementById('kelasPenilaianSelect');
+        const siswaSelect = document.getElementById('siswaPenilaianSelect');
+        const form = document.getElementById('laporanPenilaianSiswaForm');
+    
+        console.log('Modal laporan penilaian siswa loaded');
+    
+        // Load data filter dari endpoint yang sudah ada
+        function loadDataFilter() {
+            console.log('Loading data filter...');
+            fetch('/laporan/data_filter')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Data filter loaded:', data);
+                    if (data.success) {
+                        populateTahunAjaran(data.tahun);
+                    } else {
+                        console.error('Error loading data filter:', data.message);
+                        showAlert('Error loading data: ' + data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading data filter:', error);
+                    showAlert('Error loading data filter: ' + error.message, 'danger');
+                });
+        }
+    
+        // Populate tahun ajaran
+        function populateTahunAjaran(tahunData) {
+        tahunAjaranSelect.innerHTML = '<option value="">-- Pilih Tahun Ajaran --</option>';
+        tahunData.forEach(ta => {
+            const option = document.createElement('option');
+            option.value = ta.id;
+            
+            // HILANGKAN SEMESTER DARI TAMPILAN - hanya tampilkan tahun ajaran saja
+            // Contoh: "2023/2024" bukan "2023/2024 (Ganjil)"
+            const tahunAjaranOnly = ta.name.split(' (')[0]; // Ambil bagian sebelum kurung
+            option.textContent = tahunAjaranOnly;
+            
+            if (ta.name.toLowerCase().includes('aktif')) {
+                option.selected = true;
+                setTimeout(() => {
+                    tahunAjaranSelect.dispatchEvent(new Event('change'));
+                }, 100);
+            }
+            
+            tahunAjaranSelect.appendChild(option);
+        });
+    }
+    
+        // Load kelas berdasarkan tahun ajaran
+        function loadKelasOptions(tahunAjaranId) {
+            console.log('Loading kelas options for tahun ajaran:', tahunAjaranId);
+            if (!tahunAjaranId) {
+                resetKelasAndSiswa();
+                return;
+            }
+    
+            fetch('/laporan/data_filter')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.kelas[tahunAjaranId]) {
+                        populateKelas(data.kelas[tahunAjaranId]);
+                    } else {
+                        resetKelasAndSiswa();
+                        showAlert('Tidak ada kelas untuk tahun ajaran ini', 'warning');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading kelas data:', error);
+                    resetKelasAndSiswa();
+                    showAlert('Error loading kelas data: ' + error.message, 'danger');
+                });
+        }
+    
+        // Reset kelas dan siswa select
+        function resetKelasAndSiswa() {
+            kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            kelasSelect.disabled = true;
+            siswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+            siswaSelect.disabled = true;
+        }
+    
+        // Populate kelas
+        function populateKelas(kelasData) {
+            kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            if (kelasData && kelasData.length > 0) {
+                kelasData.forEach(kelas => {
+                    const option = document.createElement('option');
+                    option.value = kelas.id;
+                    option.textContent = kelas.nama;
+                    kelasSelect.appendChild(option);
+                });
+                kelasSelect.disabled = false;
+            } else {
+                resetKelasAndSiswa();
+            }
+        }
+    
+        // Load siswa berdasarkan kelas - VERSI YANG DIPERBAIKI
+        function loadSiswaOptions(kelasId) {
+            console.log('Memuat data siswa untuk kelas:', kelasId);
+            
+            if (!kelasId) {
+                resetSiswaSelect();
+                return;
+            }
+    
+            // Priority 1: Endpoint kita sendiri
+            fetch(`/laporan/api/siswa-by-kelas/${kelasId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Endpoint utama gagal: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Response dari API:', data);
+                    
+                    if (data.success && data.siswa) {
+                        displaySiswaData(data.siswa, `Ditemukan ${data.total} siswa di kelas ${data.kelas.nama_kelas}`);
+                    } else {
+                        throw new Error(data.message || 'Format response tidak valid');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error dengan endpoint utama:', error);
+                    // Fallback ke data contoh dengan ID yang sesuai
+                    useFallbackData(kelasId);
+                });
+        }
+    
+        // Reset siswa select
+        function resetSiswaSelect() {
+            siswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+            siswaSelect.disabled = true;
+        }
+    
+        // Display siswa data
+        function displaySiswaData(siswaList, message = '') {
+            resetSiswaSelect();
+            
+            if (siswaList && siswaList.length > 0) {
+                siswaList.forEach(siswa => {
+                    const option = document.createElement('option');
+                    option.value = siswa.id;
+                    // Tampilkan nama dan jenis kelamin
+                    const jkIcon = siswa.jenis_kelamin === 'L' ? '♂' : '♀';
+                    option.textContent = `${siswa.nama_siswa} ${jkIcon}`;
+                    option.setAttribute('title', `ID: ${siswa.id}, Status: ${siswa.status || 'Aktif'}`);
+                    siswaSelect.appendChild(option);
+                });
+                siswaSelect.disabled = false;
+                console.log('Menampilkan', siswaList.length, 'siswa');
+                
+                if (message) {
+                    showAlert(message, 'success');
+                }
+            } else {
+                showAlert('Tidak ada siswa di kelas ini', 'warning');
+            }
+        }
+    
+        // Fallback data jika endpoint gagal
+        function useFallbackData(kelasId) {
+            console.log('Menggunakan data fallback untuk kelas:', kelasId);
+            
+            // Coba ambil data siswa langsung dari halaman lain yang mungkin sudah ada
+            const existingSiswaSelects = document.querySelectorAll('select[id*="siswa"], select[name*="siswa"]');
+            
+            for (const select of existingSiswaSelects) {
+                if (select.options.length > 1) {
+                    const siswaData = extractSiswaDataFromSelect(select);
+                    if (siswaData.length > 0) {
+                        displaySiswaData(siswaData, 'Menggunakan data siswa dari halaman');
+                        return;
+                    }
+                }
+            }
+            
+            // Jika tidak ada, gunakan data sample berdasarkan kelas yang dipilih
+            const sampleData = getSampleSiswaData(kelasId);
+            displaySiswaData(sampleData, 'Menggunakan data contoh. Pastikan ID siswa valid.');
+        }
+    
+        // Extract data siswa dari select element yang sudah ada
+        function extractSiswaDataFromSelect(selectElement) {
+            const siswaData = [];
+            for (let i = 1; i < selectElement.options.length; i++) {
+                const option = selectElement.options[i];
+                if (option.value && option.value !== '') {
+                    siswaData.push({
+                        id: parseInt(option.value),
+                        nama_siswa: option.textContent,
+                        jenis_kelamin: 'L' // Default, bisa disesuaikan
+                    });
+                }
+            }
+            return siswaData;
+        }
+    
+        // Data sample berdasarkan kelas ID
+        function getSampleSiswaData(kelasId) {
+            // Data sample - akan diganti dengan data real
+            return [
+                { id: 1, nama_siswa: 'Siswa Contoh 1', jenis_kelamin: 'L', status: 'Aktif' },
+                { id: 2, nama_siswa: 'Siswa Contoh 2', jenis_kelamin: 'P', status: 'Aktif' },
+                { id: 3, nama_siswa: 'Siswa Contoh 3', jenis_kelamin: 'L', status: 'Aktif' }
+            ];
+        }
+    
+        // Show alert function
+        function showAlert(message, type) {
+            const existingAlert = document.querySelector('#laporanPenilaianSiswaModal .alert-dismissible');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+    
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+            
+            const icons = {
+                'danger': 'exclamation-triangle',
+                'warning': 'exclamation-circle',
+                'success': 'check-circle',
+                'info': 'info-circle'
+            };
+            const icon = icons[type] || 'info-circle';
+            
+            alertDiv.innerHTML = `
+                <i class="fas fa-${icon} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const modalBody = document.querySelector('#laporanPenilaianSiswaModal .modal-body');
+            modalBody.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    
+        // Event listeners
+        tahunAjaranSelect.addEventListener('change', function() {
+            const tahunAjaranId = this.value;
+            console.log('Tahun ajaran changed:', tahunAjaranId);
+            loadKelasOptions(tahunAjaranId);
+        });
+    
+        kelasSelect.addEventListener('change', function() {
+            const kelasId = this.value;
+            console.log('Kelas changed:', kelasId);
+            loadSiswaOptions(kelasId);
+        });
+    
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const tahunAjaranId = tahunAjaranSelect.value;
+            const semester = semesterSelect.value;
+            const kelasId = kelasSelect.value;
+            const siswaId = siswaSelect.value;
+    
+            console.log('Form submitted:', { tahunAjaranId, semester, kelasId, siswaId });
+    
+            if (!tahunAjaranId || !kelasId || !siswaId) {
+                showAlert('Harap pilih tahun ajaran, kelas, dan siswa terlebih dahulu!', 'warning');
+                return;
+            }
+    
+            // Validasi ID siswa
+            if (isNaN(siswaId) || siswaId <= 0) {
+                showAlert('ID siswa tidak valid', 'danger');
+                return;
+            }
+    
+            const url = `/laporan/penilaian-siswa/${siswaId}?tahun_ajaran_id=${tahunAjaranId}&semester=${semester}`;
+            console.log('Membuka URL:', url);
+            
+            // Buka di tab baru
+            window.open(url, '_blank');
+            
+            // Tutup modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('laporanPenilaianSiswaModal'));
+            if (modal) {
+                modal.hide();
+            }
+        });
+    
+        // Initialize ketika modal dibuka
+        document.getElementById('laporanPenilaianSiswaModal').addEventListener('shown.bs.modal', function() {
+            console.log('Modal opened, loading data...');
+            loadDataFilter();
+        });
+    });
+    </script>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

@@ -590,3 +590,290 @@ def laporan_tahunan(kelas_id, tahun_ajaran_id):
         print("ERROR REPORT TAHUNAN:", e)
         traceback.print_exc()
         return jsonify({"success": False, "message": f"Error generating tahunan report: {str(e)}"}), 500
+
+@laporan_bp.route("/api/tahun-ajaran")
+@login_required
+def api_tahun_ajaran():
+    try:
+        tahun_ajaran_list = TahunAjaran.query.order_by(TahunAjaran.tahun_ajaran.desc()).all()
+        
+        data = {
+            "tahun_ajaran": [
+                {
+                    "id": ta.id,
+                    "tahun_ajaran": ta.tahun_ajaran,
+                    "semester": ta.semester,
+                    "status": ta.status
+                }
+                for ta in tahun_ajaran_list
+            ]
+        }
+        
+        return jsonify(data)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@laporan_bp.route("/api/kelas-by-tahun-ajaran/<int:tahun_ajaran_id>")
+@login_required
+def api_kelas_by_tahun_ajaran(tahun_ajaran_id):
+    try:
+        kelas_list = Kelas.query.filter_by(tahun_ajaran_id=tahun_ajaran_id).order_by(Kelas.nama_kelas).all()
+        
+        data = {
+            "kelas": [
+                {
+                    "id": kelas.id,
+                    "nama_kelas": kelas.nama_kelas,
+                    "wali_kelas_id": kelas.wali_kelas_id
+                }
+                for kelas in kelas_list
+            ]
+        }
+        
+        return jsonify(data)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@laporan_bp.route("/api/siswa-by-kelas/<int:kelas_id>")
+@login_required
+def api_siswa_by_kelas(kelas_id):
+    try:
+        print(f"DEBUG: Mengambil siswa untuk kelas_id: {kelas_id}")
+        
+        # Cek apakah kelas exists
+        kelas = Kelas.query.get(kelas_id)
+        if not kelas:
+            return jsonify({"success": False, "message": "Kelas tidak ditemukan"}), 404
+        
+        # Cek authorization - hanya wali kelas yang bisa mengakses
+        if not hasattr(current_user, 'pegawai') or kelas.wali_kelas_id != current_user.pegawai.id:
+            return jsonify({"success": False, "message": "Anda bukan wali kelas dari kelas ini"}), 403
+
+        # Ambil data siswa dari database - sesuai dengan model Siswa
+        siswa_list = Siswa.query.filter_by(kelas_id=kelas_id).order_by(Siswa.nama_siswa).all()
+        print(f"DEBUG: Ditemukan {len(siswa_list)} siswa di kelas {kelas.nama_kelas}")
+        
+        # Format data sesuai model Siswa
+        data_siswa = []
+        for siswa in siswa_list:
+            data_siswa.append({
+                "id": siswa.id,
+                "nama_siswa": siswa.nama_siswa,
+                "jenis_kelamin": siswa.jenis_kelamin,
+                "kelas_id": siswa.kelas_id,
+                "status": siswa.status
+            })
+        
+        response_data = {
+            "success": True,
+            "kelas": {
+                "id": kelas.id,
+                "nama_kelas": kelas.nama_kelas
+            },
+            "siswa": data_siswa,
+            "total": len(data_siswa)
+        }
+        
+        return jsonify(response_data)
+    
+    except Exception as e:
+        print(f"ERROR API SISWA BY KELAS: {e}")
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# Route utama untuk laporan penilaian siswa
+
+@laporan_bp.route("/penilaian-siswa/<int:siswa_id>")
+@login_required
+def laporan_penilaian_siswa(siswa_id):
+    try:
+        # Dapatkan parameter dari query string
+        tahun_ajaran_id = request.args.get('tahun_ajaran_id')
+        semester_param = request.args.get('semester', '').lower()
+        
+        print(f"DEBUG: Membuat laporan untuk siswa_id: {siswa_id}, semester: {semester_param}")
+        
+        # Cari siswa
+        siswa = Siswa.query.get(siswa_id)
+        if not siswa:
+            return render_template("error.html", 
+                                message=f"Siswa dengan ID {siswa_id} tidak ditemukan di database."), 404
+        
+        kelas = Kelas.query.get_or_404(siswa.kelas_id)
+        
+        # Authorization check
+        if not hasattr(current_user, 'pegawai') or kelas.wali_kelas_id != current_user.pegawai.id:
+            abort(403, description="Anda bukan wali kelas dari kelas ini")
+
+        # Jika tahun_ajaran_id tidak ditentukan, gunakan tahun ajaran dari kelas siswa
+        if tahun_ajaran_id:
+            tahun_ajaran = TahunAjaran.query.get(tahun_ajaran_id)
+        else:
+            tahun_ajaran = TahunAjaran.query.get(kelas.tahun_ajaran_id)
+
+        if not tahun_ajaran:
+            abort(404, description="Tahun ajaran tidak ditemukan")
+
+        # Extract tahun dari tahun ajaran (format: "2023/2024")
+        tahun_parts = tahun_ajaran.tahun_ajaran.split('/')
+        if len(tahun_parts) == 2:
+            tahun_awal = int(tahun_parts[0])  # 2023
+            tahun_akhir = int(tahun_parts[1]) # 2024
+        else:
+            tahun_awal = int(tahun_parts[0])
+            tahun_akhir = tahun_awal + 1
+
+        # Tentukan bulan yang akan ditampilkan berdasarkan semester
+        # Tahun Ajaran: Juli tahun_awal - Juni tahun_akhir
+        bulan_data = []
+        
+        if semester_param == 'ganjil':
+            # Semester Ganjil: Juli - Desember tahun_awal
+            for bulan_num in range(7, 13):
+                tahun = tahun_awal
+                bulan_key = f"{tahun}-{bulan_num:02d}"
+                bulan_data.append((bulan_num, tahun, bulan_key))
+            semester_label = "Semester Ganjil"
+        elif semester_param == 'genap':
+            # Semester Genap: Januari - Juni tahun_akhir  
+            for bulan_num in range(1, 7):
+                tahun = tahun_akhir
+                bulan_key = f"{tahun}-{bulan_num:02d}"
+                bulan_data.append((bulan_num, tahun, bulan_key))
+            semester_label = "Semester Genap"
+        else:
+            # Satu Tahun Penuh: Juli tahun_awal - Juni tahun_akhir
+            # Juli-Desember tahun_awal
+            for bulan_num in range(7, 13):
+                tahun = tahun_awal
+                bulan_key = f"{tahun}-{bulan_num:02d}"
+                bulan_data.append((bulan_num, tahun, bulan_key))
+            # Januari-Juni tahun_akhir
+            for bulan_num in range(1, 7):
+                tahun = tahun_akhir
+                bulan_key = f"{tahun}-{bulan_num:02d}"
+                bulan_data.append((bulan_num, tahun, bulan_key))
+            semester_label = "Tahun Penuh"
+
+        # Data sekolah dan tahun ajaran
+        sekolah = Sekolah.query.get(kelas.sekolah_id)
+        wali_kelas = Pegawai.query.get(kelas.wali_kelas_id)
+        kepala_sekolah = Pegawai.query.get(tahun_ajaran.kepala_sekolah_id) if tahun_ajaran else None
+
+        # Data kecamatan, kabupaten, provinsi
+        kecamatan = Kecamatan.query.get(sekolah.kecamatan_id) if sekolah else None
+        kabupaten = Kabupaten.query.get(kecamatan.kabupaten_id) if kecamatan else None
+        provinsi = Provinsi.query.get(kabupaten.provinsi_id) if kabupaten else None
+
+        # Daftar bulan yang akan ditampilkan
+        bulan_list = []
+        bulan_names = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ]
+        
+        # Track status kebiasaan (apakah ada yang kurang dari 20)
+        status_kebiasaan = {
+            'bangun_pagi': True,
+            'beribadah': True, 
+            'berolahraga': True,
+            'sehat_dan_lemar': True,
+            'belajar': True,
+            'bermasyarakat': True,
+            'tidur_cepat': True
+        }
+
+        for bulan_num, tahun, bulan_key in bulan_data:
+            bulan_label = f"{bulan_names[bulan_num - 1]} {tahun}"
+            
+            # Cari data kebiasaan untuk bulan ini
+            kebiasaan = Kebiasaan.query.filter_by(
+                siswa_id=siswa.id,
+                kelas_id=kelas.id,
+                bulan=bulan_key
+            ).first()
+            
+            nilai_data = {}
+            if kebiasaan:
+                # Hitung nilai jika ada data
+                nilai_fields = ['bangun_pagi', 'beribadah', 'berolahraga', 
+                               'sehat_dan_lemar', 'belajar', 'bermasyarakat', 'tidur_cepat']
+                
+                for field in nilai_fields:
+                    nilai = getattr(kebiasaan, field, None)
+                    nilai_data[field] = nilai
+                    
+                    # Cek jika ada nilai yang kurang dari 20
+                    if nilai is not None and nilai < 20:
+                        status_kebiasaan[field] = False
+            else:
+                # Jika tidak ada data, set semua nilai menjadi None
+                nilai_fields = ['bangun_pagi', 'beribadah', 'berolahraga', 
+                               'sehat_dan_lemar', 'belajar', 'bermasyarakat', 'tidur_cepat']
+                for field in nilai_fields:
+                    nilai_data[field] = None
+                    # Jika tidak ada data, anggap belum terbiasa
+                    status_kebiasaan[field] = False
+
+            bulan_data_item = {
+                'nama_bulan': bulan_label,
+                'bulan_key': bulan_key,
+                'nilai': nilai_data,
+                'catatan': getattr(kebiasaan, 'catatan', '') if kebiasaan else ''
+            }
+            bulan_list.append(bulan_data_item)
+
+        # Tentukan keterangan untuk setiap kebiasaan
+        keterangan_kebiasaan = {}
+        for field in status_kebiasaan:
+            if status_kebiasaan[field]:
+                keterangan_kebiasaan[field] = "Terbiasa"
+            else:
+                keterangan_kebiasaan[field] = "Belum Terbiasa"
+
+        data = {
+            'siswa': {
+                'id': siswa.id,
+                'nama_siswa': siswa.nama_siswa,
+                'jenis_kelamin': 'Laki-laki' if siswa.jenis_kelamin == 'L' else 'Perempuan'
+            },
+            'kelas': {
+                'id': kelas.id,
+                'nama_kelas': kelas.nama_kelas
+            },
+            'tahun_ajaran': {
+                'id': tahun_ajaran.id,
+                'tahun_ajaran': tahun_ajaran.tahun_ajaran,
+                'semester': tahun_ajaran.semester
+            },
+            'sekolah': {
+                'nama_sekolah': sekolah.nama_sekolah if sekolah else '',
+                'npsn': sekolah.npsn if sekolah else '',
+                'kecamatan': kecamatan.nama if kecamatan else '',
+                'kabupaten': kabupaten.nama if kabupaten else '',
+                'provinsi': provinsi.nama if provinsi else ''
+            },
+            'kepala_sekolah': {
+                'nama': kepala_sekolah.nama if kepala_sekolah else '',
+                'nip': kepala_sekolah.nip if kepala_sekolah else ''
+            } if kepala_sekolah else {'nama': '', 'nip': ''},
+            'wali_kelas': {
+                'nama': wali_kelas.nama if wali_kelas else '',
+                'nip': wali_kelas.nip if wali_kelas else ''
+            },
+            'bulan_list': bulan_list,
+            'status_kebiasaan': status_kebiasaan,
+            'keterangan_kebiasaan': keterangan_kebiasaan,
+            'semester': semester_label,
+            'tanggal_cetak': datetime.now().strftime('%d %B %Y %H:%M')
+        }
+
+        return render_template("laporan/laporan_penilaian_siswa.html", data=data)
+
+    except Exception as e:
+        print(f"ERROR LAPORAN PENILAIAN SISWA: {e}")
+        traceback.print_exc()
+        return render_template("error.html", 
+                            message=f"Error generating penilaian siswa report: {str(e)}"), 500
