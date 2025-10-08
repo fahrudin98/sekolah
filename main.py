@@ -106,7 +106,7 @@ def create_app(config_name="default"):
         
         return redirect(url_for("index"))
     
-    @app.route("/login", methods=["POST"])
+    @ app.route("/login", methods=["POST"])
     def login():
         username = request.form.get("username")
         password = request.form.get("password")
@@ -125,16 +125,17 @@ def create_app(config_name="default"):
                 # Verifikasi password dengan bcrypt
                 if check_password_hash(user.password, password):
                     login_user(user)
-                   # flash(f"Selamat datang, {user.nama_lengkap}!", "success")
                     
-                    if hasattr(user, 'pegawai') and user.pegawai:
-                        return redirect(url_for("tahun_ajaran.dashboard"))
+                    # ✅ MODIFIKASI INI: Redirect berdasarkan role
+                    if user.role == "superadmin":
+                        return redirect(url_for("superadmin.dashboard"))  # Arahkan ke dashboard superadmin
+                    elif hasattr(user, 'pegawai') and user.pegawai:
+                        return redirect(url_for("tahun_ajaran.dashboard"))  # User biasa dengan pegawai
                     else:
-                        return redirect(url_for("home"))
+                        return redirect(url_for("home"))  # User biasa tanpa pegawai
                 else:
                     flash("Username atau password salah!", "danger")
             except Exception as e:
-                # Handle kemungkinan hash corrupted
                 flash("Password hash bermasalah. Silakan reset password atau hubungi admin.", "danger")
                 app.logger.error(f"Login error for user {username}: {e}")
         else:
@@ -263,6 +264,13 @@ def create_app(config_name="default"):
         app.register_blueprint(laporan_bp)
     except ImportError as e:
         app.logger.warning(f"Laporan blueprint not found: {e}")
+
+    try:
+        from penilaiansiswa.routes.superadmin_routes import superadmin_bp
+        app.register_blueprint(superadmin_bp)
+        app.logger.info("Superadmin blueprint registered successfully")
+    except ImportError as e:
+        app.logger.warning(f"Superadmin blueprint not found: {e}")
     
     # =============================
     # JINJA2 FILTERS
