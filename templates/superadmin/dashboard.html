@@ -68,6 +68,23 @@
             font-size: 0.9rem;
             margin-left: 10px;
         }
+        .password-strength {
+            height: 5px;
+            margin-top: 5px;
+            border-radius: 2px;
+        }
+        .strength-weak {
+            background-color: #dc3545;
+            width: 25%;
+        }
+        .strength-medium {
+            background-color: #ffc107;
+            width: 50%;
+        }
+        .strength-strong {
+            background-color: #28a745;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -180,6 +197,7 @@
             </div>
         </div>
     </div>
+    
     <!-- Modal User Settings -->
     <div class="modal fade" id="userSettingsModal" tabindex="-1" aria-labelledby="userSettingsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
@@ -263,6 +281,80 @@
             </div>
         </div>
     </div>
+    
+    <!-- Modal Ganti Password -->
+    <div class="modal fade" id="changeUserPasswordModal" tabindex="-1" aria-labelledby="changeUserPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changeUserPasswordModalLabel">
+                        <i class="fas fa-key me-2"></i>Ganti Password
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="changePasswordUserId">
+                    <div class="mb-3">
+                        <label for="userUsername" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="userUsername" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="userNama" class="form-label">Nama Lengkap</label>
+                        <input type="text" class="form-control" id="userNama" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newUserPassword" class="form-label">Password Baru</label>
+                        <input type="password" class="form-control" id="newUserPassword" onkeyup="checkPasswordStrength()">
+                        <div class="password-strength" id="passwordStrength"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmUserPassword" class="form-label">Konfirmasi Password Baru</label>
+                        <input type="password" class="form-control" id="confirmUserPassword">
+                    </div>
+                    <div class="alert alert-danger d-none" id="changeUserPasswordMessage"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="submitUserPasswordChange()">Simpan Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Ganti NIP -->
+    <div class="modal fade" id="changeUserNIPModal" tabindex="-1" aria-labelledby="changeUserNIPModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changeUserNIPModalLabel">
+                        <i class="fas fa-id-card me-2"></i>Ganti NIP
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="changeNIPUserId">
+                    <div class="mb-3">
+                        <label for="nipUserUsername" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="nipUserUsername" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nipUserNama" class="form-label">Nama Lengkap</label>
+                        <input type="text" class="form-control" id="nipUserNama" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newUserNIP" class="form-label">NIP Baru</label>
+                        <input type="text" class="form-control" id="newUserNIP" placeholder="Masukkan NIP baru">
+                    </div>
+                    <div class="alert alert-danger d-none" id="changeUserNIPMessage"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="submitUserNIPChange()">Simpan NIP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script>
         let trendChart;
@@ -490,7 +582,6 @@
             }
         }
  
- 
         // Fungsi untuk load data users
         let allUsersData = [];
         let filteredUsersData = [];
@@ -569,8 +660,11 @@
                     <td>${user.sekolah}</td>
                     <td>${user.nip}</td>
                     <td>
-                        <button class="btn btn-warning btn-sm" onclick="openChangePasswordModal(${user.id}, '${user.username}', '${user.nama_lengkap}')">
-                            <i class="fas fa-key me-1"></i>Ganti Password
+                        <button class="btn btn-warning btn-sm me-1" onclick="openChangePasswordModal(${user.id}, '${user.username}', '${user.nama_lengkap}')">
+                            <i class="fas fa-key me-1"></i>Password
+                        </button>
+                        <button class="btn btn-info btn-sm" onclick="openChangeNIPModal(${user.id}, '${user.username}', '${user.nama_lengkap}', '${user.nip}')">
+                            <i class="fas fa-id-card me-1"></i>NIP
                         </button>
                     </td>
                 </tr>
@@ -634,68 +728,198 @@
             };
         }
 
-        // Fungsi untuk buka modal ganti password (tetap sama)
+        // Fungsi untuk buka modal ganti password
         function openChangePasswordModal(userId, username, namaLengkap) {
             document.getElementById('changePasswordUserId').value = userId;
             document.getElementById('userUsername').value = username;
             document.getElementById('userNama').value = namaLengkap;
             document.getElementById('newUserPassword').value = '';
             document.getElementById('confirmUserPassword').value = '';
+            document.getElementById('passwordStrength').className = 'password-strength';
             document.getElementById('changeUserPasswordMessage').textContent = '';
+            document.getElementById('changeUserPasswordMessage').classList.add('d-none');
             
             const modal = new bootstrap.Modal(document.getElementById('changeUserPasswordModal'));
             modal.show();
         }
 
-        // Fungsi untuk submit ganti password (tetap sama)
-        async function submitUserPasswordChange() {
-            const userId = document.getElementById('changePasswordUserId').value;
-            const newPassword = document.getElementById('newUserPassword').value;
-            const confirmPassword = document.getElementById('confirmUserPassword').value;
-            const messageDiv = document.getElementById('changeUserPasswordMessage');
+        // Fungsi untuk buka modal ganti NIP
+        function openChangeNIPModal(userId, username, namaLengkap, currentNIP) {
+            document.getElementById('changeNIPUserId').value = userId;
+            document.getElementById('nipUserUsername').value = username;
+            document.getElementById('nipUserNama').value = namaLengkap;
+            document.getElementById('newUserNIP').value = currentNIP || '';
+            document.getElementById('changeUserNIPMessage').textContent = '';
+            document.getElementById('changeUserNIPMessage').classList.add('d-none');
             
-            messageDiv.textContent = '';
+            const modal = new bootstrap.Modal(document.getElementById('changeUserNIPModal'));
+            modal.show();
+        }
+
+        // Fungsi untuk submit ganti password
+        // Tambahkan di bagian JavaScript dashboard superadmin Anda
+
+// Fungsi untuk submit ganti password - DENGAN LOADING STATE
+async function submitUserPasswordChange() {
+    const userId = document.getElementById('changePasswordUserId').value;
+    const newPassword = document.getElementById('newUserPassword').value;
+    const confirmPassword = document.getElementById('confirmUserPassword').value;
+    const messageDiv = document.getElementById('changeUserPasswordMessage');
+    const submitBtn = document.querySelector('#changeUserPasswordModal .btn-primary');
+    
+    const originalBtnText = submitBtn.innerHTML;
+    
+    messageDiv.textContent = '';
+    messageDiv.classList.remove('alert-danger', 'alert-success');
+    messageDiv.classList.add('d-none');
+    
+    // Validasi
+    if (!newPassword || !confirmPassword) {
+        showMessage(messageDiv, 'Password baru dan konfirmasi harus diisi!', 'danger');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showMessage(messageDiv, 'Password baru dan konfirmasi tidak cocok!', 'danger');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showMessage(messageDiv, 'Password minimal 6 karakter!', 'danger');
+        return;
+    }
+    
+    // Loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/superadmin/api/change_user_password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                new_password: newPassword
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage(messageDiv, result.message, 'success');
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserPasswordModal'));
+                modal.hide();
+            }, 1500);
+        } else {
+            showMessage(messageDiv, result.message, 'danger');
+        }
+    } catch (error) {
+        console.error('Error changing password:', error);
+        showMessage(messageDiv, 'Terjadi kesalahan saat mengubah password!', 'danger');
+    } finally {
+        // Reset button state
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Fungsi untuk submit ganti NIP - DENGAN LOADING STATE
+async function submitUserNIPChange() {
+    const userId = document.getElementById('changeNIPUserId').value;
+    const newNIP = document.getElementById('newUserNIP').value;
+    const messageDiv = document.getElementById('changeUserNIPMessage');
+    const submitBtn = document.querySelector('#changeUserNIPModal .btn-primary');
+    
+    const originalBtnText = submitBtn.innerHTML;
+    
+    messageDiv.textContent = '';
+    messageDiv.classList.remove('alert-danger', 'alert-success');
+    messageDiv.classList.add('d-none');
+    
+    // Validasi
+    if (!newNIP) {
+        showMessage(messageDiv, 'NIP baru harus diisi!', 'danger');
+        return;
+    }
+    
+    // Loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/superadmin/api/change_user_nip', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                new_nip: newNIP
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showMessage(messageDiv, result.message, 'success');
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserNIPModal'));
+                modal.hide();
+                // Refresh data users
+                loadUsersData();
+            }, 1500);
+        } else {
+            showMessage(messageDiv, result.message, 'danger');
+        }
+    } catch (error) {
+        console.error('Error changing NIP:', error);
+        showMessage(messageDiv, 'Terjadi kesalahan saat mengubah NIP!', 'danger');
+    } finally {
+        // Reset button state
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Helper function untuk menampilkan pesan
+function showMessage(element, message, type) {
+    element.textContent = message;
+    element.classList.remove('d-none', 'alert-danger', 'alert-success');
+    element.classList.add('alert', `alert-${type}`);
+}
+
+        // Fungsi untuk mengecek kekuatan password
+        function checkPasswordStrength() {
+            const password = document.getElementById('newUserPassword').value;
+            const strengthBar = document.getElementById('passwordStrength');
             
-            // Validasi
-            if (!newPassword || !confirmPassword) {
-                messageDiv.textContent = 'Password baru dan konfirmasi harus diisi!';
+            if (password.length === 0) {
+                strengthBar.className = 'password-strength';
                 return;
             }
             
-            if (newPassword !== confirmPassword) {
-                messageDiv.textContent = 'Password baru dan konfirmasi tidak cocok!';
-                return;
-            }
+            let strength = 0;
             
-            if (newPassword.length < 6) {
-                messageDiv.textContent = 'Password minimal 6 karakter!';
-                return;
-            }
+            // Cek panjang password
+            if (password.length >= 6) strength += 1;
+            if (password.length >= 8) strength += 1;
             
-            try {
-                const response = await fetch('/superadmin/api/change_user_password', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        new_password: newPassword
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert(result.message);
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserPasswordModal'));
-                    modal.hide();
-                } else {
-                    messageDiv.textContent = result.message;
-                }
-            } catch (error) {
-                console.error('Error changing password:', error);
-                messageDiv.textContent = 'Terjadi kesalahan saat mengubah password!';
+            // Cek karakter
+            if (/[a-z]/.test(password)) strength += 1;
+            if (/[A-Z]/.test(password)) strength += 1;
+            if (/[0-9]/.test(password)) strength += 1;
+            if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
+            
+            // Update tampilan
+            if (strength <= 2) {
+                strengthBar.className = 'password-strength strength-weak';
+            } else if (strength <= 4) {
+                strengthBar.className = 'password-strength strength-medium';
+            } else {
+                strengthBar.className = 'password-strength strength-strong';
             }
         }
 

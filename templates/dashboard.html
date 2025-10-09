@@ -407,37 +407,76 @@
                 </div>
 
                 <!-- Form Tambah Siswa (tampil setelah pilih kelas) -->
+                <!-- Form Tambah Siswa (tampil setelah pilih kelas) -->
                 <form id="formSiswa" class="mt-2 d-none">
                     <input type="hidden" name="kelas_id" id="kelasIdInput">
                     <h5 class="mb-2">Tambah Siswa</h5>
-                    <table class="table table-bordered align-middle" id="tambahSiswaTable">
-                        <thead>
-                            <tr>
-                                <th>Nama Siswa</th>
-                                <th>Jenis Kelamin</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="siswaFormBody">
-                            <tr>
-                                <td><input type="text" name="nama_siswa[]" class="form-control" required></td>
-                                <td>
-                                    <select name="jenis_kelamin[]" class="form-select" required>
-                                        <option value="">-- Pilih --</option>
-                                        <option value="L">Laki-laki</option>
-                                        <option value="P">Perempuan</option>
-                                    </select>
-                                </td>
-                                <td><input type="text" name="status[]" class="form-control" value="Aktif"></td>
-                                <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    
+                    <!-- Pencarian Siswa yang Sudah Ada -->
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">🔍 Cari Siswa yang Sudah Ada</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" id="searchSiswa" 
+                                        placeholder="Cari berdasarkan nama atau NISN...">
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" class="btn btn-outline-primary w-100" onclick="searchExistingSiswa()">
+                                        Cari Siswa
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="searchResults" class="mt-2" style="max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
 
-                    <div class="d-flex gap-2 mb-2">
-                        <button type="button" id="addRow" class="btn btn-success btn-sm">+ Tambah Baris</button>
-                        <button type="submit" class="btn btn-primary">Simpan Semua</button>
+                    <!-- Tambah Siswa Baru Manual -->
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">➕ Tambah Siswa Baru</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-bordered align-middle" id="tambahSiswaTable">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Siswa</th>
+                                        <th>NISN</th>
+                                        <th>Jenis Kelamin</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="siswaFormBody">
+                                    <tr>
+                                        <td><input type="text" name="nama_siswa[]" class="form-control" required></td>
+                                        <td><input type="text" name="nisn[]" class="form-control" placeholder="Opsional"></td>
+                                        <td>
+                                            <select name="jenis_kelamin[]" class="form-select" required>
+                                                <option value="">-- Pilih --</option>
+                                                <option value="L">Laki-laki</option>
+                                                <option value="P">Perempuan</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select name="status[]" class="form-select">
+                                                <option value="Aktif">Aktif</option>
+                                                <option value="Tidak Aktif">Tidak Aktif</option>
+                                                <option value="Pindah">Pindah</option>
+                                            </select>
+                                        </td>
+                                        <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="d-flex gap-2 mb-2">
+                                <button type="button" id="addRow" class="btn btn-success btn-sm">+ Tambah Baris</button>
+                                <button type="submit" class="btn btn-primary">Simpan Semua Siswa Baru</button>
+                            </div>
+                        </div>
                     </div>
                 </form>
 
@@ -447,13 +486,14 @@
                     <thead>
                         <tr>
                             <th>Nama</th>
+                            <th>NISN</th>
                             <th>Jenis Kelamin</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td colspan="4" class="text-center">Pilih kelas terlebih dahulu</td></tr>
+                        <tr><td colspan="5" class="text-center">Pilih kelas terlebih dahulu</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -472,6 +512,10 @@
           <div class="mb-2">
             <label class="form-label">Nama Siswa</label>
             <input type="text" class="form-control" name="nama_siswa" id="editNama" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">NISN</label> <!-- ✅ TAMBAHKAN FIELD NISN -->
+            <input type="text" class="form-control" name="nisn" id="editNisn" placeholder="Opsional">
           </div>
           <div class="mb-2">
             <label class="form-label">Jenis Kelamin</label>
@@ -932,7 +976,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const kelasId = this.value;
         if (!kelasId) {
             formSiswa.classList.add("d-none");
-            siswaTableBody.innerHTML = `<tr><td colspan="4" class="text-center">Pilih kelas terlebih dahulu</td></tr>`;
+            siswaTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Pilih kelas terlebih dahulu</td></tr>`;
             return;
         }
     
@@ -956,18 +1000,19 @@ document.addEventListener("DOMContentLoaded", function() {
     function renderSiswaTable(siswaList) {
         siswaTableBody.innerHTML = "";
         if (siswaList.length === 0) {
-            siswaTableBody.innerHTML = `<tr><td colspan="4" class="text-center">Belum ada siswa</td></tr>`;
+            siswaTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Belum ada siswa</td></tr>`; // ✅ Ubah colspan dari 4 ke 5
             return;
         }
         siswaList.forEach(s => addSiswaRow(s));
     }
-    
+
     // tambahkan baris siswa di tabel daftar
     function addSiswaRow(s) {
         const row = document.createElement("tr");
         row.setAttribute("data-id", s.id);
         row.innerHTML = `
             <td>${s.nama_siswa}</td>
+            <td>${s.nisn || '-'}</td> <!-- ✅ TAMBAHKAN KOLOM NISN -->
             <td>${s.jenis_kelamin === "L" ? "Laki-laki" : "Perempuan"}</td>
             <td>${s.status}</td>
             <td>
@@ -976,15 +1021,13 @@ document.addEventListener("DOMContentLoaded", function() {
             </td>
         `;
         siswaTableBody.appendChild(row);
-    
-    // EDIT  HANDLER   
 
-
+        // EDIT HANDLER   
         row.querySelector(".edit-btn").addEventListener("click", function() {
             openEditModal(s);
         });
 
-    // DELETE HANDLER   
+        // DELETE HANDLER   
         row.querySelector(".delete-btn").addEventListener("click", async function() {
             if (!confirm("Hapus siswa ini?")) return;
             const resp = await fetch(`/siswa/delete/${s.id}`, { method: "POST" });
@@ -1079,6 +1122,7 @@ document.addEventListener("DOMContentLoaded", function() {
         function openEditModal(siswa) {
             document.getElementById("editId").value = siswa.id;
             document.getElementById("editNama").value = siswa.nama_siswa;
+            document.getElementById("editNisn").value = siswa.nisn || '';
             document.getElementById("editJK").value = siswa.jenis_kelamin;
             document.getElementById("editStatus").value = siswa.status;
 
@@ -1108,8 +1152,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 const row = document.querySelector(`#siswaTable tr[data-id="${id}"]`);
                 if (row) {
                     row.children[0].textContent = result.siswa.nama_siswa;
-                    row.children[1].textContent = result.siswa.jenis_kelamin === "L" ? "Laki-laki" : "Perempuan";
-                    row.children[2].textContent = result.siswa.status;
+                    row.children[1].textContent = result.siswa.nisn || '-';
+                    row.children[2].textContent = result.siswa.jenis_kelamin === "L" ? "Laki-laki" : "Perempuan";
+                    row.children[3].textContent = result.siswa.status;
                 }
             } else {
                 alert(result.message);
@@ -1965,6 +2010,204 @@ document.getElementById('btnGenerateReport').addEventListener('click', function(
             console.log('Modal opened, loading data...');
             loadDataFilter();
         });
+    });
+
+    // Fungsi untuk mencari siswa yang sudah ada
+    async function searchExistingSiswa() {
+        const searchTerm = document.getElementById('searchSiswa').value.trim();
+        const kelasId = document.getElementById('kelasDropdown').value;
+        
+        if (!searchTerm) {
+            alert('Masukkan nama atau NISN siswa untuk dicari');
+            return;
+        }
+
+        if (!kelasId) {
+            alert('Pilih kelas terlebih dahulu');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/siswa/search?q=${encodeURIComponent(searchTerm)}&kelas_id=${kelasId}`);
+            const data = await response.json();
+            
+            displaySearchResults(data.siswa);
+        } catch (error) {
+            console.error('Error searching siswa:', error);
+            alert('Gagal mencari siswa');
+        }
+    }
+
+    // Fungsi untuk menampilkan hasil pencarian
+    function displaySearchResults(siswaList) {
+        const resultsContainer = document.getElementById('searchResults');
+        
+        if (!siswaList || siswaList.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="alert alert-warning">
+                    Tidak ditemukan siswa dengan kata kunci tersebut.
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="list-group">
+                <div class="list-group-item bg-light">
+                    <strong>Hasil Pencarian (${siswaList.length} siswa ditemukan):</strong>
+                </div>
+        `;
+
+        siswaList.forEach(siswa => {
+            const isInCurrentClass = siswa.kelas_id && siswa.kelas_id.toString() === document.getElementById('kelasDropdown').value;
+            
+            html += `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${siswa.nama_siswa}</strong>
+                        ${siswa.nisn ? `<br><small class="text-muted">NISN: ${siswa.nisn}</small>` : ''}
+                        ${siswa.kelas ? `<br><small class="text-muted">Kelas: ${siswa.kelas.nama_kelas}</small>` : ''}
+                        ${siswa.sekolah ? `<br><small class="text-muted">Sekolah: ${siswa.sekolah.nama_sekolah}</small>` : ''}
+                    </div>
+                    <div>
+                        ${isInCurrentClass ? 
+                            '<span class="badge bg-success me-2">Sudah di kelas ini</span>' : 
+                            `<button type="button" class="btn btn-primary btn-sm" onclick="addExistingSiswa(${siswa.id})">
+                                Tambah ke Kelas
+                            </button>`
+                        }
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        resultsContainer.innerHTML = html;
+    }
+
+    // Fungsi untuk menambahkan siswa yang sudah ada ke kelas
+    async function addExistingSiswa(siswaId) {
+        const kelasId = document.getElementById('kelasDropdown').value;
+        
+        if (!confirm('Tambahkan siswa ini ke kelas?')) return;
+
+        try {
+            const response = await fetch('/siswa/add_to_class', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    siswa_id: siswaId,
+                    kelas_id: kelasId
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Siswa berhasil ditambahkan ke kelas!');
+                // Refresh daftar siswa
+                await loadSiswa(kelasId);
+                // Clear search results
+                document.getElementById('searchResults').innerHTML = '';
+                document.getElementById('searchSiswa').value = '';
+            } else {
+                alert('Gagal menambahkan siswa: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error adding siswa:', error);
+            alert('Terjadi kesalahan saat menambahkan siswa');
+        }
+    }
+
+    // Update form submission untuk handle NISN
+    formSiswa?.addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const rows = document.querySelectorAll("#siswaFormBody tr");
+        const kelasId = kelasDropdown.value;
+        let successCount = 0;
+
+        for (let row of rows) {
+            const nama = row.querySelector('input[name="nama_siswa[]"]').value;
+            const nisn = row.querySelector('input[name="nisn[]"]').value;
+            const jk = row.querySelector('select[name="jenis_kelamin[]"]').value;
+            const status = row.querySelector('select[name="status[]"]').value;
+
+            if (!nama || !jk) continue;
+
+            const formData = new FormData();
+            formData.append("kelas_id", kelasId);
+            formData.append("nama_siswa", nama);
+            formData.append("nisn", nisn);
+            formData.append("jenis_kelamin", jk);
+            formData.append("status", status);
+
+            const resp = await fetch(`/siswa/create`, {
+                method: "POST",
+                body: formData
+            });
+            const result = await resp.json();
+            if (result.success) {
+                successCount++;
+            } else {
+                alert("Gagal tambah siswa: " + result.message);
+            }
+        }
+
+        if (successCount > 0) {
+            alert(successCount + " siswa berhasil ditambahkan.");
+            await loadSiswa(kelasId);
+            // Reset form
+            document.getElementById("siswaFormBody").innerHTML = `
+                <tr>
+                    <td><input type="text" name="nama_siswa[]" class="form-control" required></td>
+                    <td><input type="text" name="nisn[]" class="form-control" placeholder="Opsional"></td>
+                    <td>
+                        <select name="jenis_kelamin[]" class="form-select" required>
+                            <option value="">-- Pilih --</option>
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="status[]" class="form-select">
+                            <option value="Aktif">Aktif</option>
+                            <option value="Tidak Aktif">Tidak Aktif</option>
+                            <option value="Pindah">Pindah</option>
+                        </select>
+                    </td>
+                    <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
+                </tr>
+            `;
+        }
+    });
+
+    // Update addRow function untuk include NISN
+    document.getElementById("addRow")?.addEventListener("click", function() {
+        let tbody = document.getElementById("siswaFormBody");
+        let row = document.createElement("tr");
+        row.innerHTML = `
+            <td><input type="text" name="nama_siswa[]" class="form-control" required></td>
+            <td><input type="text" name="nisn[]" class="form-control" placeholder="Opsional"></td>
+            <td>
+                <select name="jenis_kelamin[]" class="form-select" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="L">Laki-laki</option>
+                    <option value="P">Perempuan</option>
+                </select>
+            </td>
+            <td>
+                <select name="status[]" class="form-select">
+                    <option value="Aktif">Aktif</option>
+                    <option value="Tidak Aktif">Tidak Aktif</option>
+                    <option value="Pindah">Pindah</option>
+                </select>
+            </td>
+            <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
+        `;
+        tbody.appendChild(row);
     });
     </script>
 

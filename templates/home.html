@@ -9,6 +9,7 @@
     body { font-family: Arial, sans-serif; background-color: #f8f9fa; }
     .container { margin-top: 50px; }
     .flash-message { margin-bottom: 15px; }
+    .nip-error { display: none; }
   </style>
 </head>
 <body>
@@ -30,10 +31,16 @@
     {% endif %}
   {% endwith %}
 
+  <!-- ✅ ALERT KHUSUS UNTUK ERROR NIP -->
+  <div id="nipErrorAlert" class="alert alert-danger d-none">
+    NIP sudah digunakan oleh pegawai lain. Silakan gunakan NIP yang berbeda.
+  </div>
+
   <div class="row justify-content-center">
     <div class="col-md-4">
       <form method="POST" 
-            action="{{ url_for('pegawai_bp.create_pegawai') if not pegawai else url_for('pegawai_bp.update_pegawai', pegawai_id=pegawai.id) }}">
+            action="{{ url_for('pegawai_bp.create_pegawai') if not pegawai else url_for('pegawai_bp.update_pegawai', pegawai_id=pegawai.id) }}"
+            id="pegawaiForm">
         
         <!-- Nama Lengkap -->
         <div class="mb-3">
@@ -46,7 +53,12 @@
         <div class="mb-3">
           <label for="nip" class="form-label">NIP</label>
           <input type="text" class="form-control" id="nip" name="nip"
-                 value="{{ pegawai.nip if pegawai else '' }}" required>
+                 value="{{ pegawai.nip if pegawai else '' }}" required
+                 oninput="checkNipAvailability()">
+          <!-- ✅ FEEDBACK REAL-TIME -->
+          <div class="form-text text-danger" id="nipFeedback" style="display: none;">
+            NIP sudah digunakan oleh pegawai lain
+          </div>
         </div>
 
         <h5 class="fw-bold mb-3">Tempat Tugas</h5>
@@ -109,7 +121,7 @@
           </select>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">
+        <button type="submit" class="btn btn-primary w-100" id="submitBtn">
           {% if pegawai %}Update & Lanjut ke Dashboard{% else %}Simpan & Lanjut ke Dashboard{% endif %}
         </button>
       </form>
@@ -118,6 +130,66 @@
 </div>
 
 <script>
+  // ✅ FUNGSI UNTUK CEK KETERSEDIAAN NIP - YANG SUDAH DIPERBAIKI
+// ✅ VERSI FINAL (tanpa debug log)
+function checkNipAvailability() {
+    const nipInput = document.getElementById('nip');
+    const nipFeedback = document.getElementById('nipFeedback');
+    const submitBtn = document.getElementById('submitBtn');
+    const nipErrorAlert = document.getElementById('nipErrorAlert');
+    
+    const nip = nipInput.value.trim();
+    
+    if (nip.length < 1) {
+        nipFeedback.style.display = 'none';
+        submitBtn.disabled = false;
+        nipErrorAlert.classList.add('d-none');
+        return;
+    }
+
+    // Cek NIP via AJAX
+    fetch(`/pegawai/check_nip?nip=${encodeURIComponent(nip)}`)
+      .then(res => res.json())
+      .then(data => {
+          if (data.exists) {
+              nipFeedback.textContent = `NIP sudah digunakan oleh ${data.nama_pegawai || 'pegawai lain'}`;
+              nipFeedback.style.display = 'block';
+              submitBtn.disabled = true;
+              nipErrorAlert.classList.remove('d-none');
+          } else {
+              nipFeedback.style.display = 'none';
+              submitBtn.disabled = false;
+              nipErrorAlert.classList.add('d-none');
+          }
+      })
+      .catch(error => {
+          console.error('Error checking NIP:', error);
+          nipFeedback.style.display = 'none';
+          submitBtn.disabled = false;
+      });
+}
+
+  // ✅ HANDLE FORM SUBMIT UNTUK VALIDASI FINAL - YANG SUDAH DIPERBAIKI
+  document.getElementById('pegawaiForm').addEventListener('submit', function(e) {
+    const nipInput = document.getElementById('nip');
+    const nip = nipInput.value.trim();
+    const nipFeedback = document.getElementById('nipFeedback');
+    
+    if (!nip) {
+      e.preventDefault();
+      alert('NIP harus diisi');
+      return;
+    }
+
+    // ✅ PERBAIKI LOGIKA INI: Cek apakah feedback error sedang ditampilkan
+    const isNipErrorShowing = nipFeedback.style.display === 'block';
+    if (isNipErrorShowing) {
+      e.preventDefault();
+      alert('NIP sudah digunakan. Silakan gunakan NIP yang berbeda.');
+      return;
+    }
+  });
+
   // Provinsi → Kabupaten
   document.getElementById('provinsi_id').addEventListener('change', function() {
     fetch(`/pegawai/get_kabupaten/${this.value}`)
@@ -152,6 +224,14 @@
         data.forEach(s => html += `<option value="${s.id}">${s.nama_sekolah}</option>`);
         document.getElementById('sekolah_id').innerHTML = html;
       });
+  });
+
+  // ✅ CEK NIP SAAT PAGE LOAD (jika ada nilai sebelumnya)
+  document.addEventListener('DOMContentLoaded', function() {
+    const nipInput = document.getElementById('nip');
+    if (nipInput.value) {
+      checkNipAvailability();
+    }
   });
 </script>
 

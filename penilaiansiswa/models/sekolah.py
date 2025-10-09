@@ -72,16 +72,15 @@ class Kelas(db.Model, LogMixin):
 class Siswa(db.Model, LogMixin):
     __tablename__ = "siswa"
     id = db.Column(db.Integer, primary_key=True)
-    kelas_id = db.Column(db.Integer, db.ForeignKey("kelas.id"))
-    nama_siswa = db.Column(db.String(100))
-    jenis_kelamin = db.Column(Enum("L", "P", name="jenis_kelamin_enum"), nullable=False)
-    status = db.Column(db.String(50))
-
-    kelas = db.relationship("Kelas")
-    kebiasaans = db.relationship(
-        "Kebiasaan",
-        backref="siswa",
-        cascade="all, delete-orphan"
+    nama_siswa = db.Column(db.String(100), nullable=False)
+    nisn = db.Column(db.String(20), unique=False, nullable=False)  # ✅ TAMBAH INI
+    jenis_kelamin = db.Column(db.Enum('L', 'P'), nullable=False)
+    status = db.Column(db.String(20), default='Aktif')
+    kelas_id = db.Column(db.Integer, db.ForeignKey('kelas.id'))
+    
+    kelas = db.relationship('Kelas', backref='siswa')
+    __table_args__ = (
+        db.UniqueConstraint('nisn', 'kelas_id', name='uq_nisn_per_kelas'),
     )
 class Kebiasaan(db.Model, LogMixin):
     __tablename__ = "kebiasaan"
@@ -101,7 +100,7 @@ class Kebiasaan(db.Model, LogMixin):
 
     catatan = db.Column(db.Text)
 
-    siswa_id = db.Column(db.Integer, db.ForeignKey("siswa.id"))
+    siswa = db.relationship("Siswa", backref="kebiasaan_list")
     kelas = db.relationship("Kelas")
 
 

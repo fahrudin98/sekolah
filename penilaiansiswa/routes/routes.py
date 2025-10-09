@@ -4,7 +4,6 @@ from penilaiansiswa.models.sekolah import Sekolah, Kabupaten, Kecamatan, Provins
 from flask_login import current_user, login_required
 from penilaiansiswa import db
 
-
 pegawai_bp = Blueprint("pegawai_bp", __name__, url_prefix="/pegawai")
 
 # ===== AJAX cascading dropdown =====
@@ -26,6 +25,30 @@ def get_sekolah(kecamatan_id):
     sekolah_list = Sekolah.query.filter_by(kecamatan_id=kecamatan_id).all()
     return jsonify([{"id": s.id, "nama_sekolah": s.nama_sekolah} for s in sekolah_list])
 
+# ===== CEK NIP UNIK =====
+@pegawai_bp.route("/check_nip", methods=["GET"])
+@login_required
+def check_nip():
+    nip = request.args.get("nip", "").strip()
+    
+    if not nip:
+        return jsonify({"exists": False})
+    
+    # Cari pegawai dengan NIP ini
+    existing_pegawai = Pegawai.query.filter_by(nip=nip).first()
+    
+    if not existing_pegawai:
+        return jsonify({"exists": False})
+    
+    # Cek apakah NIP ini milik user yang sedang login
+    if existing_pegawai.user_id == current_user.id:
+        return jsonify({"exists": False})  # NIP sendiri - BOLEH
+    else:
+        # Dapatkan nama user dari existing pegawai
+        existing_user = User.query.get(existing_pegawai.user_id)
+        nama_pegawai = existing_user.nama_lengkap if existing_user else "Unknown"
+        return jsonify({"exists": True, "nama_pegawai": nama_pegawai})
+
 # ===== CREATE Pegawai =====
 @pegawai_bp.route("/create", methods=["GET", "POST"])
 @login_required
@@ -37,26 +60,36 @@ def create_pegawai():
         return redirect(url_for("pegawai_bp.update_pegawai", pegawai_id=user.pegawai.id))
 
     if request.method == "POST":
-        nip = request.form.get("nip")
+        nip = request.form.get("nip", "").strip()
         sekolah_id = request.form.get("sekolah_id")
-        nama_lengkap = request.form.get("nama_lengkap")
+        nama_lengkap = request.form.get("nama_lengkap", "").strip()
 
         if not nip or not sekolah_id:
             flash("NIP dan Sekolah wajib diisi!", "danger")
+            return redirect(url_for("pegawai_bp.create_pegawai"))
+
+        # ✅ VALIDASI NIP UNIK - CREATE
+        existing_pegawai = Pegawai.query.filter_by(nip=nip).first()
+        if existing_pegawai:
+            flash(f"NIP {nip} sudah digunakan oleh {existing_pegawai.user.nama_lengkap}. Silakan gunakan NIP yang berbeda.", "danger")
             return redirect(url_for("pegawai_bp.create_pegawai"))
 
         # update nama lengkap user juga
         if nama_lengkap:
             user.nama_lengkap = nama_lengkap
 
-
         # buat pegawai baru
-        new_pegawai = Pegawai(user_id=user.id, nip=nip, sekolah_id=sekolah_id)
-        db.session.add(new_pegawai)
-        db.session.commit()
-        
-        flash("Profile pegawai berhasil dibuat!", "success")
-        return redirect(url_for("tahun_ajaran.dashboard"))
+        try:
+            new_pegawai = Pegawai(user_id=user.id, nip=nip, sekolah_id=sekolah_id)
+            db.session.add(new_pegawai)
+            db.session.commit()
+            
+            flash("Profile pegawai berhasil dibuat!", "success")
+            return redirect(url_for("tahun_ajaran.dashboard"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Terjadi kesalahan saat menyimpan: {str(e)}", "danger")
+            return redirect(url_for("pegawai_bp.create_pegawai"))
 
     provinsi_list = Provinsi.query.all()
     return render_template(
@@ -69,8 +102,6 @@ def create_pegawai():
         sekolah_list=[]
     )
 
-
-# ===== UPDATE Pegawai =====
 # ===== UPDATE Pegawai =====
 @pegawai_bp.route("/update/<int:pegawai_id>", methods=["GET", "POST"])
 @login_required
@@ -81,23 +112,39 @@ def update_pegawai(pegawai_id):
         return redirect(url_for("tahun_ajaran.dashboard"))
 
     if request.method == "POST":
-        nip = request.form.get("nip")
+        nip = request.form.get("nip", "").strip()
         sekolah_id = request.form.get("sekolah_id")
-        nama_lengkap = request.form.get("nama_lengkap")
+        nama_lengkap = request.form.get("nama_lengkap", "").strip()
 
         if not nip or not sekolah_id:
             flash("NIP dan Sekolah wajib diisi!", "danger")
             return redirect(url_for("pegawai_bp.update_pegawai", pegawai_id=pegawai.id))
 
-        # Update data Pegawai dan User
-        pegawai.nip = nip
-        pegawai.sekolah_id = sekolah_id
-        if nama_lengkap:
-            pegawai.user.nama_lengkap = nama_lengkap
+        # ✅ VALIDASI NIP UNIK - UPDATE (kecuali untuk diri sendiri)
+        if nip != pegawai.nip:  # Hanya validasi jika NIP berubah
+            existing_pegawai = Pegawai.query.filter(
+                Pegawai.nip == nip,
+                Pegawai.id != pegawai_id
+            ).first()
+            
+            if existing_pegawai:
+                flash(f"NIP {nip} sudah digunakan oleh {existing_pegawai.user.nama_lengkap}. Silakan gunakan NIP yang berbeda.", "danger")
+                return redirect(url_for("pegawai_bp.update_pegawai", pegawai_id=pegawai.id))
 
-        db.session.commit()
-        flash("Profile pegawai berhasil diperbarui!", "success")
-        return redirect(url_for("tahun_ajaran.dashboard"))
+        # Update data Pegawai dan User
+        try:
+            pegawai.nip = nip
+            pegawai.sekolah_id = sekolah_id
+            if nama_lengkap:
+                pegawai.user.nama_lengkap = nama_lengkap
+
+            db.session.commit()
+            flash("Profile pegawai berhasil diperbarui!", "success")
+            return redirect(url_for("tahun_ajaran.dashboard"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Terjadi kesalahan saat memperbarui: {str(e)}", "danger")
+            return redirect(url_for("pegawai_bp.update_pegawai", pegawai_id=pegawai.id))
 
     # Pre-fill cascading dropdown
     selected_sekolah = Sekolah.query.get(pegawai.sekolah_id)
@@ -123,3 +170,4 @@ def update_pegawai(pegawai_id):
         selected_kecamatan=selected_kecamatan,
         selected_sekolah=selected_sekolah
     )
+

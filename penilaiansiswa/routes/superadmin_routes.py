@@ -6,6 +6,7 @@ from penilaiansiswa.models.sekolah import Sekolah
 from penilaiansiswa.models import Kebiasaan, Kelas, Siswa, TahunAjaran
 from sqlalchemy import func, extract
 from datetime import datetime
+from passlib.hash import bcrypt
 
 superadmin_bp = Blueprint("superadmin", __name__, url_prefix="/superadmin")
 
@@ -223,57 +224,120 @@ def api_statistik():
 @superadmin_bp.route("/api/users")
 @login_required
 def api_users():
-    if not current_user.is_superadmin:
-        return jsonify({"error": "Unauthorized"}), 403
+    # Pastikan hanya superadmin yang bisa akses
+    if current_user.role != 'superadmin':
+        return jsonify({'error': 'Unauthorized'}), 403
     
-    # Ambil semua user dengan data pegawai dan sekolah
-    users = db.session.query(
-        User, Pegawai, Sekolah
-    ).outerjoin(Pegawai, Pegawai.user_id == User.id
-    ).outerjoin(Sekolah, Sekolah.id == Pegawai.sekolah_id
-    ).all()
-    
-    users_data = []
-    for user, pegawai, sekolah in users:
-        users_data.append({
-            'id': user.id,
-            'username': user.username,
-            'nama_lengkap': user.nama_lengkap,
-            'email': user.email,
-            'role': user.role,
-            'sekolah': sekolah.nama_sekolah if sekolah else '-',
-            'nip': pegawai.nip if pegawai else '-',
-            'pegawai_id': pegawai.id if pegawai else None
-        })
-    
-    return jsonify({'users': users_data})
+    try:
+        # Ambil semua user dengan data pegawai dan sekolah
+        users = User.query.all()
+        
+        users_data = []
+        for user in users:
+            # Cek apakah user punya data pegawai
+            pegawai = Pegawai.query.filter_by(user_id=user.id).first()
+            sekolah_nama = pegawai.sekolah.nama_sekolah if pegawai and pegawai.sekolah else ""
+            
+            users_data.append({
+                'id': user.id,
+                'username': user.username,
+                'nama_lengkap': user.nama_lengkap or '',
+                'email': user.email or '',
+                'role': user.role,
+                'sekolah': sekolah_nama,
+                'nip': pegawai.nip if pegawai else ''
+            })
+        
+        return jsonify({'users': users_data})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
+# ===== API CHANGE USER PASSWORD =====
 @superadmin_bp.route("/api/change_user_password", methods=["POST"])
 @login_required
 def api_change_user_password():
-    if not current_user.is_superadmin:
-        return jsonify({"error": "Unauthorized"}), 403
-    
-    data = request.get_json()
-    user_id = data.get('user_id')
-    new_password = data.get('new_password')
-    
-    if not user_id or not new_password:
-        return jsonify({"success": False, "message": "Data tidak lengkap"})
+    # Pastikan hanya superadmin yang bisa akses
+    if current_user.role != 'superadmin':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
     try:
-        from werkzeug.security import generate_password_hash
+        data = request.get_json()
+        user_id = data.get('user_id')
+        new_password = data.get('new_password')
         
+        if not user_id or not new_password:
+            return jsonify({'success': False, 'message': 'User ID dan password baru harus diisi'})
+        
+        if len(new_password) < 6:
+            return jsonify({'success': False, 'message': 'Password minimal 6 karakter'})
+        
+        # Cari user berdasarkan ID
         user = User.query.get(user_id)
         if not user:
-            return jsonify({"success": False, "message": "User tidak ditemukan"})
+            return jsonify({'success': False, 'message': 'User tidak ditemukan'})
         
-        # Update password
-        user.password = generate_password_hash(new_password)
+        # ✅ GUNAKAN BCRYPT YANG SAMA DENGAN LUPA PASSWORD
+        user.password = bcrypt.hash(new_password)
+        
         db.session.commit()
         
-        return jsonify({"success": True, "message": f"Password untuk {user.username} berhasil diubah"})
+        return jsonify({
+            'success': True, 
+            'message': f'Password untuk user {user.username} berhasil diubah'
+        })
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "message": f"Error: {str(e)}"})
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+# ===== API CHANGE USER NIP =====
+@superadmin_bp.route("/api/change_user_nip", methods=["POST"])
+@login_required
+def api_change_user_nip():
+    # Pastikan hanya superadmin yang bisa akses
+    if current_user.role != 'superadmin':
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        new_nip = data.get('new_nip')
+        
+        if not user_id or not new_nip:
+            return jsonify({'success': False, 'message': 'User ID dan NIP baru harus diisi'})
+        
+        # Cari user dan data pegawainya
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'success': False, 'message': 'User tidak ditemukan'})
+        
+        pegawai = Pegawai.query.filter_by(user_id=user_id).first()
+        if not pegawai:
+            return jsonify({'success': False, 'message': 'Data pegawai tidak ditemukan'})
+        
+        # Validasi NIP unik (kecuali untuk user yang sama)
+        existing_pegawai = Pegawai.query.filter(
+            Pegawai.nip == new_nip,
+            Pegawai.user_id != user_id
+        ).first()
+        
+        if existing_pegawai:
+            existing_user = User.query.get(existing_pegawai.user_id)
+            nama_pegawai = existing_user.nama_lengkap if existing_user else "Unknown"
+            return jsonify({
+                'success': False, 
+                'message': f'NIP {new_nip} sudah digunakan oleh {nama_pegawai}. Silakan gunakan NIP yang berbeda.'
+            })
+        
+        # Update NIP
+        pegawai.nip = new_nip
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'NIP untuk user {user.username} berhasil diubah menjadi {new_nip}'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
