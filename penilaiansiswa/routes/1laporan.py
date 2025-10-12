@@ -94,10 +94,9 @@ def laporan_rchk(kelas_id, bulan):
             nilai_kebiasaan = []
             for field in kebiasaan_fields:
                 nilai = getattr(kebiasaan, field, 0) if kebiasaan else 0
-                nilai = nilai or 0
                 nilai_kebiasaan.append(nilai)
 
-                if nilai >= 20:
+                if nilai is not None and nilai >= 20:
                     rekap_umum[field]['terbiasa'] += 1
                     rekap_jk[siswa.jenis_kelamin][field]['terbiasa'] += 1
                 else:
@@ -105,7 +104,7 @@ def laporan_rchk(kelas_id, bulan):
                     rekap_jk[siswa.jenis_kelamin][field]['belum'] += 1
 
             # LOGIKA TERBIASA: semua 7 nilai >= 20
-            if all(nilai >= 20 for nilai in nilai_kebiasaan):
+            if all(nilai is not None and nilai >= 20 for nilai in nilai_kebiasaan):
                 if siswa.jenis_kelamin == 'P':
                     terbiasa_perempuan += 1
                 elif siswa.jenis_kelamin == 'L':
@@ -596,49 +595,79 @@ def laporan_tahunan(kelas_id, tahun_ajaran_id):
 @login_required
 def api_tahun_ajaran():
     try:
-        print("DEBUG: Mengakses API tahun ajaran")
+        print("DEBUG: Mengambil tahun ajaran...")
         
-        # Dapatkan sekolah dari user yang login
+        # FILTER BERDASARKAN SEKOLAH USER
         if not hasattr(current_user, 'pegawai') or not current_user.pegawai:
+            print("DEBUG: User tidak terkait pegawai")
             return jsonify({"error": "User tidak terkait pegawai"}), 403
-            
-        sekolah = getattr(current_user.pegawai, "sekolah", None)
-        if not sekolah:
+        
+        sekolah_id = current_user.pegawai.sekolah_id
+        if not sekolah_id:
+            print("DEBUG: Pegawai tidak terkait sekolah")
             return jsonify({"error": "Pegawai tidak terkait sekolah"}), 403
+
+        print(f"DEBUG: Sekolah ID: {sekolah_id}")
         
-        print(f"DEBUG: Sekolah ID: {sekolah.id}")
-        
-        # Ambil semua tahun ajaran untuk sekolah ini
-        tahun_ajaran_list = TahunAjaran.query.filter_by(sekolah_id=sekolah.id).order_by(TahunAjaran.id.desc()).all()
+        tahun_ajaran_list = TahunAjaran.query.filter_by(
+            sekolah_id=sekolah_id
+        ).order_by(TahunAjaran.tahun_ajaran.desc()).all()
         
         print(f"DEBUG: Ditemukan {len(tahun_ajaran_list)} tahun ajaran")
         
         data = {
+            "success": True,  # TAMBAH INI
             "tahun_ajaran": [
                 {
                     "id": ta.id,
                     "tahun_ajaran": ta.tahun_ajaran,
                     "semester": ta.semester,
-                    # Gunakan field yang ada di model - sesuaikan dengan model Anda
                     "status": "Aktif" if getattr(ta, 'aktif', False) else "Tidak Aktif"
                 }
                 for ta in tahun_ajaran_list
             ]
         }
         
-        print("DEBUG: Data tahun ajaran berhasil dibuat")
+        print(f"DEBUG: Response data: {data}")
         return jsonify(data)
     
     except Exception as e:
         print(f"ERROR API TAHUN AJARAN: {e}")
-        traceback.print_exc()
-        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @laporan_bp.route("/api/kelas-by-tahun-ajaran/<int:tahun_ajaran_id>")
 @login_required
 def api_kelas_by_tahun_ajaran(tahun_ajaran_id):
     try:
-        kelas_list = Kelas.query.filter_by(tahun_ajaran_id=tahun_ajaran_id).order_by(Kelas.nama_kelas).all()
+        print(f"DEBUG API KELAS: Mengambil kelas untuk tahun_ajaran_id: {tahun_ajaran_id}")
+        
+        # AUTHORIZATION CHECK
+        if not hasattr(current_user, 'pegawai') or not current_user.pegawai:
+            print("DEBUG API KELAS: User tidak terkait pegawai")
+            return jsonify({"error": "User tidak terkait pegawai"}), 403
+        
+        user_pegawai_id = current_user.pegawai.id
+        print(f"DEBUG API KELAS: User pegawai ID: {user_pegawai_id}")
+        
+        # Cek dulu apakah tahun ajaran ada
+        tahun_ajaran = TahunAjaran.query.get(tahun_ajaran_id)
+        if not tahun_ajaran:
+            print(f"DEBUG API KELAS: Tahun ajaran {tahun_ajaran_id} tidak ditemukan")
+            return jsonify({"error": "Tahun ajaran tidak ditemukan"}), 404
+        
+        print(f"DEBUG API KELAS: Tahun ajaran ditemukan: {tahun_ajaran.tahun_ajaran}")
+        
+        # Ambil kelas untuk tahun ajaran, hanya yang user adalah wali kelas
+        kelas_list = Kelas.query.filter_by(
+            tahun_ajaran_id=tahun_ajaran_id,
+            wali_kelas_id=user_pegawai_id
+        ).order_by(Kelas.nama_kelas).all()
+        
+        print(f"DEBUG API KELAS: Ditemukan {len(kelas_list)} kelas untuk user {user_pegawai_id}")
+        
+        # DEBUG: Tampilkan semua kelas yang ditemukan
+        for kelas in kelas_list:
+            print(f"DEBUG API KELAS: Kelas - ID: {kelas.id}, Nama: {kelas.nama_kelas}, Wali: {kelas.wali_kelas_id}")
         
         data = {
             "kelas": [
@@ -651,9 +680,13 @@ def api_kelas_by_tahun_ajaran(tahun_ajaran_id):
             ]
         }
         
+        print(f"DEBUG API KELAS: Response data: {data}")
         return jsonify(data)
     
     except Exception as e:
+        print(f"ERROR API KELAS: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @laporan_bp.route("/api/siswa-by-kelas/<int:kelas_id>")
@@ -681,7 +714,6 @@ def api_siswa_by_kelas(kelas_id):
             data_siswa.append({
                 "id": siswa.id,
                 "nama_siswa": siswa.nama_siswa,
-                "nisn": siswa.nisn,
                 "jenis_kelamin": siswa.jenis_kelamin,
                 "kelas_id": siswa.kelas_id,
                 "status": siswa.status
@@ -716,11 +748,6 @@ def laporan_penilaian_siswa(siswa_id):
         
         print(f"DEBUG: Membuat laporan untuk siswa_id: {siswa_id}, semester: {semester_param}")
         
-        # Validasi parameter semester
-        if semester_param not in ['ganjil', 'genap']:
-            return render_template("error.html", 
-                                message="Parameter semester harus diisi dengan 'ganjil' atau 'genap'"), 400
-        
         # Cari siswa
         siswa = Siswa.query.get(siswa_id)
         if not siswa:
@@ -752,28 +779,36 @@ def laporan_penilaian_siswa(siswa_id):
             tahun_akhir = tahun_awal + 1
 
         # Tentukan bulan yang akan ditampilkan berdasarkan semester
+        # Tahun Ajaran: Juli tahun_awal - Juni tahun_akhir
         bulan_data = []
-        bulan_names = [
-            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ]
         
         if semester_param == 'ganjil':
             # Semester Ganjil: Juli - Desember tahun_awal
             for bulan_num in range(7, 13):
                 tahun = tahun_awal
                 bulan_key = f"{tahun}-{bulan_num:02d}"
-                bulan_label = f"{bulan_names[bulan_num - 1]} {tahun}"
-                bulan_data.append((bulan_num, tahun, bulan_key, bulan_label))
-            semester_label = "Ganjil"
-        else:  # semester_param == 'genap'
+                bulan_data.append((bulan_num, tahun, bulan_key))
+            semester_label = "Semester Ganjil"
+        elif semester_param == 'genap':
             # Semester Genap: Januari - Juni tahun_akhir  
             for bulan_num in range(1, 7):
                 tahun = tahun_akhir
                 bulan_key = f"{tahun}-{bulan_num:02d}"
-                bulan_label = f"{bulan_names[bulan_num - 1]} {tahun}"
-                bulan_data.append((bulan_num, tahun, bulan_key, bulan_label))
-            semester_label = "Genap"
+                bulan_data.append((bulan_num, tahun, bulan_key))
+            semester_label = "Semester Genap"
+        else:
+            # Satu Tahun Penuh: Juli tahun_awal - Juni tahun_akhir
+            # Juli-Desember tahun_awal
+            for bulan_num in range(7, 13):
+                tahun = tahun_awal
+                bulan_key = f"{tahun}-{bulan_num:02d}"
+                bulan_data.append((bulan_num, tahun, bulan_key))
+            # Januari-Juni tahun_akhir
+            for bulan_num in range(1, 7):
+                tahun = tahun_akhir
+                bulan_key = f"{tahun}-{bulan_num:02d}"
+                bulan_data.append((bulan_num, tahun, bulan_key))
+            semester_label = "Tahun Penuh"
 
         # Data sekolah dan tahun ajaran
         sekolah = Sekolah.query.get(kelas.sekolah_id)
@@ -787,18 +822,12 @@ def laporan_penilaian_siswa(siswa_id):
 
         # Daftar bulan yang akan ditampilkan
         bulan_list = []
+        bulan_names = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ]
         
-        # Inisialisasi variabel untuk perhitungan rata-rata
-        total_nilai = {
-            'bangun_pagi': 0, 'beribadah': 0, 'berolahraga': 0,
-            'sehat_dan_lemar': 0, 'belajar': 0, 'bermasyarakat': 0, 'tidur_cepat': 0
-        }
-        jumlah_bulan_terisi = {
-            'bangun_pagi': 0, 'beribadah': 0, 'berolahraga': 0,
-            'sehat_dan_lemar': 0, 'belajar': 0, 'bermasyarakat': 0, 'tidur_cepat': 0
-        }
-        
-        # Track status kebiasaan (apakah rata-rata >= 20)
+        # Track status kebiasaan (apakah ada yang kurang dari 20)
         status_kebiasaan = {
             'bangun_pagi': True,
             'beribadah': True, 
@@ -809,7 +838,9 @@ def laporan_penilaian_siswa(siswa_id):
             'tidur_cepat': True
         }
 
-        for bulan_num, tahun, bulan_key, bulan_label in bulan_data:
+        for bulan_num, tahun, bulan_key in bulan_data:
+            bulan_label = f"{bulan_names[bulan_num - 1]} {tahun}"
+            
             # Cari data kebiasaan untuk bulan ini
             kebiasaan = Kebiasaan.query.filter_by(
                 siswa_id=siswa.id,
@@ -824,19 +855,20 @@ def laporan_penilaian_siswa(siswa_id):
                                'sehat_dan_lemar', 'belajar', 'bermasyarakat', 'tidur_cepat']
                 
                 for field in nilai_fields:
-                    nilai = getattr(kebiasaan, field, 0) or 0
+                    nilai = getattr(kebiasaan, field, None)
                     nilai_data[field] = nilai
                     
-                    # Akumulasi untuk rata-rata
-                    if nilai is not None and nilai > 0:
-                        total_nilai[field] += nilai
-                        jumlah_bulan_terisi[field] += 1
+                    # Cek jika ada nilai yang kurang dari 20
+                    if nilai is not None and nilai < 20:
+                        status_kebiasaan[field] = False
             else:
-                # Jika tidak ada data, set semua nilai menjadi 0
+                # Jika tidak ada data, set semua nilai menjadi None
                 nilai_fields = ['bangun_pagi', 'beribadah', 'berolahraga', 
                                'sehat_dan_lemar', 'belajar', 'bermasyarakat', 'tidur_cepat']
                 for field in nilai_fields:
-                    nilai_data[field] = 0
+                    nilai_data[field] = None
+                    # Jika tidak ada data, anggap belum terbiasa
+                    status_kebiasaan[field] = False
 
             bulan_data_item = {
                 'nama_bulan': bulan_label,
@@ -845,17 +877,6 @@ def laporan_penilaian_siswa(siswa_id):
                 'catatan': getattr(kebiasaan, 'catatan', '') if kebiasaan else ''
             }
             bulan_list.append(bulan_data_item)
-
-        # Hitung rata-rata per kebiasaan
-        rata_rata = {}
-        for field in total_nilai:
-            if jumlah_bulan_terisi[field] > 0:
-                rata_rata[field] = total_nilai[field] / jumlah_bulan_terisi[field]
-                # Cek status kebiasaan berdasarkan rata-rata
-                status_kebiasaan[field] = rata_rata[field] >= 20
-            else:
-                rata_rata[field] = 0
-                status_kebiasaan[field] = False
 
         # Tentukan keterangan untuk setiap kebiasaan
         keterangan_kebiasaan = {}
@@ -869,7 +890,6 @@ def laporan_penilaian_siswa(siswa_id):
             'siswa': {
                 'id': siswa.id,
                 'nama_siswa': siswa.nama_siswa,
-                'nisn': getattr(siswa, 'nisn', None),
                 'jenis_kelamin': 'Laki-laki' if siswa.jenis_kelamin == 'L' else 'Perempuan'
             },
             'kelas': {
@@ -897,7 +917,6 @@ def laporan_penilaian_siswa(siswa_id):
                 'nip': wali_kelas.nip if wali_kelas else ''
             },
             'bulan_list': bulan_list,
-            'rata_rata': rata_rata,
             'status_kebiasaan': status_kebiasaan,
             'keterangan_kebiasaan': keterangan_kebiasaan,
             'semester': semester_label,
@@ -911,3 +930,4 @@ def laporan_penilaian_siswa(siswa_id):
         traceback.print_exc()
         return render_template("error.html", 
                             message=f"Error generating penilaian siswa report: {str(e)}"), 500
+    

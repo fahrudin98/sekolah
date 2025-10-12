@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Laporan Penilaian Kebiasaan Siswa - {{ data.siswa.nama_siswa }} - {{ data.tahun_ajaran.tahun_ajaran }}</title>
+    <title>Laporan Perkembangan Siswa - {{ data.siswa.nama_siswa }} - {{ data.tahun_ajaran.tahun_ajaran }} - {{ data.semester }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -88,6 +88,11 @@
             color: #666;
         }
         
+        .rata-rata-row {
+            background-color: #e8f4fd;
+            font-weight: bold;
+        }
+        
         .terbiasa { color: green; font-weight: bold; }
         .belum-terbiasa { color: red; font-weight: bold; }
         
@@ -99,8 +104,8 @@
 </head>
 <body>
     <div class="header">
-        <h1>LAPORAN PENILAIAN KEBIASAAN SISWA PER SISWA</h1>
-        
+        <h1>LAPORAN PERKEMBANGAN SISWA PER SISWA</h1>
+        <h2>Semester {{ data.semester }} - Tahun Ajaran {{ data.tahun_ajaran.tahun_ajaran }}</h2>
     </div>
 
     <div class="info-container">
@@ -127,6 +132,7 @@
                         {% if data.kepala_sekolah.nip %}(NIP: {{ data.kepala_sekolah.nip }}){% endif %}
                     </div>
                 </div>
+
                 <div class="info-row">
                     <div class="info-label">Kelas</div>
                     <div class="info-colon">:</div>
@@ -164,16 +170,20 @@
                     <div class="info-value">{{ data.siswa.nama_siswa }}</div>
                 </div>
                 <div class="info-row">
+                    <div class="info-label">NISN</div>
+                    <div class="info-colon">:</div>
+                    <div class="info-value">{{ data.siswa.nisn or '-' }}</div>
+                </div>
+                <div class="info-row">
                     <div class="info-label">Jenis Kelamin</div>
                     <div class="info-colon">:</div>
                     <div class="info-value">{{ data.siswa.jenis_kelamin }}</div>
                 </div>
-
             </div>
         </div>
     </div>
 
-    <!-- Tabel Nilai Per Bulan -->
+    <!-- Tabel Nilai Per Bulan dalam Semester -->
     <table>
         <thead>
             <tr>
@@ -207,14 +217,27 @@
                 <td class="text-left">{{ bulan.catatan or '' }}</td>
             </tr>
             {% endfor %}
+            
+            <!-- Baris Rata-rata -->
+            <tr class="rata-rata-row">
+                <td colspan="2" class="text-center bold">RATA-RATA SEMESTER</td>
+                <td>{{ "%.1f"|format(data.rata_rata.bangun_pagi) if data.rata_rata.bangun_pagi else '-' }}</td>
+                <td>{{ "%.1f"|format(data.rata_rata.beribadah) if data.rata_rata.beribadah else '-' }}</td>
+                <td>{{ "%.1f"|format(data.rata_rata.berolahraga) if data.rata_rata.berolahraga else '-' }}</td>
+                <td>{{ "%.1f"|format(data.rata_rata.sehat_dan_lemar) if data.rata_rata.sehat_dan_lemar else '-' }}</td>
+                <td>{{ "%.1f"|format(data.rata_rata.belajar) if data.rata_rata.belajar else '-' }}</td>
+                <td>{{ "%.1f"|format(data.rata_rata.bermasyarakat) if data.rata_rata.bermasyarakat else '-' }}</td>
+                <td>{{ "%.1f"|format(data.rata_rata.tidur_cepat) if data.rata_rata.tidur_cepat else '-' }}</td>
+                <td class="text-left">-</td>
+            </tr>
         </tbody>
     </table>
 
-    <!-- Tabel Status Kebiasaan (Menggantikan Rata-rata) -->
+    <!-- Tabel Status Kebiasaan -->
     <table>
         <thead>
             <tr>
-                <th colspan="7" class="text-center">STATUS KEBIASAAN</th>
+                <th colspan="7" class="text-center">STATUS KEBIASAAN BERDASARKAN RATA-RATA SEMESTER</th>
             </tr>
             <tr>
                 <th>Bangun Pagi</th>
@@ -275,7 +298,7 @@
 
             const options = {
                 margin: [10, 10, 10, 10],
-                filename: `Penilaian_{{ data.siswa.nama_siswa }}_{{ data.tahun_ajaran.tahun_ajaran }}_{{ data.semester }}.pdf`,
+                filename: `Laporan_Perkembangan_{{ data.siswa.nama_siswa }}_{{ data.tahun_ajaran.tahun_ajaran }}_{{ data.semester }}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }

@@ -85,6 +85,36 @@
             background-color: #28a745;
             width: 100%;
         }
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .table th {
+            position: sticky;
+            top: 0;
+            background-color: #343a40;
+            color: white;
+            z-index: 10;
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .error-message {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #dc3545;
+        }
+        .performance-badge {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -94,7 +124,8 @@
             <div class="container-fluid">
                 <span class="navbar-brand mb-0 h1">
                     <i class="fas fa-shield-alt me-2"></i>Superadmin Dashboard
-                    <span class="tahun-ajaran-badge" id="tahunAjaranBadge">2025/2026</span>
+                    <span class="tahun-ajaran-badge" id="tahunAjaranBadge">2024/2025</span>
+                    <span class="performance-badge" id="overallPerformance">Rata-rata: 0.0</span>
                 </span>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -117,6 +148,19 @@
                 </div>
             </div>
         </nav>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Memuat data...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message alert alert-danger" id="errorMessage">
+            Terjadi kesalahan saat memuat data. Silakan refresh halaman.
+        </div>
 
         <!-- BAGIAN ATAS: Trend Chart + Statistik -->
         <div class="row top-section">
@@ -155,7 +199,9 @@
                         <small class="text-muted" id="tahunAjaranText2"></small>
                     </h5>
                     <div class="row" id="habitsContainer">
-                        <!-- 7 grafik akan diisi oleh JavaScript -->
+                        <div class="col-12 text-center">
+                            <p class="text-muted">Data grafik kebiasaan sedang dimuat...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -189,7 +235,9 @@
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
-                                <!-- Data akan diisi oleh JavaScript -->
+                                <tr>
+                                    <td colspan="9" class="text-center">Data sekolah sedang dimuat...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -257,7 +305,9 @@
                                 </tr>
                             </thead>
                             <tbody id="usersTableBody">
-                                <!-- Data akan diisi oleh JavaScript -->
+                                <tr>
+                                    <td colspan="7" class="text-center">Data pengguna sedang dimuat...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -365,36 +415,65 @@
             loadDashboardData();
         });
 
+        // Fungsi untuk menampilkan/menyembunyikan loading spinner
+        function showLoading(show) {
+            document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+        }
+
+        // Fungsi untuk menampilkan error message
+        function showError(show, message = '') {
+            const errorElement = document.getElementById('errorMessage');
+            if (message) {
+                errorElement.textContent = message;
+            }
+            errorElement.style.display = show ? 'block' : 'none';
+        }
+
+        // Fungsi untuk mengambil data dashboard
         async function loadDashboardData() {
+            showLoading(true);
+            showError(false);
+            
             try {
+                // Mengambil semua data dari satu endpoint API
                 const response = await fetch('/superadmin/api/statistik');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
 
                 // Update tahun ajaran
-                document.getElementById('tahunAjaranBadge').textContent = data.tahun_ajaran;
-                document.getElementById('tahunAjaranText').textContent = `- ${data.tahun_ajaran}`;
-                document.getElementById('tahunAjaranText2').textContent = `- ${data.tahun_ajaran}`;
-                document.getElementById('tahunAjaranText3').textContent = `- ${data.tahun_ajaran}`;
+                document.getElementById('tahunAjaranBadge').textContent = data.tahun_ajaran || '2024/2025';
+                document.getElementById('tahunAjaranText').textContent = data.tahun_ajaran ? `- ${data.tahun_ajaran}` : '';
+                document.getElementById('tahunAjaranText2').textContent = data.tahun_ajaran ? `- ${data.tahun_ajaran}` : '';
+                document.getElementById('tahunAjaranText3').textContent = data.tahun_ajaran ? `- ${data.tahun_ajaran}` : '';
+
+                // Update overall performance
+                document.getElementById('overallPerformance').textContent = `Rata-rata: ${data.overall_performance || 0}`;
 
                 // Update card statistik
                 document.getElementById('totalUsers').textContent = data.total_users || 0;
                 document.getElementById('totalPegawai').textContent = data.total_pegawai || 0;
                 document.getElementById('totalSekolah').textContent = data.total_sekolah || 0;
                 
-                // Render 7 grafik kebiasaan (2 baris)
+                // Render 7 grafik kebiasaan
                 renderHabitsCharts(data.habits_data);
                 
                 // Render grafik trend
                 renderTrendChart(data.trend_data);
                 
-                // Render tabel
+                // Render tabel sekolah
                 renderTable(data.sekolah_stats);
                 
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
+                showError(true, 'Terjadi kesalahan saat memuat data dashboard: ' + error.message);
+            } finally {
+                showLoading(false);
             }
         }
 
+        // Fungsi untuk render grafik kebiasaan
         function renderHabitsCharts(habitsData) {
             const container = document.getElementById('habitsContainer');
             const habitColors = [
@@ -404,6 +483,16 @@
             
             let html = '';
             let habitIndex = 0;
+            
+            // Pastikan habitsData ada dan tidak kosong
+            if (!habitsData || Object.keys(habitsData).length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center">
+                        <p class="text-muted">Tidak ada data kebiasaan tersedia</p>
+                    </div>
+                `;
+                return;
+            }
             
             Object.keys(habitsData).forEach(habitName => {
                 const habit = habitsData[habitName];
@@ -421,19 +510,48 @@
                     </div>
                 `;
                 
-                // Render chart
-                setTimeout(() => {
-                    renderHabitChart(canvasId, habitName, habit, habitColors[habitIndex]);
-                }, 100);
-                
                 habitIndex++;
             });
             
             container.innerHTML = html;
+            
+            // Render charts setelah HTML di-update
+            setTimeout(() => {
+                let index = 0;
+                Object.keys(habitsData).forEach(habitName => {
+                    const habit = habitsData[habitName];
+                    const canvasId = `habitChart${index}`;
+                    renderHabitChart(canvasId, habitName, habit, habitColors[index]);
+                    index++;
+                });
+            }, 100);
         }
 
+        // Fungsi untuk render grafik kebiasaan individual
+        // Di fungsi renderHabitChart, tambahkan penyesuaian tinggi grafik berdasarkan jumlah data
         function renderHabitChart(canvasId, habitName, habitData, color) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Pastikan data ada
+            if (!habitData || !habitData.labels || !habitData.data) {
+                console.warn(`Data tidak valid untuk ${habitName}`);
+                return;
+            }
+            
+            // Hitung jumlah data untuk menyesuaikan tinggi grafik
+            const jumlahData = habitData.labels.length;
+            const minHeight = 180; // tinggi minimum
+            const extraHeightPerItem = 15; // tambahan tinggi per item
+            
+            // Sesuaikan tinggi container berdasarkan jumlah data
+            const container = canvas.closest('.habit-chart');
+            if (container && jumlahData > 5) {
+                const newHeight = minHeight + (jumlahData - 5) * extraHeightPerItem;
+                container.style.height = `${newHeight}px`;
+            }
             
             // Reverse data untuk horizontal bar chart
             const reversedLabels = [...habitData.labels].reverse();
@@ -491,11 +609,18 @@
             });
         }
 
+        // Fungsi untuk render grafik trend
         function renderTrendChart(trendData) {
             const ctx = document.getElementById('trendChart').getContext('2d');
             
             if (trendChart) {
                 trendChart.destroy();
+            }
+            
+            // Pastikan data trend ada
+            if (!trendData || !trendData.labels || !trendData.datasets) {
+                console.warn('Data trend tidak valid');
+                return;
             }
             
             trendChart = new Chart(ctx, {
@@ -535,15 +660,18 @@
             });
         }
 
+        // Fungsi untuk render tabel
         function renderTable(schoolData) {
-            allSchoolData = schoolData;
+            allSchoolData = schoolData || [];
             const tableBody = document.getElementById('tableBody');
             const sekolahFilter = document.getElementById('sekolahFilter');
             
             // Populate filter options
             sekolahFilter.innerHTML = '<option value="all">Semua Sekolah</option>';
-            schoolData.forEach(school => {
-                sekolahFilter.innerHTML += `<option value="${school.sekolah}">${school.sekolah}</option>`;
+            allSchoolData.forEach(school => {
+                if (school.sekolah) {
+                    sekolahFilter.innerHTML += `<option value="${school.sekolah}">${school.sekolah}</option>`;
+                }
             });
             
             // Render table
@@ -555,6 +683,7 @@
             });
         }
 
+        // Fungsi untuk update tabel berdasarkan filter
         function updateTable(filter) {
             const tableBody = document.getElementById('tableBody');
             let filteredData = allSchoolData;
@@ -563,26 +692,28 @@
                 filteredData = allSchoolData.filter(school => school.sekolah === filter);
             }
             
+            if (filteredData.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data sekolah</td></tr>';
+                return;
+            }
+            
             tableBody.innerHTML = filteredData.map(school => `
                 <tr>
-                    <td><strong>${school.sekolah}</strong></td>
-                    <td>${school.bangun_pagi.toFixed(1)}</td>
-                    <td>${school.beribadah.toFixed(1)}</td>
-                    <td>${school.berolahraga.toFixed(1)}</td>
-                    <td>${school.sehat_dan_lemar.toFixed(1)}</td>
-                    <td>${school.belajar.toFixed(1)}</td>
-                    <td>${school.bermasyarakat.toFixed(1)}</td>
-                    <td>${school.tidur_cepat.toFixed(1)}</td>
-                    <td><strong>${school.rata_rata.toFixed(1)}</strong></td>
+                    <td><strong>${school.sekolah || 'N/A'}</strong></td>
+                    <td>${(school.bangun_pagi || 0).toFixed(1)}</td>
+                    <td>${(school.beribadah || 0).toFixed(1)}</td>
+                    <td>${(school.berolahraga || 0).toFixed(1)}</td>
+                    <td>${(school.sehat_dan_lemar || 0).toFixed(1)}</td>
+                    <td>${(school.belajar || 0).toFixed(1)}</td>
+                    <td>${(school.bermasyarakat || 0).toFixed(1)}</td>
+                    <td>${(school.tidur_cepat || 0).toFixed(1)}</td>
+                    <td><strong>${(school.rata_rata || 0).toFixed(1)}</strong></td>
                 </tr>
             `).join('');
-            
-            if (filteredData.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data</td></tr>';
-            }
         }
- 
-        // Fungsi untuk load data users
+
+        // ========== USER MANAGEMENT FUNCTIONS ==========
+        
         let allUsersData = [];
         let filteredUsersData = [];
         let currentPage = 1;
@@ -592,9 +723,14 @@
         async function loadUsersData() {
             try {
                 const response = await fetch('/superadmin/api/users');
-                const data = await response.json();
+                if (response.ok) {
+                    const data = await response.json();
+                    allUsersData = data.users || [];
+                } else {
+                    console.warn('API users belum tersedia');
+                    allUsersData = [];
+                }
                 
-                allUsersData = data.users;
                 filteredUsersData = [...allUsersData];
                 currentPage = 1;
                 
@@ -602,7 +738,10 @@
                 updatePaginationInfo();
             } catch (error) {
                 console.error('Error loading users data:', error);
-                alert('Gagal memuat data pengguna');
+                allUsersData = [];
+                filteredUsersData = [];
+                renderUsersTable();
+                updatePaginationInfo();
             }
         }
 
@@ -615,8 +754,8 @@
             
             filteredUsersData = allUsersData.filter(user => {
                 const matchUsername = user.username.toLowerCase().includes(filterUsername);
-                const matchNama = user.nama_lengkap.toLowerCase().includes(filterNama);
-                const matchSekolah = user.sekolah.toLowerCase().includes(filterSekolah);
+                const matchNama = (user.nama_lengkap || '').toLowerCase().includes(filterNama);
+                const matchSekolah = (user.sekolah || '').toLowerCase().includes(filterSekolah);
                 const matchRole = !filterRole || user.role === filterRole;
                 
                 return matchUsername && matchNama && matchSekolah && matchRole;
@@ -647,18 +786,23 @@
             const endIndex = startIndex + usersPerPage;
             const usersToShow = filteredUsersData.slice(startIndex, endIndex);
             
+            if (usersToShow.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Tidak ada data pengguna</td></tr>';
+                return;
+            }
+            
             tableBody.innerHTML = usersToShow.map(user => `
                 <tr>
                     <td><strong>${user.username}</strong></td>
-                    <td>${user.nama_lengkap}</td>
-                    <td>${user.email}</td>
+                    <td>${user.nama_lengkap || ''}</td>
+                    <td>${user.email || ''}</td>
                     <td>
                         <span class="badge ${user.role === 'superadmin' ? 'bg-danger' : 'bg-primary'}">
                             ${user.role}
                         </span>
                     </td>
-                    <td>${user.sekolah}</td>
-                    <td>${user.nip}</td>
+                    <td>${user.sekolah || ''}</td>
+                    <td>${user.nip || ''}</td>
                     <td>
                         <button class="btn btn-warning btn-sm me-1" onclick="openChangePasswordModal(${user.id}, '${user.username}', '${user.nama_lengkap}')">
                             <i class="fas fa-key me-1"></i>Password
@@ -669,10 +813,6 @@
                     </td>
                 </tr>
             `).join('');
-            
-            if (usersToShow.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Tidak ada data pengguna</td></tr>';
-            }
         }
 
         // Fungsi untuk update pagination info
@@ -757,139 +897,136 @@
         }
 
         // Fungsi untuk submit ganti password
-        // Tambahkan di bagian JavaScript dashboard superadmin Anda
-
-// Fungsi untuk submit ganti password - DENGAN LOADING STATE
-async function submitUserPasswordChange() {
-    const userId = document.getElementById('changePasswordUserId').value;
-    const newPassword = document.getElementById('newUserPassword').value;
-    const confirmPassword = document.getElementById('confirmUserPassword').value;
-    const messageDiv = document.getElementById('changeUserPasswordMessage');
-    const submitBtn = document.querySelector('#changeUserPasswordModal .btn-primary');
-    
-    const originalBtnText = submitBtn.innerHTML;
-    
-    messageDiv.textContent = '';
-    messageDiv.classList.remove('alert-danger', 'alert-success');
-    messageDiv.classList.add('d-none');
-    
-    // Validasi
-    if (!newPassword || !confirmPassword) {
-        showMessage(messageDiv, 'Password baru dan konfirmasi harus diisi!', 'danger');
-        return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-        showMessage(messageDiv, 'Password baru dan konfirmasi tidak cocok!', 'danger');
-        return;
-    }
-    
-    if (newPassword.length < 6) {
-        showMessage(messageDiv, 'Password minimal 6 karakter!', 'danger');
-        return;
-    }
-    
-    // Loading state
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
-    submitBtn.disabled = true;
-    
-    try {
-        const response = await fetch('/superadmin/api/change_user_password', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                user_id: userId,
-                new_password: newPassword
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage(messageDiv, result.message, 'success');
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserPasswordModal'));
-                modal.hide();
-            }, 1500);
-        } else {
-            showMessage(messageDiv, result.message, 'danger');
+        async function submitUserPasswordChange() {
+            const userId = document.getElementById('changePasswordUserId').value;
+            const newPassword = document.getElementById('newUserPassword').value;
+            const confirmPassword = document.getElementById('confirmUserPassword').value;
+            const messageDiv = document.getElementById('changeUserPasswordMessage');
+            const submitBtn = document.querySelector('#changeUserPasswordModal .btn-primary');
+            
+            const originalBtnText = submitBtn.innerHTML;
+            
+            messageDiv.textContent = '';
+            messageDiv.classList.remove('alert-danger', 'alert-success');
+            messageDiv.classList.add('d-none');
+            
+            // Validasi
+            if (!newPassword || !confirmPassword) {
+                showMessage(messageDiv, 'Password baru dan konfirmasi harus diisi!', 'danger');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showMessage(messageDiv, 'Password baru dan konfirmasi tidak cocok!', 'danger');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showMessage(messageDiv, 'Password minimal 6 karakter!', 'danger');
+                return;
+            }
+            
+            // Loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/superadmin/api/change_user_password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        new_password: newPassword
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(messageDiv, result.message, 'success');
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserPasswordModal'));
+                        modal.hide();
+                    }, 1500);
+                } else {
+                    showMessage(messageDiv, result.message, 'danger');
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showMessage(messageDiv, 'Terjadi kesalahan saat mengubah password!', 'danger');
+            } finally {
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
         }
-    } catch (error) {
-        console.error('Error changing password:', error);
-        showMessage(messageDiv, 'Terjadi kesalahan saat mengubah password!', 'danger');
-    } finally {
-        // Reset button state
-        submitBtn.innerHTML = originalBtnText;
-        submitBtn.disabled = false;
-    }
-}
 
-// Fungsi untuk submit ganti NIP - DENGAN LOADING STATE
-async function submitUserNIPChange() {
-    const userId = document.getElementById('changeNIPUserId').value;
-    const newNIP = document.getElementById('newUserNIP').value;
-    const messageDiv = document.getElementById('changeUserNIPMessage');
-    const submitBtn = document.querySelector('#changeUserNIPModal .btn-primary');
-    
-    const originalBtnText = submitBtn.innerHTML;
-    
-    messageDiv.textContent = '';
-    messageDiv.classList.remove('alert-danger', 'alert-success');
-    messageDiv.classList.add('d-none');
-    
-    // Validasi
-    if (!newNIP) {
-        showMessage(messageDiv, 'NIP baru harus diisi!', 'danger');
-        return;
-    }
-    
-    // Loading state
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
-    submitBtn.disabled = true;
-    
-    try {
-        const response = await fetch('/superadmin/api/change_user_nip', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                user_id: userId,
-                new_nip: newNIP
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage(messageDiv, result.message, 'success');
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserNIPModal'));
-                modal.hide();
-                // Refresh data users
-                loadUsersData();
-            }, 1500);
-        } else {
-            showMessage(messageDiv, result.message, 'danger');
+        // Fungsi untuk submit ganti NIP
+        async function submitUserNIPChange() {
+            const userId = document.getElementById('changeNIPUserId').value;
+            const newNIP = document.getElementById('newUserNIP').value;
+            const messageDiv = document.getElementById('changeUserNIPMessage');
+            const submitBtn = document.querySelector('#changeUserNIPModal .btn-primary');
+            
+            const originalBtnText = submitBtn.innerHTML;
+            
+            messageDiv.textContent = '';
+            messageDiv.classList.remove('alert-danger', 'alert-success');
+            messageDiv.classList.add('d-none');
+            
+            // Validasi
+            if (!newNIP) {
+                showMessage(messageDiv, 'NIP baru harus diisi!', 'danger');
+                return;
+            }
+            
+            // Loading state
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/superadmin/api/change_user_nip', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        new_nip: newNIP
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(messageDiv, result.message, 'success');
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserNIPModal'));
+                        modal.hide();
+                        // Refresh data users
+                        loadUsersData();
+                    }, 1500);
+                } else {
+                    showMessage(messageDiv, result.message, 'danger');
+                }
+            } catch (error) {
+                console.error('Error changing NIP:', error);
+                showMessage(messageDiv, 'Terjadi kesalahan saat mengubah NIP!', 'danger');
+            } finally {
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
         }
-    } catch (error) {
-        console.error('Error changing NIP:', error);
-        showMessage(messageDiv, 'Terjadi kesalahan saat mengubah NIP!', 'danger');
-    } finally {
-        // Reset button state
-        submitBtn.innerHTML = originalBtnText;
-        submitBtn.disabled = false;
-    }
-}
 
-// Helper function untuk menampilkan pesan
-function showMessage(element, message, type) {
-    element.textContent = message;
-    element.classList.remove('d-none', 'alert-danger', 'alert-success');
-    element.classList.add('alert', `alert-${type}`);
-}
+        // Helper function untuk menampilkan pesan
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.classList.remove('d-none', 'alert-danger', 'alert-success');
+            element.classList.add('alert', `alert-${type}`);
+        }
 
         // Fungsi untuk mengecek kekuatan password
         function checkPasswordStrength() {
