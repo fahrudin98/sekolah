@@ -106,42 +106,26 @@ def get_kelas_for_current_user(sekolah, tahun_ajaran):
 # ----------------------
 # Dashboard route
 # ----------------------
-@tahun_ajaran_bp.route("/dashboard", methods=["GET","POST"])
+@tahun_ajaran_bp.route("/dashboard", methods=["GET" , 'POST'])
 @login_required
 def dashboard():
-    if request.method == "POST":
-        return redirect(url_for("tahun_ajaran.dashboard"))
-    
-    # Refresh session untuk data terbaru
-    db.session.expire_all()
+    if request.method == 'POST':
+        return handle_tahun_ajaran_form()
     
     sekolah = None
     kelas_list = []
     existing_tahun = None
     nonaktif_tahun = []
 
-    # Ambil sekolah dari pegawai user
+    # coba ambil sekolah dari pegawai user
     if getattr(current_user, "pegawai", None) and current_user.pegawai.sekolah_id:
         sekolah = current_user.pegawai.sekolah
 
     if sekolah:
-        # Eager loading untuk performa dan data ter-update
-        existing_tahun = TahunAjaran.query\
-            .filter_by(sekolah_id=sekolah.id, aktif=True)\
-            .options(
-                db.joinedload(TahunAjaran.kepala_sekolah).joinedload(Pegawai.user)
-            )\
-            .first()
-            
-        nonaktif_tahun = TahunAjaran.query\
-            .filter_by(sekolah_id=sekolah.id, aktif=False)\
-            .options(
-                db.joinedload(TahunAjaran.kepala_sekolah).joinedload(Pegawai.user)
-            )\
-            .order_by(TahunAjaran.id.desc())\
-            .all()
+        existing_tahun = TahunAjaran.query.filter_by(sekolah_id=sekolah.id, aktif=True).first()
+        nonaktif_tahun = TahunAjaran.query.filter_by(sekolah_id=sekolah.id, aktif=False).order_by(TahunAjaran.id.desc()).all()
 
-    # Pegawai list (profil)
+    # pegawai list (profil)
     pegawai_q = []
     if sekolah:
         pegawai_q = (
@@ -152,9 +136,11 @@ def dashboard():
             .all()
         )
 
-    # Kelas hanya yang dimiliki user (wali) pada tahun ajaran aktif
+    # kelas hanya yang dimiliki user (wali) pada tahun ajaran aktif
     if existing_tahun and sekolah:
+        # ✅ pakai helper filter kelas sesuai role (wali/superadmin)
         kelas_list = get_kelas_for_current_user(sekolah, existing_tahun)
+        # ✅ generate bulan sesuai semester (ganjil/genap)
         bulan_list = generate_bulan_list_for_semester(existing_tahun)
     else:
         bulan_list = []
@@ -171,7 +157,61 @@ def dashboard():
         current_user=current_user
     )
 
+def handle_tahun_ajaran_form():
+    """Handle form submission untuk tahun ajaran dari dashboard"""
+    if not current_user.pegawai or not current_user.pegawai.sekolah_id:
+        flash("User tidak terkait sekolah.", "error")
+        return redirect(url_for("tahun_ajaran.dashboard"))
 
+    sekolah_id = current_user.pegawai.sekolah_id
+
+    tahun_ajaran = (request.form.get("tahun_ajaran") or "").strip()
+    semester = (request.form.get("semester") or "").strip().lower()
+    kepala_sekolah_id = request.form.get("kepala_sekolah_id")
+
+    if not tahun_ajaran or not semester or not kepala_sekolah_id:
+        flash("Data tidak lengkap.", "error")
+        return redirect(url_for("tahun_ajaran.dashboard"))
+
+    if semester not in ["ganjil", "genap"]:
+        flash("Semester tidak valid.", "error")
+        return redirect(url_for("tahun_ajaran.dashboard"))
+
+    kepala = Pegawai.query.filter_by(id=kepala_sekolah_id, sekolah_id=sekolah_id).first()
+    if not kepala:
+        flash("Kepala sekolah tidak valid atau belum mengisi profil.", "error")
+        return redirect(url_for("tahun_ajaran.dashboard"))
+
+    # Validasi duplikat (case-insensitive)
+    existing = TahunAjaran.query.filter(
+        TahunAjaran.sekolah_id == sekolah_id,
+        func.lower(TahunAjaran.tahun_ajaran) == tahun_ajaran.lower(),
+        func.lower(TahunAjaran.semester) == semester
+    ).first()
+
+    if existing:
+        flash(f"Tahun ajaran {tahun_ajaran} semester {semester} sudah ada.", "error")
+        return redirect(url_for("tahun_ajaran.dashboard"))
+
+    # Pastikan tidak ada tahun ajaran aktif lain
+    existing_active = TahunAjaran.query.filter_by(sekolah_id=sekolah_id, aktif=True).first()
+    if existing_active:
+        flash("Masih ada tahun ajaran aktif. Nonaktifkan dulu.", "error")
+        return redirect(url_for("tahun_ajaran.dashboard"))
+
+    # Buat baru
+    t = TahunAjaran(
+        sekolah_id=sekolah_id,
+        tahun_ajaran=tahun_ajaran,
+        semester=semester,
+        kepala_sekolah_id=kepala.id,
+        aktif=True
+    )
+    db.session.add(t)
+    db.session.commit()
+
+    flash("Tahun ajaran baru berhasil dibuat & diaktifkan.", "success")
+    return redirect(url_for("tahun_ajaran.dashboard"))
 # ----------------------
 # Add / toggle Tahun Ajaran (tetap seperti Anda punya)
 # ----------------------
@@ -250,41 +290,3 @@ def toggle_tahun_ajaran():
 
     db.session.commit()
     return jsonify({"success": True, "aktif": tahun.aktif, "message": "Status diperbarui."})
-
-
-@tahun_ajaran_bp.route('/update_kepala_sekolah', methods=['POST'])
-@login_required
-def update_kepala_sekolah():
-    tahun_ajaran_id = request.form.get('tahun_ajaran_id')
-    kepala_sekolah_id = request.form.get('kepala_sekolah_id')
-    
-    print(f"Debug: tahun_ajaran_id={tahun_ajaran_id}, kepala_sekolah_id={kepala_sekolah_id}")
-    
-    tahun_ajaran = TahunAjaran.query.get(tahun_ajaran_id)
-    if not tahun_ajaran:
-        return jsonify({'success': False, 'message': 'Tahun ajaran tidak ditemukan'})
-    
-    pegawai = Pegawai.query.get(kepala_sekolah_id)
-    if not pegawai:
-        return jsonify({'success': False, 'message': 'Pegawai tidak ditemukan'})
-    
-    try:
-        # Hanya update kepala_sekolah_id saja
-        # Property nama_kepala_sekolah dan nip_kepala_sekolah akan otomatis ter-update
-        tahun_ajaran.kepala_sekolah_id = kepala_sekolah_id
-        
-        db.session.commit()
-        
-        return jsonify({
-            'success': True, 
-            'message': 'Kepala sekolah berhasil diperbarui',
-            'data': {
-                'nama_kepala_sekolah': tahun_ajaran.nama_kepala_sekolah,  # Property akan otomatis ter-update
-                'nip_kepala_sekolah': tahun_ajaran.nip_kepala_sekolah     # Property akan otomatis ter-update
-            }
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error updating kepala sekolah: {str(e)}")
-        return jsonify({'success': False, 'message': f'Terjadi kesalahan: {str(e)}'})

@@ -3,12 +3,11 @@ from dotenv import load_dotenv
 from penilaiansiswa import db
 from penilaiansiswa.models.users import User
 
-
 # Load environment variables first
 load_dotenv()
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from passlib.hash import bcrypt
+from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mail import Mail
@@ -17,16 +16,21 @@ import calendar
 # Import config
 from config import config
 
+bcrypt = Bcrypt()
+migrate = Migrate()
+login_manager = LoginManager()
+mail = Mail()
+
 # =============================
 # PASSWORD HELPER FUNCTIONS
 # =============================
 def generate_password_hash(password):
     """Generate bcrypt hash untuk password"""
-    return bcrypt.hash(password)
+    return bcrypt.generate_password_hash(password).decode('utf-8')
 
 def check_password_hash(hashed_password, password):
     """Verifikasi password dengan bcrypt"""
-    return bcrypt.verify(password, hashed_password)
+    return bcrypt.check_password_hash(hashed_password, password)
 
 def create_app(config_name="default"):
     # Determine config based on environment
@@ -35,26 +39,21 @@ def create_app(config_name="default"):
     else:
         config_name = "development"
     
-    # ✅ HAPUS template_folder dan static_folder
-    # Flask otomatis akan mencari di ./templates dan ./static
     app = Flask(__name__)
     
     app.config.from_object(config[config_name])
     
     # Initialize extensions
-    from penilaiansiswa import db, login_manager, mail, migrate
-    
     db.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
     migrate.init_app(app, db)
+    bcrypt.init_app(app)
     
     # Setup login manager
     login_manager.login_view = "index"
     login_manager.login_message = "Silakan login untuk mengakses halaman ini."
     login_manager.login_message_category = "warning"
-    
-    from penilaiansiswa.models.users import User
     
     @login_manager.user_loader
     def load_user(user_id):
@@ -78,7 +77,6 @@ def create_app(config_name="default"):
             flash("Semua field harus diisi!", "danger")
             return redirect(url_for("index"))
 
-        from penilaiansiswa.models.users import User
         existing_user = User.query.filter(
             (User.username == username) | (User.email == email)
         ).first()
@@ -91,7 +89,7 @@ def create_app(config_name="default"):
             nama_lengkap=nama,
             email=email,
             username=username,
-            password=bcrypt.hash(password),
+            password=generate_password_hash(password),
             role="user"
         )
         
@@ -106,7 +104,7 @@ def create_app(config_name="default"):
         
         return redirect(url_for("index"))
     
-    @ app.route("/login", methods=["POST"])
+    @app.route("/login", methods=["POST"])
     def login():
         username = request.form.get("username")
         password = request.form.get("password")
@@ -115,29 +113,22 @@ def create_app(config_name="default"):
             flash("Username dan password harus diisi!", "danger")
             return redirect(url_for("index"))
 
-        from penilaiansiswa.models.users import User
-        from flask_login import login_user
-        
         user = User.query.filter_by(username=username).first()
         
-        if user:
-            try:
-                # Verifikasi password dengan bcrypt
-                if check_password_hash(user.password, password):
-                    login_user(user)
-                    
-                    # ✅ MODIFIKASI INI: Redirect berdasarkan role
-                    if user.role == "superadmin":
-                        return redirect(url_for("superadmin.dashboard"))  # Arahkan ke dashboard superadmin
-                    elif hasattr(user, 'pegawai') and user.pegawai:
-                        return redirect(url_for("tahun_ajaran.dashboard"))  # User biasa dengan pegawai
-                    else:
-                        return redirect(url_for("home"))  # User biasa tanpa pegawai
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            
+            # Redirect berdasarkan role
+            if user.role == "superadmin":
+                return redirect(url_for("superadmin.dashboard"))
+            else:
+                # Cek apakah user memiliki data pegawai
+                from penilaiansiswa.models.users import Pegawai
+                pegawai = Pegawai.query.filter_by(user_id=user.id).first()
+                if pegawai:
+                    return redirect(url_for("tahun_ajaran.dashboard"))
                 else:
-                    flash("Username atau password salah!", "danger")
-            except Exception as e:
-                flash("Password hash bermasalah. Silakan reset password atau hubungi admin.", "danger")
-                app.logger.error(f"Login error for user {username}: {e}")
+                    return redirect(url_for("home"))
         else:
             flash("Username atau password salah!", "danger")
         
@@ -164,7 +155,6 @@ def create_app(config_name="default"):
     @login_required
     def logout():
         logout_user()
-        #flash("Anda berhasil logout!", "info")
         return redirect(url_for("index"))
     
     @app.route("/change-password", methods=["POST"])
@@ -184,11 +174,12 @@ def create_app(config_name="default"):
             if not check_password_hash(current_user.password, current_pw):
                 return jsonify({"success": False, "message": "Password saat ini salah"})
 
-            current_user.password = bcrypt.hash(new_pw)
+            current_user.password = generate_password_hash(new_pw)
             db.session.commit()
             
             return jsonify({"success": True, "message": "Password berhasil diubah"})
         except Exception as e:
+            db.session.rollback()
             return jsonify({"success": False, "message": f"Error: {str(e)}"})
     
     # =============================
@@ -197,18 +188,16 @@ def create_app(config_name="default"):
     @app.route("/admin/migrate-passwords")
     def migrate_passwords():
         """Endpoint untuk migrasi password yang rusak ke bcrypt"""
-        from penilaiansiswa.models.users import User
-        
         users = User.query.all()
         migrated_count = 0
         
         for user in users:
             try:
                 # Coba verifikasi dengan dummy password
-                bcrypt.verify("dummy", user.password)
-            except:
+                check_password_hash(user.password, "dummy")
+            except Exception:
                 # Hash rusak, reset ke default
-                user.password = bcrypt.hash("default123")
+                user.password = generate_password_hash("default123")
                 migrated_count += 1
                 app.logger.info(f"Migrated user: {user.username}")
         
@@ -251,7 +240,6 @@ def create_app(config_name="default"):
     except ImportError as e:
         app.logger.warning(f"Penilaian blueprint not found: {e}")
     
-    # ✅ FIXED: HAPUS return prematur dan pindahkan ke bawah
     try:
         from penilaiansiswa.routes.lupa_password_routes import lupa_password_bp
         app.register_blueprint(lupa_password_bp)
@@ -282,7 +270,7 @@ def create_app(config_name="default"):
         except (ValueError, IndexError):
             return ""
     
-    return app  # ✅ RETURN YANG BENAR - di akhir fungsi
+    return app
 
 # Create application instance
 app = create_app()

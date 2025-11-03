@@ -2,9 +2,10 @@ from datetime import datetime
 from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
-from flask_bcrypt import Bcrypt
+from flask_bcrypt import Bcrypt  # ✅ GUNAKAN FLAKS-BCRYPT
 from penilaiansiswa import db  # gunakan db yang di-init di __init__.py
 
+# ✅ INISIALISASI BCRYPT
 bcrypt = Bcrypt()
 
 class User(UserMixin, db.Model):
@@ -22,14 +23,14 @@ class User(UserMixin, db.Model):
     def is_superadmin(self):
         return self.role == "superadmin"
 
-    # ✅ TAMBAHAN UNTUK RESET PASSWORD - INDENTASI DIPERBAIKI
+    # ✅ PERBAIKAN: GUNAKAN FLAKS-BCRYPT
     # 🔹 hash password baru
     def set_password(self, password):
-        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+        self.password = bcrypt.generate_password_hash(password).decode('utf-8')  # ✅ DECODE
 
     # 🔹 verifikasi password saat login
     def check_password(self, password):
-       return bcrypt.check_password_hash(self.password, password)
+        return bcrypt.check_password_hash(self.password, password)  # ✅ FLAKS-BCRYPT
 
     # 🔹 generate token untuk reset password
     def get_reset_token(self, expires_sec=None):

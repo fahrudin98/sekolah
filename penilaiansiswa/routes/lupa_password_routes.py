@@ -5,10 +5,13 @@ from penilaiansiswa.models.users import User
 from penilaiansiswa.forms import RequestResetForm, ResetPasswordForm
 from penilaiansiswa.email_utils import send_reset_email
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
-from passlib.hash import bcrypt  # ✅ IMPORT BCRYPT LANGSUNG
+from flask_bcrypt import Bcrypt  # ✅ GUNAKAN FLAKS-BCRYPT
 
 # Definisikan blueprint
 lupa_password_bp = Blueprint("lupa_password", __name__)
+
+# ✅ INISIALISASI BCRYPT
+bcrypt = Bcrypt()
 
 def verify_reset_token(token):
     """Function terpisah untuk verify token reset password"""
@@ -69,8 +72,8 @@ def reset_token(token):
     
     if form.validate_on_submit():
         try:
-            # ✅ PAKAI BCRYPT LANGSUNG - SAMA DENGAN MAIN.PY
-            user.password = bcrypt.hash(form.password.data)
+            # ✅ GUNAKAN FLAKS-BCRYPT - SAMA DENGAN USERS.PY
+            user.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             db.session.commit()
             
             flash("Password berhasil diubah. Silakan login dengan password baru Anda.", "success")

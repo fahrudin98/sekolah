@@ -115,6 +115,14 @@
             font-size: 0.9rem;
             margin-left: 10px;
         }
+        /* Style untuk rata tengah tabel */
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .table thead th {
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -226,9 +234,9 @@
                                     <th>Sekolah</th>
                                     <th>Bangun Pagi</th>
                                     <th>Beribadah</th>
-                                    <th>Berolahraga</th>
-                                    <th>Sehat & Bergizi</th>
-                                    <th>Belajar</th>
+                                    <th>Gemar Berolahraga</th>
+                                    <th>Makan Sehat & Bergizi</th>
+                                    <th>Gemar Belajar</th>
                                     <th>Bermasyarakat</th>
                                     <th>Tidur Cepat</th>
                                     <th>Rata-rata</th>
@@ -498,13 +506,16 @@
                 const habit = habitsData[habitName];
                 const canvasId = `habitChart${habitIndex}`;
                 
+                // Mapping nama kebiasaan untuk label yang konsisten - PERBAIKAN DI SINI
+                let displayName = getDisplayName(habitName);
+                
                 // Baris pertama: 4 chart, Baris kedua: 3 chart
                 const colClass = habitIndex < 4 ? 'col-md-3' : 'col-md-4';
                 
                 html += `
                     <div class="${colClass} mb-3">
                         <div class="habit-chart small-chart">
-                            <h6 class="text-center mb-2" style="font-size: 0.9rem;">${habitName}</h6>
+                            <h6 class="text-center mb-2" style="font-size: 0.9rem;">${displayName}</h6>
                             <canvas id="${canvasId}"></canvas>
                         </div>
                     </div>
@@ -521,14 +532,41 @@
                 Object.keys(habitsData).forEach(habitName => {
                     const habit = habitsData[habitName];
                     const canvasId = `habitChart${index}`;
-                    renderHabitChart(canvasId, habitName, habit, habitColors[index]);
+                    
+                    // Mapping nama kebiasaan untuk label yang konsisten - PERBAIKAN DI SINI
+                    let displayName = getDisplayName(habitName);
+                    
+                    renderHabitChart(canvasId, displayName, habit, habitColors[index]);
                     index++;
                 });
             }, 100);
         }
 
+        // Fungsi untuk mendapatkan nama tampilan yang konsisten
+        function getDisplayName(habitName) {
+            const nameMapping = {
+                'bangun_pagi': 'Bangun Pagi',
+                'beribadah': 'Beribadah',
+                'berolahraga': 'Gemar Berolahraga',
+                'sehat_dan_bergizi': 'Makan Sehat & Bergizi',
+                'sehat_dan_lemar': 'Makan Sehat & Bergizi',
+                'belajar': 'Gemar Belajar',
+                'bermasyarakat': 'Bermasyarakat',
+                'tidur_cepat': 'Tidur Cepat',
+                // Tambahan untuk nama yang mungkin muncul di API
+                'Bangun Pagi': 'Bangun Pagi',
+                'Beribadah': 'Beribadah',
+                'Berolahraga': 'Gemar Berolahraga',
+                'Sehat & Bergizi': 'Makan Sehat & Bergizi',
+                'Belajar': 'Gemar Belajar',
+                'Bermasyarakat': 'Bermasyarakat',
+                'Tidur Cepat': 'Tidur Cepat'
+            };
+            
+            return nameMapping[habitName] || habitName;
+        }
+
         // Fungsi untuk render grafik kebiasaan individual
-        // Di fungsi renderHabitChart, tambahkan penyesuaian tinggi grafik berdasarkan jumlah data
         function renderHabitChart(canvasId, habitName, habitData, color) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return;
@@ -623,6 +661,16 @@
                 return;
             }
             
+            // Update label dataset untuk konsistensi - PERBAIKAN DI SINI
+            if (trendData.datasets && Array.isArray(trendData.datasets)) {
+                trendData.datasets.forEach(dataset => {
+                    // Mapping nama dataset untuk konsistensi
+                    if (dataset.label) {
+                        dataset.label = getDisplayName(dataset.label);
+                    }
+                });
+            }
+            
             trendChart = new Chart(ctx, {
                 type: 'line',
                 data: trendData,
@@ -632,6 +680,17 @@
                     plugins: {
                         legend: {
                             position: 'top',
+                            labels: {
+                                // Pastikan label legend juga menggunakan nama yang konsisten
+                                generateLabels: function(chart) {
+                                    const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                    const labels = original.call(this, chart);
+                                    labels.forEach(label => {
+                                        label.text = getDisplayName(label.text);
+                                    });
+                                    return labels;
+                                }
+                            }
                         }
                     },
                     scales: {

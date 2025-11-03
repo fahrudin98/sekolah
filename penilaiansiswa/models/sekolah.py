@@ -52,9 +52,23 @@ class TahunAjaran(db.Model, LogMixin):
     aktif = db.Column(db.Boolean, default=False) 
 
     sekolah = db.relationship("Sekolah", back_populates="tahun_ajaran")
-    kepala_sekolah = db.relationship("Pegawai")
+    kepala_sekolah = db.relationship("Pegawai", backref="tahun_ajaran_kepala")
     kelas = db.relationship("Kelas", back_populates="tahun_ajaran")
-
+    
+    # ✅ PROPERTY BARU UNTUK AKSES DATA TERUPDATE
+    @property
+    def nama_kepala_sekolah(self):
+        """Ambil nama terupdate dari user"""
+        if self.kepala_sekolah and self.kepala_sekolah.user:
+            return self.kepala_sekolah.user.nama_lengkap
+        return "-"
+    
+    @property 
+    def nip_kepala_sekolah(self):
+        """Ambil NIP terupdate"""
+        if self.kepala_sekolah:
+            return self.kepala_sekolah.nip or "-"
+        return "-"
 
 class Kelas(db.Model, LogMixin):
     __tablename__ = "kelas"

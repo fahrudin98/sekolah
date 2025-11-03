@@ -6,9 +6,9 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 10mm;
+            margin: 15mm;
             font-size: 11px;
-            width: 200mm;
+            width: 100%;
         }
         .header {
             text-align: center;
@@ -42,12 +42,12 @@
             margin-bottom: 15px;
             width: 100%;
             page-break-inside: avoid;
+            font-size: 9px;
         }
         th, td {
             border: 1px solid #000;
             padding: 4px 6px;
             text-align: center;
-            font-size: 9px;
         }
         th {
             background-color: #f2f2f2;
@@ -55,6 +55,7 @@
         }
         .text-left { text-align: left; }
         .text-center { text-align: center; }
+        .text-right { text-align: right; }
         .bold { font-weight: bold; }
         
         .info-grid {
@@ -96,9 +97,85 @@
         .terbiasa { color: green; font-weight: bold; }
         .belum-terbiasa { color: red; font-weight: bold; }
         
+        /* Style untuk bagian tanda tangan */
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            page-break-inside: avoid;
+        }
+        
+        .signature-left, .signature-right {
+            width: 45%;
+            text-align: center;
+        }
+        
+        .signature-space {
+            height: 60px;
+            margin-bottom: 5px;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            margin-top: 5px;
+            text-decoration: underline;
+            min-height: 20px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        
+        .signature-nip {
+            font-size: 9px;
+            margin-top: 2px;
+        }
+        
+        .date-info {
+            text-align: right;
+            margin-bottom: 30px;
+            font-size: 10px;
+        }
+        
+        /* Container untuk memastikan nama sejajar */
+        .name-align-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .name-align-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        
+        /* Media query untuk print A4 portrait */
         @media print {
-            body { margin: 10mm; }
+            body { 
+                margin: 15mm;
+                width: 210mm;
+                height: 297mm;
+            }
             .no-print { display: none; }
+            
+            /* Memastikan tabel tidak melebihi lebar halaman */
+            table {
+                font-size: 8px;
+            }
+            th, td {
+                padding: 3px 4px;
+            }
+        }
+        
+        /* Untuk tampilan di browser */
+        @media screen {
+            body {
+                max-width: 210mm;
+                margin: 20px auto;
+                padding: 20px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            }
         }
     </style>
 </head>
@@ -276,8 +353,46 @@
         </tbody>
     </table>
 
-    <div class="footer">
+    <!-- Bagian Tanda Tangan -->
+    <div class="date-info">
         <p>Dicetak pada: {{ data.tanggal_cetak }}</p>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-left">
+            <div class="name-align-container">
+                <div>
+                    <p>Mengetahui</p>
+                    <p>Kepala Sekolah</p>
+                </div>
+                <div class="name-align-wrapper">
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ data.kepala_sekolah.nama }}</div>
+                    {% if data.kepala_sekolah.nip %}
+                    <div class="signature-nip">NIP: {{ data.kepala_sekolah.nip }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="signature-right">
+            <div class="name-align-container">
+                <div>
+                    <p>Wali Kelas {{ data.kelas.nama_kelas }}</p>
+                </div>
+                <div class="name-align-wrapper">
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ data.wali_kelas.nama }}</div>
+                    {% if data.wali_kelas.nip %}
+                    <div class="signature-nip">NIP: {{ data.wali_kelas.nip }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer no-print">
+        <p>Laporan ini dicetak secara elektronik</p>
     </div>
 
     <div class="no-print">
@@ -297,11 +412,11 @@
             });
 
             const options = {
-                margin: [10, 10, 10, 10],
+                margin: [15, 15, 15, 15],
                 filename: `Laporan_Perkembangan_{{ data.siswa.nama_siswa }}_{{ data.tahun_ajaran.tahun_ajaran }}_{{ data.semester }}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } // Changed to portrait
             };
             html2pdf().set(options).from(element).save().then(() => {
                 noPrintElements.forEach(el => {
