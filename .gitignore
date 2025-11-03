@@ -1,36 +1,5 @@
-# .gitignore
-.env
-.env.*
-*.env
-config.py  # 🔥 JANGAN commit config.py yang sebenarnya!
-instance/
+.DS_Store
 __pycache__/
 *.pyc
-*.pyo
-.pytest_cache/
-.coverage
-htmlcov/
-dist/
-build/
-*.egg-info/
-.DS_Store
-# Hosting files
-app.py
-passenger_wsgi.py
-stderr.log
-tmp/
+.vscode/
 *.log
-
-# Python
-__pycache__/
-*.pyc
-.env
-
-# Database
-*.db
-*.sqlite3
-
-# OS
-.DS_Store
-Thumbs.db
-EOF
