@@ -7,3 +7,1269 @@
 [2025-09-24 15:32:47,929] ERROR in main: Login error for user fahrudin: not a valid bcrypt hash
 [2025-09-24 15:34:18,345] ERROR in main: Login error for user fahrudin: not a valid bcrypt hash
 OSError: LSAPI: File error
+[2025-10-12 13:06:18,647] ERROR in app: Exception on /penilaian/siswa/list/33 [GET]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/home/kebiasaa/sekolah/penilaiansiswa/routes/penilaian_routes.py", line 160, in get_siswa
+    siswa_list = Siswa.query.filter_by(kelas_id=kelas.id).order_by(Siswa.nama_siswa).all()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+    return self._iter().all()  # type: ignore
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+[SQL: SELECT siswa.id AS siswa_id, siswa.nama_siswa AS siswa_nama_siswa, siswa.nisn AS siswa_nisn, siswa.jenis_kelamin AS siswa_jenis_kelamin, siswa.status AS siswa_status, siswa.kelas_id AS siswa_kelas_id, siswa.created_at AS siswa_created_at, siswa.updated_at AS siswa_updated_at, siswa.created_by AS siswa_created_by, siswa.updated_by AS siswa_updated_by 
+FROM siswa 
+WHERE siswa.kelas_id = %(kelas_id_1)s ORDER BY siswa.nama_siswa]
+[parameters: {'kelas_id_1': 33}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-12 13:06:20,546] ERROR in app: Exception on /penilaian/kebiasaan/get/33/2025-07 [GET]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/home/kebiasaa/sekolah/penilaiansiswa/routes/penilaian_routes.py", line 176, in get_kebiasaan
+    siswa_list = Siswa.query.filter_by(kelas_id=kelas.id).order_by(Siswa.nama_siswa).all()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+    return self._iter().all()  # type: ignore
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+[SQL: SELECT siswa.id AS siswa_id, siswa.nama_siswa AS siswa_nama_siswa, siswa.nisn AS siswa_nisn, siswa.jenis_kelamin AS siswa_jenis_kelamin, siswa.status AS siswa_status, siswa.kelas_id AS siswa_kelas_id, siswa.created_at AS siswa_created_at, siswa.updated_at AS siswa_updated_at, siswa.created_by AS siswa_created_by, siswa.updated_by AS siswa_updated_by 
+FROM siswa 
+WHERE siswa.kelas_id = %(kelas_id_1)s ORDER BY siswa.nama_siswa]
+[parameters: {'kelas_id_1': 33}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-12 13:06:25,284] ERROR in app: Exception on /penilaian/siswa/list/34 [GET]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/home/kebiasaa/sekolah/penilaiansiswa/routes/penilaian_routes.py", line 160, in get_siswa
+    siswa_list = Siswa.query.filter_by(kelas_id=kelas.id).order_by(Siswa.nama_siswa).all()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+    return self._iter().all()  # type: ignore
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+[SQL: SELECT siswa.id AS siswa_id, siswa.nama_siswa AS siswa_nama_siswa, siswa.nisn AS siswa_nisn, siswa.jenis_kelamin AS siswa_jenis_kelamin, siswa.status AS siswa_status, siswa.kelas_id AS siswa_kelas_id, siswa.created_at AS siswa_created_at, siswa.updated_at AS siswa_updated_at, siswa.created_by AS siswa_created_by, siswa.updated_by AS siswa_updated_by 
+FROM siswa 
+WHERE siswa.kelas_id = %(kelas_id_1)s ORDER BY siswa.nama_siswa]
+[parameters: {'kelas_id_1': 34}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-12 13:06:45,409] ERROR in app: Exception on /penilaian/siswa/list/32 [GET]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/home/kebiasaa/sekolah/penilaiansiswa/routes/penilaian_routes.py", line 160, in get_siswa
+    siswa_list = Siswa.query.filter_by(kelas_id=kelas.id).order_by(Siswa.nama_siswa).all()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+    return self._iter().all()  # type: ignore
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+[SQL: SELECT siswa.id AS siswa_id, siswa.nama_siswa AS siswa_nama_siswa, siswa.nisn AS siswa_nisn, siswa.jenis_kelamin AS siswa_jenis_kelamin, siswa.status AS siswa_status, siswa.kelas_id AS siswa_kelas_id, siswa.created_at AS siswa_created_at, siswa.updated_at AS siswa_updated_at, siswa.created_by AS siswa_created_by, siswa.updated_by AS siswa_updated_by 
+FROM siswa 
+WHERE siswa.kelas_id = %(kelas_id_1)s ORDER BY siswa.nama_siswa]
+[parameters: {'kelas_id_1': 32}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-12 13:06:47,224] ERROR in app: Exception on /penilaian/kebiasaan/get/32/2025-07 [GET]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/home/kebiasaa/sekolah/penilaiansiswa/routes/penilaian_routes.py", line 176, in get_kebiasaan
+    siswa_list = Siswa.query.filter_by(kelas_id=kelas.id).order_by(Siswa.nama_siswa).all()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+    return self._iter().all()  # type: ignore
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+[SQL: SELECT siswa.id AS siswa_id, siswa.nama_siswa AS siswa_nama_siswa, siswa.nisn AS siswa_nisn, siswa.jenis_kelamin AS siswa_jenis_kelamin, siswa.status AS siswa_status, siswa.kelas_id AS siswa_kelas_id, siswa.created_at AS siswa_created_at, siswa.updated_at AS siswa_updated_at, siswa.created_by AS siswa_created_by, siswa.updated_by AS siswa_updated_by 
+FROM siswa 
+WHERE siswa.kelas_id = %(kelas_id_1)s ORDER BY siswa.nama_siswa]
+[parameters: {'kelas_id_1': 32}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/sekolah/penilaiansiswa/routes/laporan.py", line 379, in laporan_penilaian
+    siswa_list = Siswa.query.filter_by(kelas_id=kelas.id).order_by(Siswa.nama_siswa).all()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+    return self._iter().all()  # type: ignore
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+[SQL: SELECT siswa.id AS siswa_id, siswa.nama_siswa AS siswa_nama_siswa, siswa.nisn AS siswa_nisn, siswa.jenis_kelamin AS siswa_jenis_kelamin, siswa.status AS siswa_status, siswa.kelas_id AS siswa_kelas_id, siswa.created_at AS siswa_created_at, siswa.updated_at AS siswa_updated_at, siswa.created_by AS siswa_created_by, siswa.updated_by AS siswa_updated_by 
+FROM siswa 
+WHERE siswa.kelas_id = %(kelas_id_1)s ORDER BY siswa.nama_siswa]
+[parameters: {'kelas_id_1': 32}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-12 13:07:48,695] ERROR in app: Exception on /siswa/list/32 [GET]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/home/kebiasaa/sekolah/penilaiansiswa/routes/siswa_routes.py", line 84, in list_siswa
+    siswa = Siswa.query.filter_by(kelas_id=kelas.id).all()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+    return self._iter().all()  # type: ignore
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+[SQL: SELECT siswa.id AS siswa_id, siswa.nama_siswa AS siswa_nama_siswa, siswa.nisn AS siswa_nisn, siswa.jenis_kelamin AS siswa_jenis_kelamin, siswa.status AS siswa_status, siswa.kelas_id AS siswa_kelas_id, siswa.created_at AS siswa_created_at, siswa.updated_at AS siswa_updated_at, siswa.created_by AS siswa_created_by, siswa.updated_by AS siswa_updated_by 
+FROM siswa 
+WHERE siswa.kelas_id = %(kelas_id_1)s]
+[parameters: {'kelas_id_1': 32}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-12 13:08:10,902] ERROR in app: Exception on /siswa/create [POST]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+  File "/home/kebiasaa/sekolah/penilaiansiswa/routes/siswa_routes.py", line 36, in create_siswa
+    ).first()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2759, in first
+    return self.limit(1)._iter().first()  # type: ignore
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 575, in query
+    self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 826, in _read_query_result
+    result.read()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 1203, in read
+    first_packet = self.connection._read_packet()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 782, in _read_packet
+    packet.raise_for_error()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+[SQL: SELECT siswa.id AS siswa_id, siswa.nama_siswa AS siswa_nama_siswa, siswa.nisn AS siswa_nisn, siswa.jenis_kelamin AS siswa_jenis_kelamin, siswa.status AS siswa_status, siswa.kelas_id AS siswa_kelas_id, siswa.created_at AS siswa_created_at, siswa.updated_at AS siswa_updated_at, siswa.created_by AS siswa_created_by, siswa.updated_by AS siswa_updated_by 
+FROM siswa INNER JOIN kelas ON kelas.id = siswa.kelas_id 
+WHERE siswa.nisn = %(nisn_1)s AND kelas.sekolah_id = %(sekolah_id_1)s AND kelas.tahun_ajaran_id = %(tahun_ajaran_id_1)s 
+ LIMIT %(param_1)s]
+[parameters: {'nisn_1': '919191', 'sekolah_id_1': 2, 'tahun_ajaran_id_1': 5, 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+ERROR LAPORAN PENILAIAN: (pymysql.err.OperationalError) (1054, "Unknown column 'siswa.nisn' in 'SELECT'")
+[SQL: SELECT siswa.id AS siswa_id, siswa.nama_siswa AS siswa_nama_siswa, siswa.nisn AS siswa_nisn, siswa.jenis_kelamin AS siswa_jenis_kelamin, siswa.status AS siswa_status, siswa.kelas_id AS siswa_kelas_id, siswa.created_at AS siswa_created_at, siswa.updated_at AS siswa_updated_at, siswa.created_by AS siswa_created_by, siswa.updated_by AS siswa_updated_by 
+FROM siswa 
+WHERE siswa.kelas_id = %(kelas_id_1)s ORDER BY siswa.nama_siswa]
+[parameters: {'kelas_id_1': 32}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+DEBUG: Mengambil siswa untuk kelas_id: 33
+DEBUG: Ditemukan 1 siswa di kelas 1A
+DEBUG: Membuat laporan untuk siswa_id: 28, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 2
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 33
+DEBUG: Ditemukan 1 siswa di kelas 1A
+DEBUG: Membuat laporan untuk siswa_id: 28, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 2
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 2
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 33
+DEBUG: Ditemukan 1 siswa di kelas 1A
+DEBUG: Membuat laporan untuk siswa_id: 28, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 114
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 40
+DEBUG: Ditemukan 4 siswa di kelas 1
+DEBUG: Membuat laporan untuk siswa_id: 36, semester: ganjil
+[UID:1308][2864072] Child process with pid: 2864449 was killed by signal: 15, core dumped: no
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 114
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 114
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 40
+DEBUG: Ditemukan 4 siswa di kelas 2
+DEBUG: Membuat laporan untuk siswa_id: 36, semester: ganjil
+[UID:1308][3581262] Child process with pid: 3582164 was killed by signal: 15, core dumped: no
+DEBUG: Mengambil siswa untuk kelas_id: 40
+DEBUG: Ditemukan 4 siswa di kelas 2
+DEBUG: Membuat laporan untuk siswa_id: 36, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 114
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Membuat laporan untuk siswa_id: 36, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 114
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 40
+DEBUG: Ditemukan 4 siswa di kelas 2
+[2025-11-01 09:36:09,120] ERROR in app: Exception on /home [GET]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 813, in _write_bytes
+    self._sock.sendall(data)
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 574, in query
+    self._execute_command(COMMAND.COM_QUERY, sql)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 865, in _execute_command
+    self._write_bytes(packet)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 816, in _write_bytes
+    raise err.OperationalError(
+pymysql.err.OperationalError: (2006, "MySQL server has gone away (ConnectionResetError(104, 'Connection reset by peer'))")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 284, in decorated_view
+    elif not current_user.is_authenticated:
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/werkzeug/local.py", line 318, in __get__
+    obj = instance._get_current_object()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/werkzeug/local.py", line 526, in _get_current_object
+    return get_name(local())
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 25, in <lambda>
+    current_user = LocalProxy(lambda: _get_user())
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 370, in _get_user
+    current_app.login_manager._load_user()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/login_manager.py", line 364, in _load_user
+    user = self._user_callback(user_id)
+  File "/home/kebiasaa/sekolah/main.py", line 61, in load_user
+    return User.query.get(int(user_id))
+  File "<string>", line 2, in get
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/util/deprecations.py", line 386, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 1126, in get
+    return self._get_impl(ident, loading.load_on_pk_identity)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 1135, in _get_impl
+    return self.session._get_impl(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 3873, in _get_impl
+    return db_load_fn(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/loading.py", line 695, in load_on_pk_identity
+    session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 574, in query
+    self._execute_command(COMMAND.COM_QUERY, sql)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 865, in _execute_command
+    self._write_bytes(packet)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 816, in _write_bytes
+    raise err.OperationalError(
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (2006, "MySQL server has gone away (ConnectionResetError(104, 'Connection reset by peer'))")
+[SQL: SELECT users.id AS users_id, users.nama_lengkap AS users_nama_lengkap, users.email AS users_email, users.username AS users_username, users.password AS users_password, users.role AS users_role 
+FROM users 
+WHERE users.id = %(pk_1)s]
+[parameters: {'pk_1': 30}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 432
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 36
+DEBUG: Mengambil siswa untuk kelas_id: 42
+DEBUG: Ditemukan 1 siswa di kelas Kelas IV
+DEBUG: Membuat laporan untuk siswa_id: 40, semester: ganjil
+DEBUG: Membuat laporan untuk siswa_id: 41, semester: ganjil
+[2025-11-01 10:10:16,266] ERROR in app: Exception on /penilaian/siswa/list/56 [GET]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 813, in _write_bytes
+    self._sock.sendall(data)
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 574, in query
+    self._execute_command(COMMAND.COM_QUERY, sql)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 865, in _execute_command
+    self._write_bytes(packet)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 816, in _write_bytes
+    raise err.OperationalError(
+pymysql.err.OperationalError: (2006, "MySQL server has gone away (ConnectionResetError(104, 'Connection reset by peer'))")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 284, in decorated_view
+    elif not current_user.is_authenticated:
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/werkzeug/local.py", line 318, in __get__
+    obj = instance._get_current_object()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/werkzeug/local.py", line 526, in _get_current_object
+    return get_name(local())
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 25, in <lambda>
+    current_user = LocalProxy(lambda: _get_user())
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 370, in _get_user
+    current_app.login_manager._load_user()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/login_manager.py", line 364, in _load_user
+    user = self._user_callback(user_id)
+  File "/home/kebiasaa/sekolah/main.py", line 61, in load_user
+    return User.query.get(int(user_id))
+  File "<string>", line 2, in get
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/util/deprecations.py", line 386, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 1126, in get
+    return self._get_impl(ident, loading.load_on_pk_identity)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 1135, in _get_impl
+    return self.session._get_impl(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 3873, in _get_impl
+    return db_load_fn(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/loading.py", line 695, in load_on_pk_identity
+    session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 574, in query
+    self._execute_command(COMMAND.COM_QUERY, sql)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 865, in _execute_command
+    self._write_bytes(packet)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 816, in _write_bytes
+    raise err.OperationalError(
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (2006, "MySQL server has gone away (ConnectionResetError(104, 'Connection reset by peer'))")
+[SQL: SELECT users.id AS users_id, users.nama_lengkap AS users_nama_lengkap, users.email AS users_email, users.username AS users_username, users.password AS users_password, users.role AS users_role 
+FROM users 
+WHERE users.id = %(pk_1)s]
+[parameters: {'pk_1': 39}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 42
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 49
+DEBUG: Ditemukan 2 siswa di kelas IV
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 42
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 49
+DEBUG: Ditemukan 2 siswa di kelas IV
+DEBUG: Membuat laporan untuk siswa_id: 41, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 253
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 46
+DEBUG: Ditemukan 12 siswa di kelas Kelas VI
+DEBUG: Membuat laporan untuk siswa_id: 43, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 132
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 52
+DEBUG: Ditemukan 6 siswa di kelas Kelas IV
+[2025-11-01 10:30:00,301] ERROR in app: Exception on /reset_password/eyJ1c2VyX2lkIjoxM30.aQV0gg.DClgAuHJ4Bk-duQkO6sIF70Poys [GET]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 813, in _write_bytes
+    self._sock.sendall(data)
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 574, in query
+    self._execute_command(COMMAND.COM_QUERY, sql)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 865, in _execute_command
+    self._write_bytes(packet)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 816, in _write_bytes
+    raise err.OperationalError(
+pymysql.err.OperationalError: (2006, "MySQL server has gone away (ConnectionResetError(104, 'Connection reset by peer'))")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/sekolah/penilaiansiswa/routes/lupa_password_routes.py", line 55, in reset_token
+    if current_user.is_authenticated:
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/werkzeug/local.py", line 318, in __get__
+    obj = instance._get_current_object()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/werkzeug/local.py", line 526, in _get_current_object
+    return get_name(local())
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 25, in <lambda>
+    current_user = LocalProxy(lambda: _get_user())
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/utils.py", line 370, in _get_user
+    current_app.login_manager._load_user()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask_login/login_manager.py", line 364, in _load_user
+    user = self._user_callback(user_id)
+  File "/home/kebiasaa/sekolah/main.py", line 61, in load_user
+    return User.query.get(int(user_id))
+  File "<string>", line 2, in get
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/util/deprecations.py", line 386, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 1126, in get
+    return self._get_impl(ident, loading.load_on_pk_identity)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 1135, in _get_impl
+    return self.session._get_impl(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 3873, in _get_impl
+    return db_load_fn(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/loading.py", line 695, in load_on_pk_identity
+    session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 574, in query
+    self._execute_command(COMMAND.COM_QUERY, sql)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 865, in _execute_command
+    self._write_bytes(packet)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 816, in _write_bytes
+    raise err.OperationalError(
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (2006, "MySQL server has gone away (ConnectionResetError(104, 'Connection reset by peer'))")
+[SQL: SELECT users.id AS users_id, users.nama_lengkap AS users_nama_lengkap, users.email AS users_email, users.username AS users_username, users.password AS users_password, users.role AS users_role 
+FROM users 
+WHERE users.id = %(pk_1)s]
+[parameters: {'pk_1': 13}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 42
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 49
+DEBUG: Ditemukan 2 siswa di kelas IV
+DEBUG: Membuat laporan untuk siswa_id: 41, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 196
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 48
+DEBUG: Ditemukan 5 siswa di kelas 4
+DEBUG: Membuat laporan untuk siswa_id: 59, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 253
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 46
+DEBUG: Ditemukan 12 siswa di kelas Kelas VI
+DEBUG: Membuat laporan untuk siswa_id: 43, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 334
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 58
+DEBUG: Ditemukan 2 siswa di kelas VI
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 426
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 51
+DEBUG: Ditemukan 8 siswa di kelas Kelas 6
+DEBUG: Membuat laporan untuk siswa_id: 75, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 291
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 55
+DEBUG: Ditemukan 4 siswa di kelas Kelas 4
+DEBUG: Membuat laporan untuk siswa_id: 55, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 114
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 40
+DEBUG: Ditemukan 2 siswa di kelas 2
+DEBUG: Membuat laporan untuk siswa_id: 56, semester: ganjil
+DEBUG: Membuat laporan untuk siswa_id: 145, semester: ganjil
+DEBUG: Membuat laporan untuk siswa_id: 80, semester: ganjil
+DEBUG: Mengambil siswa untuk kelas_id: 47
+DEBUG: Ditemukan 5 siswa di kelas IV
+DEBUG: Membuat laporan untuk siswa_id: 147, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 389
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 47
+DEBUG: Ditemukan 0 siswa di kelas IV
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 389
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 234
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 56
+DEBUG: Ditemukan 8 siswa di kelas IV
+DEBUG: Membuat laporan untuk siswa_id: 119, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 196
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 426
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+[2025-11-03 13:35:49,220] ERROR in app: Exception on /login [POST]
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 813, in _write_bytes
+    self._sock.sendall(data)
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 574, in query
+    self._execute_command(COMMAND.COM_QUERY, sql)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 865, in _execute_command
+    self._write_bytes(packet)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 816, in _write_bytes
+    raise err.OperationalError(
+pymysql.err.OperationalError: (2006, "MySQL server has gone away (ConnectionResetError(104, 'Connection reset by peer'))")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "/home/kebiasaa/sekolah/main.py", line 121, in login
+    user = User.query.filter_by(username=username).first()
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2759, in first
+    return self.limit(1)._iter().first()  # type: ignore
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1419, in execute
+    return meth(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib64/python3.10/site-packages/sqlalchemy/engine/default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 153, in execute
+    result = self._query(query)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/cursors.py", line 322, in _query
+    conn.query(q)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 574, in query
+    self._execute_command(COMMAND.COM_QUERY, sql)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 865, in _execute_command
+    self._write_bytes(packet)
+  File "/home/kebiasaa/virtualenv/sekolah/3.10/lib/python3.10/site-packages/pymysql/connections.py", line 816, in _write_bytes
+    raise err.OperationalError(
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (2006, "MySQL server has gone away (ConnectionResetError(104, 'Connection reset by peer'))")
+[SQL: SELECT users.id AS users_id, users.nama_lengkap AS users_nama_lengkap, users.email AS users_email, users.username AS users_username, users.password AS users_password, users.role AS users_role 
+FROM users 
+WHERE users.username = %(username_1)s 
+ LIMIT %(param_1)s]
+[parameters: {'username_1': 'SADAR', 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 253
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 46
+DEBUG: Ditemukan 12 siswa di kelas Kelas VI
+DEBUG: Membuat laporan untuk siswa_id: 43, semester: ganjil
+DEBUG: Mengambil siswa untuk kelas_id: 46
+DEBUG: Ditemukan 12 siswa di kelas Kelas VI
+DEBUG: Membuat laporan untuk siswa_id: 43, semester: ganjil
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 253
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 253
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 46
+DEBUG: Ditemukan 12 siswa di kelas Kelas VI
+DEBUG: Mengakses API tahun ajaran
+DEBUG: Sekolah ID: 253
+DEBUG: Ditemukan 1 tahun ajaran
+DEBUG: Data tahun ajaran berhasil dibuat
+DEBUG: Mengambil siswa untuk kelas_id: 46
+DEBUG: Ditemukan 12 siswa di kelas Kelas VI
+DEBUG: Membuat laporan untuk siswa_id: 43, semester: ganjil
+DEBUG: Membuat laporan untuk siswa_id: 51, semester: ganjil
