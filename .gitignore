@@ -41,3 +41,4 @@ test_db.py
 # Uploads
 uploads/
 temp/config.py
+config.py
