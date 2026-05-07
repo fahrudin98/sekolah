@@ -40,4 +40,4 @@ test_db.py
 
 # Uploads
 uploads/
-temp/
+temp/config.py
