@@ -57,10 +57,12 @@
         .text-center { text-align: center; }
         .bold { font-weight: bold; }
         
+        /* PERBAIKAN: Format info grid yang rapi */
         .info-grid {
             display: table;
             width: 100%;
             margin-bottom: 5px;
+            table-layout: fixed;
         }
         .info-row {
             display: table-row;
@@ -74,11 +76,17 @@
         .info-label { 
             white-space: nowrap; 
             font-weight: bold; 
-            width: 100px; 
+            width: 120px; /* Diperlebar untuk "PLT. Kepala Sekolah" */
+            text-align: left;
         }
         .info-colon { 
-            width: 5px; 
+            width: 8px; 
+            text-align: center;
             padding: 2px 5px;
+        }
+        .info-value { 
+            text-align: left;
+            word-wrap: break-word;
         }
         
         .footer {
@@ -86,6 +94,74 @@
             font-size: 10px;
             text-align: center;
             color: #666;
+        }
+
+        /* PERBAIKAN: Style untuk bagian tanda tangan yang rapi */
+        .signature-section {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            page-break-inside: avoid;
+        }
+        
+        .signature-left, .signature-right {
+            width: 45%;
+            text-align: center;
+        }
+        
+        .signature-space {
+            height: 50px;
+            margin-bottom: 5px;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            margin-top: 5px;
+            text-decoration: underline;
+            font-size: 11px;
+            text-align: center;
+        }
+        
+        .signature-nip {
+            font-size: 9px;
+            margin-top: 2px;
+            text-align: center;
+        }
+        
+        .date-info {
+            text-align: right;
+            margin-bottom: 30px;
+            font-size: 10px;
+        }
+        
+        /* PERBAIKAN: Container untuk memastikan nama sejajar */
+        .name-align-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+        }
+        
+        .name-align-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .no-print {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .no-print button {
+            padding: 6px 12px;
+            margin: 0 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
         }
         
         @media print {
@@ -97,7 +173,7 @@
 <body>
     <div class="header">
         <h1>LAPORAN PENILAIAN KEBIASAAN SISWA</h1>
-
+        <h2>Bulan: {{ data.bulan_label }}</h2>
     </div>
 
     <div class="info-container">
@@ -117,7 +193,13 @@
                     </div>
                 </div>
                 <div class="info-row">
-                    <div class="info-label">Kepala Sekolah</div>
+                    <div class="info-label">
+                        {% if data.kepala_sekolah.is_plt %}
+                        PLT. Kepala Sekolah
+                        {% else %}
+                        Kepala Sekolah
+                        {% endif %}
+                    </div>
                     <div class="info-colon">:</div>
                     <div class="info-value">
                         {{ data.kepala_sekolah.nama }} 
@@ -200,8 +282,54 @@
         </tbody>
     </table>
 
-    <div class="footer">
+    <!-- Bagian Tanda Tangan -->
+    <div class="date-info">
         <p>Dicetak pada: {{ data.tanggal_cetak }}</p>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-left">
+            <div class="name-align-container">
+                <div style="margin-bottom: 10px;">
+                    <p style="margin: 0;">Mengetahui</p>
+                    <p style="margin: 0; font-weight: bold; font-size: 11px;">
+                        {% if data.kepala_sekolah.is_plt %}
+                        PLT. Kepala Sekolah
+                        {% else %}
+                        Kepala Sekolah
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="name-align-wrapper">
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ data.kepala_sekolah.nama }}</div>
+                    {% if data.kepala_sekolah.nip %}
+                    <div class="signature-nip">NIP: {{ data.kepala_sekolah.nip }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="signature-right">
+            <div class="name-align-container">
+                <div style="margin-bottom: 10px;">
+                    <p style="margin: 0; font-weight: bold; font-size: 11px;">
+                        Wali Kelas {{ data.kelas.nama_kelas }}
+                    </p>
+                </div>
+                <div class="name-align-wrapper">
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ data.wali_kelas.nama }}</div>
+                    {% if data.wali_kelas.nip %}
+                    <div class="signature-nip">NIP: {{ data.wali_kelas.nip }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Laporan ini dicetak secara elektronik</p>
     </div>
 
     <div class="no-print">

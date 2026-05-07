@@ -22,12 +22,13 @@ class Config:
     
     # 📧 EMAIL - Ambil SEMUA dari environment variables
     MAIL_SERVER = os.environ.get("MAIL_SERVER", "mail.7kebiasaan.com")
-    MAIL_PORT = int(os.environ.get("MAIL_PORT", 465))
+    MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
     MAIL_USE_SSL = os.environ.get("MAIL_USE_SSL", "True").lower() == "true"
     MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "False").lower() == "true"
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "admin@7kebiasaan.com")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "Nurulfarida02102011")
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "admin@7kebiasaan.com")
+    CONTACT_RECIPIENT = os.environ.get("CONTACT_RECIPIENT", "fahrudnahmad98@gmail.com")
     
     # 📁 Template & Static Files
     TEMPLATES_FOLDER = os.path.join(basedir, 'penilaiansiswa', 'templates')

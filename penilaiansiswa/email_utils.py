@@ -10,7 +10,7 @@ def send_reset_email(user):
         s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         token = s.dumps({'user_id': user.id}, salt='password-reset-salt')
         
-        # ✅ PASTIKAN NAMA BLUEPRINT BENAR
+        # Create reset URL
         reset_url = url_for('lupa_password.reset_token', token=token, _external=True)
         
         # Create email message
@@ -20,7 +20,7 @@ def send_reset_email(user):
             recipients=[user.email]
         )
         
-        # Email content
+        # Email content (HTML)
         msg.html = f"""
         <!DOCTYPE html>
         <html>
@@ -75,9 +75,26 @@ def send_reset_email(user):
         </html>
         """
         
+        # Plain text version
+        msg.body = f"""
+Halo {user.username},
+
+Anda menerima email ini karena meminta reset password untuk akun Aplikasi Penilaian Siswa.
+
+Klik link berikut untuk reset password:
+{reset_url}
+
+Link ini berlaku selama 1 jam.
+
+Jika Anda tidak meminta reset password, abaikan email ini.
+
+Terima kasih,
+Tim Aplikasi Penilaian Siswa
+        """
+        
         # Send email
         mail.send(msg)
-        current_app.logger.info(f"Reset email successfully sent to {user.email}")
+        current_app.logger.info(f"Reset email sent to {user.email}")
         return True
         
     except Exception as e:

@@ -58,10 +58,12 @@
         .text-right { text-align: right; }
         .bold { font-weight: bold; }
         
+        /* PERBAIKAN: Format info grid yang rapi */
         .info-grid {
             display: table;
             width: 100%;
             margin-bottom: 5px;
+            table-layout: fixed;
         }
         .info-row {
             display: table-row;
@@ -75,11 +77,17 @@
         .info-label { 
             white-space: nowrap; 
             font-weight: bold; 
-            width: 100px; 
+            width: 120px; /* Diperlebar untuk "PLT. Kepala Sekolah" */
+            text-align: left;
         }
         .info-colon { 
-            width: 5px; 
+            width: 8px; 
+            text-align: center;
             padding: 2px 5px;
+        }
+        .info-value { 
+            text-align: left;
+            word-wrap: break-word;
         }
         
         .footer {
@@ -97,7 +105,7 @@
         .terbiasa { color: green; font-weight: bold; }
         .belum-terbiasa { color: red; font-weight: bold; }
         
-        /* Style untuk bagian tanda tangan */
+        /* PERBAIKAN: Style untuk bagian tanda tangan yang rapi */
         .signature-section {
             margin-top: 40px;
             display: flex;
@@ -119,15 +127,14 @@
             font-weight: bold;
             margin-top: 5px;
             text-decoration: underline;
-            min-height: 20px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
+            font-size: 11px;
+            text-align: center;
         }
         
         .signature-nip {
             font-size: 9px;
             margin-top: 2px;
+            text-align: center;
         }
         
         .date-info {
@@ -136,18 +143,34 @@
             font-size: 10px;
         }
         
-        /* Container untuk memastikan nama sejajar */
+        /* PERBAIKAN: Container untuk memastikan nama sejajar */
         .name-align-container {
             display: flex;
             flex-direction: column;
+            align-items: center;
             height: 100%;
         }
         
         .name-align-wrapper {
-            flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .no-print {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .no-print button {
+            padding: 6px 12px;
+            margin: 0 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
         }
         
         /* Media query untuk print A4 portrait */
@@ -202,14 +225,19 @@
                     </div>
                 </div>
                 <div class="info-row">
-                    <div class="info-label">Kepala Sekolah</div>
+                    <div class="info-label">
+                        {% if data.kepala_sekolah.is_plt %}
+                        PLT. Kepala Sekolah
+                        {% else %}
+                        Kepala Sekolah
+                        {% endif %}
+                    </div>
                     <div class="info-colon">:</div>
                     <div class="info-value">
                         {{ data.kepala_sekolah.nama }} 
                         {% if data.kepala_sekolah.nip %}(NIP: {{ data.kepala_sekolah.nip }}){% endif %}
                     </div>
                 </div>
-
                 <div class="info-row">
                     <div class="info-label">Kelas</div>
                     <div class="info-colon">:</div>
@@ -223,7 +251,6 @@
                         {% if data.wali_kelas.nip %}(NIP: {{ data.wali_kelas.nip }}){% endif %}
                     </div>
                 </div>
-
             </div>
         </div>
         
@@ -240,7 +267,6 @@
                     <div class="info-colon">:</div>
                     <div class="info-value">{{ data.semester }}</div>
                 </div>
-
                 <div class="info-row">
                     <div class="info-label">Nama Siswa</div>
                     <div class="info-colon">:</div>
@@ -361,9 +387,15 @@
     <div class="signature-section">
         <div class="signature-left">
             <div class="name-align-container">
-                <div>
-                    <p>Mengetahui</p>
-                    <p>Kepala Sekolah</p>
+                <div style="margin-bottom: 10px;">
+                    <p style="margin: 0;">Mengetahui</p>
+                    <p style="margin: 0; font-weight: bold; font-size: 11px;">
+                        {% if data.kepala_sekolah.is_plt %}
+                        PLT. Kepala Sekolah
+                        {% else %}
+                        Kepala Sekolah
+                        {% endif %}
+                    </p>
                 </div>
                 <div class="name-align-wrapper">
                     <div class="signature-space"></div>
@@ -377,8 +409,10 @@
         
         <div class="signature-right">
             <div class="name-align-container">
-                <div>
-                    <p>Wali Kelas {{ data.kelas.nama_kelas }}</p>
+                <div style="margin-bottom: 10px;">
+                    <p style="margin: 0; font-weight: bold; font-size: 11px;">
+                        Wali Kelas {{ data.kelas.nama_kelas }}
+                    </p>
                 </div>
                 <div class="name-align-wrapper">
                     <div class="signature-space"></div>
@@ -416,7 +450,7 @@
                 filename: `Laporan_Perkembangan_{{ data.siswa.nama_siswa }}_{{ data.tahun_ajaran.tahun_ajaran }}_{{ data.semester }}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } // Changed to portrait
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             html2pdf().set(options).from(element).save().then(() => {
                 noPrintElements.forEach(el => {

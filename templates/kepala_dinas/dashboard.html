@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Kepala Dinas - {{ kabupaten_nama }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; padding-top: 20px; }
+        .stat-card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; margin-bottom: 15px; height: 100px; display: flex; flex-direction: column; justify-content: center; }
+        .stat-number { font-size: 1.8rem; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+        .stat-label { font-size: 0.8rem; color: #7f8c8d; }
+        .chart-container { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .habit-chart { height: 180px; margin-bottom: 15px; }
+        .navbar-custom { background: linear-gradient(135deg, #28a745, #1e7e34); border-radius: 10px; margin-bottom: 20px; }
+        .trend-chart-container { height: 350px; }
+        .small-chart { height: 180px !important; }
+        .tahun-ajaran-badge { background: #ffc107; color: #333; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem; margin-left: 10px; }
+        .performance-badge { background: linear-gradient(135deg, #6c757d, #495057); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; margin-left: 10px; }
+        .filter-section { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .table thead th { background-color: #343a40; color: white; text-align: center; vertical-align: middle; }
+        .table td { text-align: center; vertical-align: middle; }
+        .loading-spinner { display: none; text-align: center; padding: 20px; }
+        .error-message { display: none; text-align: center; padding: 20px; color: #dc3545; }
+        .pagination-container { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .page-btn { padding: 0.25rem 0.5rem; font-size: 0.875rem; margin: 0 2px; cursor: pointer; }
+        .kabupaten-badge { background: #17a2b8; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; margin-left: 10px; }
+        .table-responsive { max-height: 500px; overflow-y: auto; }
+        .table th { position: sticky; top: 0; background-color: #343a40; color: white; z-index: 10; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-building me-2"></i>Dashboard Kepala Dinas
+                <span class="kabupaten-badge" id="kabupatenBadge">{{ kabupaten_nama }}</span>
+                <span class="tahun-ajaran-badge" id="tahunAjaranBadge">2024/2025</span>
+                <span class="performance-badge" id="overallPerformance">Rata-rata: 0.0</span>
+            </span>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="navbar-text me-3"><i class="fas fa-user me-1"></i>{{ user.username }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-light btn-sm" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Loading & Error -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+        <p class="mt-2">Memuat data...</p>
+    </div>
+    <div class="error-message alert alert-danger" id="errorMessage">Terjadi kesalahan saat memuat data.</div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="row align-items-end">
+            <div class="col-md-4">
+                <label class="form-label"><strong>Tahun Ajaran</strong></label>
+                <select class="form-select" id="tahunAjaranFilter">
+                    <option value="">-- Pilih Tahun Ajaran --</option>
+                    {% for ta in tahun_ajaran_list %}
+                    <option value="{{ ta.id }}" {% if ta.aktif %}selected{% endif %}>{{ ta.tahun_ajaran }} ({{ ta.semester }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label"><strong>Pilih Bulan</strong></label>
+                <select class="form-select" id="bulanFilter">
+                    <option value="">-- Semua Bulan (Rata-rata) --</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <input type="text" class="form-control" id="searchSekolah" placeholder="Cari sekolah...">
+                    <button class="btn btn-primary" id="searchBtn">🔍 Cari</button>
+                    <button class="btn btn-outline-secondary" id="resetFilterBtn">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Statistik -->
+    <div class="row">
+        <div class="col-md-3"><div class="stat-card"><div class="stat-number" id="totalSekolah">0</div><div class="stat-label">SEKOLAH</div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="stat-number" id="totalSiswa">0</div><div class="stat-label">SISWA</div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="stat-number" id="totalGuru">0</div><div class="stat-label">GURU</div></div></div>
+        <div class="col-md-3"><div class="stat-card"><div class="stat-number" id="totalPengguna">0</div><div class="stat-label">PENGGUNA</div></div></div>
+    </div>
+
+    <!-- Grafik Trend -->
+    <div class="row">
+        <div class="col-12">
+            <div class="chart-container trend-chart-container">
+                <h5 class="mb-4">Perkembangan Rata-rata Kebiasaan Siswa per Bulan <small class="text-muted" id="tahunAjaranText"></small></h5>
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7 Grafik Kebiasaan -->
+    <div class="row">
+        <div class="col-12">
+            <div class="chart-container">
+                <h5 class="mb-4">10 Sekolah Terbaik per Kebiasaan <small class="text-muted" id="tahunAjaranText2"></small></h5>
+                <div class="row" id="habitsContainer"><div class="col-12 text-center"><p class="text-muted">Data grafik sedang dimuat...</p></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabel Sekolah -->
+    <div class="row">
+        <div class="col-12">
+            <div class="chart-container">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Rangkuman Performa Sekolah <small class="text-muted" id="tahunAjaranText3"></small></h5>
+                    <select class="form-select" id="pageSizeSelect" style="width: 120px;">
+                        <option value="25" selected>25 baris</option>
+                        <option value="50">50 baris</option>
+                        <option value="100">100 baris</option>
+                    </select>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr><th>Sekolah</th><th>Bangun Pagi</th><th>Beribadah</th><th>Berolahraga</th><th>Makan Sehat</th><th>Belajar</th><th>Bermasyarakat</th><th>Tidur Cepat</th><th>Rata-rata</th></tr>
+                        </thead>
+                        <tbody id="tableBody"><tr><td colspan="9" class="text-center">Data sedang dimuat...</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pagination-container" id="paginationContainer" style="display: none;">
+                    <div class="page-info" id="pageInfo"></div>
+                    <div class="pagination-buttons" id="paginationButtons"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<script>
+// ========== VARIABEL ==========
+let currentPage = 1, pageSize = 25, currentBulan = '', currentTahunAjaran = '', currentSearch = '', totalData = 0, totalPages = 0, trendChart = null;
+
+// ========== LOAD DATA ==========
+async function loadDashboardData() {
+    showLoading(true); showError(false);
+    try {
+        let url = `/kepala_dinas/api/statistik?page=${currentPage}&limit=${pageSize}&bulan=${currentBulan}&tahun_ajaran_id=${currentTahunAjaran}`;
+        if (currentSearch) url += `&search=${encodeURIComponent(currentSearch)}`;
+        const response = await fetch(url);
+        const result = await response.json();
+        if (result.success) {
+            document.getElementById('totalSekolah').textContent = result.total_sekolah || 0;
+            document.getElementById('totalSiswa').textContent = result.total_siswa || 0;
+            document.getElementById('totalGuru').textContent = result.total_pegawai || 0;
+            document.getElementById('totalPengguna').textContent = result.total_users || 0;
+            document.getElementById('overallPerformance').textContent = `Rata-rata: ${result.overall_performance || 0}`;
+            document.getElementById('kabupatenBadge').textContent = result.kabupaten_nama || '{{ kabupaten_nama }}';
+            renderSchoolTable(result.data_sekolah);
+            totalData = result.total_data; totalPages = result.total_pages;
+            renderPagination();
+            renderHabitsCharts(result.habits_data);
+            renderTrendChart(result.trend_data);
+            const tahunText = result.tahun_ajaran ? `- ${result.tahun_ajaran}` : '';
+            document.getElementById('tahunAjaranText').textContent = tahunText;
+            document.getElementById('tahunAjaranText2').textContent = tahunText;
+            document.getElementById('tahunAjaranText3').textContent = tahunText;
+            document.getElementById('tahunAjaranBadge').textContent = result.tahun_ajaran || '2024/2025';
+        }
+    } catch(e) { console.error(e); showError(true, 'Terjadi kesalahan'); }
+    finally { showLoading(false); }
+}
+
+async function loadBulanList() {
+    try {
+        let url = `/kepala_dinas/api/bulan_list?tahun_ajaran_id=${currentTahunAjaran}`;
+        const response = await fetch(url);
+        const result = await response.json();
+        if (result.success && result.bulan_list) {
+            const select = document.getElementById('bulanFilter');
+            select.innerHTML = '<option value="">-- Semua Bulan (Rata-rata) --</option>';
+            result.bulan_list.forEach(b => select.innerHTML += `<option value="${b.value}">${b.display} (${b.jumlah} data)</option>`);
+        }
+    } catch(e) { console.error(e); }
+}
+
+function renderSchoolTable(data) {
+    const tbody = document.getElementById('tableBody');
+    if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data</td></tr>'; return; }
+    tbody.innerHTML = data.map(s => `<tr><td><strong>${escapeHtml(s.sekolah)}</strong></td><td>${s.bangun_pagi}</td><td>${s.beribadah}</td><td>${s.berolahraga}</td><td>${s.sehat_dan_lemar}</td><td>${s.belajar}</td><td>${s.bermasyarakat}</td><td>${s.tidur_cepat}</td><td><strong>${s.rata_rata}</strong></td></tr>`).join('');
+}
+
+function renderPagination() {
+    const container = document.getElementById('paginationContainer');
+    if (totalPages <= 1) { container.style.display = 'none'; return; }
+    container.style.display = 'flex';
+    document.getElementById('pageInfo').textContent = `Menampilkan ${(currentPage-1)*pageSize+1} - ${Math.min(currentPage*pageSize, totalData)} dari ${totalData} sekolah`;
+    let html = `<button class="btn btn-sm btn-outline-secondary page-btn" onclick="goToPage(${currentPage-1})" ${currentPage===1?'disabled':''}>« Prev</button>`;
+    let start = Math.max(1, currentPage-2), end = Math.min(totalPages, currentPage+2);
+    if(start>1){ html+=`<button class="btn btn-sm btn-outline-secondary page-btn" onclick="goToPage(1)">1</button>`; if(start>2) html+=`<span class="px-1">...</span>`; }
+    for(let i=start;i<=end;i++) html+=`<button class="btn btn-sm ${i===currentPage?'btn-primary':'btn-outline-secondary'} page-btn" onclick="goToPage(${i})">${i}</button>`;
+    if(end<totalPages){ if(end<totalPages-1) html+=`<span class="px-1">...</span>`; html+=`<button class="btn btn-sm btn-outline-secondary page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`; }
+    html+=`<button class="btn btn-sm btn-outline-secondary page-btn" onclick="goToPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>Next »</button>`;
+    document.getElementById('paginationButtons').innerHTML = html;
+}
+
+function goToPage(page){ if(page<1||page>totalPages) return; currentPage=page; loadDashboardData(); }
+
+// ========== GRAFIK ==========
+function getDisplayName(n){ const m={'bangun_pagi':'Bangun Pagi','beribadah':'Beribadah','berolahraga':'Berolahraga','sehat_dan_lemar':'Makan Sehat','belajar':'Belajar','bermasyarakat':'Bermasyarakat','tidur_cepat':'Tidur Cepat'}; return m[n]||n; }
+function renderHabitChart(id,name,data,color){
+    const c=document.getElementById(id); if(!c) return;
+    if(c.chart) c.chart.destroy();
+    if(!data||!data.labels||!data.data) return;
+    const revL=[...data.labels].reverse(), revD=[...data.data].reverse();
+    c.chart=new Chart(c.getContext('2d'),{type:'bar',data:{labels:revL,datasets:[{label:name,data:revD,backgroundColor:color}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:31},y:{ticks:{font:{size:8}}}}}});
+}
+function renderHabitsCharts(data){
+    const cont=document.getElementById('habitsContainer'); if(!cont) return;
+    const colors=['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#2E8B57'];
+    if(!data||Object.keys(data).length===0){ cont.innerHTML='<div class="col-12 text-center"><p class="text-muted">Tidak ada data</p></div>'; return; }
+    let html='',i=0;
+    Object.keys(data).forEach(k=>{ html+=`<div class="${i<4?'col-md-3':'col-md-4'} mb-3"><div class="habit-chart small-chart"><h6 class="text-center mb-2" style="font-size:0.9rem;">${getDisplayName(k)}</h6><canvas id="habitChart${i}"></canvas></div></div>`; i++; });
+    cont.innerHTML=html;
+    setTimeout(()=>{ let idx=0; Object.keys(data).forEach(k=>{ renderHabitChart(`habitChart${idx}`,getDisplayName(k),data[k],colors[idx%colors.length]); idx++; }); },100);
+}
+function renderTrendChart(data){
+    const c=document.getElementById('trendChart'); if(!c) return;
+    if(trendChart) trendChart.destroy();
+    if(!data||!data.labels||!data.datasets) return;
+    data.datasets.forEach(ds=>{ if(ds.label) ds.label=getDisplayName(ds.label); });
+    trendChart=new Chart(c.getContext('2d'),{type:'line',data:data,options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,max:31}}}});
+}
+
+// ========== UTILITY ==========
+function showLoading(s){ document.getElementById('loadingSpinner').style.display=s?'block':'none'; }
+function showError(s,m){ const e=document.getElementById('errorMessage'); if(m) e.textContent=m; e.style.display=s?'block':'none'; }
+function escapeHtml(t){ if(!t) return ''; const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+
+// ========== EVENT LISTENERS ==========
+document.addEventListener('DOMContentLoaded',()=>{
+    loadBulanList(); loadDashboardData();
+    document.getElementById('tahunAjaranFilter').addEventListener('change',()=>{ currentTahunAjaran=document.getElementById('tahunAjaranFilter').value; currentPage=1; loadBulanList(); loadDashboardData(); });
+    document.getElementById('bulanFilter').addEventListener('change',()=>{ currentBulan=document.getElementById('bulanFilter').value; currentPage=1; loadDashboardData(); });
+    document.getElementById('pageSizeSelect').addEventListener('change',()=>{ pageSize=parseInt(document.getElementById('pageSizeSelect').value); currentPage=1; loadDashboardData(); });
+    document.getElementById('searchBtn').addEventListener('click',()=>{ currentSearch=document.getElementById('searchSekolah').value; currentPage=1; loadDashboardData(); });
+    document.getElementById('resetFilterBtn').addEventListener('click',()=>{ document.getElementById('searchSekolah').value=''; document.getElementById('bulanFilter').value=''; document.getElementById('tahunAjaranFilter').value=''; currentSearch=''; currentBulan=''; currentTahunAjaran=''; currentPage=1; loadBulanList(); loadDashboardData(); });
+    document.getElementById('searchSekolah').addEventListener('keypress',e=>{ if(e.key==='Enter') document.getElementById('searchBtn').click(); });
+});
+</script>
+</body>
+</html>

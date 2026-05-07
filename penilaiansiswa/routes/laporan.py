@@ -64,6 +64,24 @@ def laporan_rchk(kelas_id, bulan):
         kabupaten = Kabupaten.query.get(kecamatan.kabupaten_id) if kecamatan else None
         provinsi = Provinsi.query.get(kabupaten.provinsi_id) if kabupaten else None
 
+        # **LOGIKA PLT YANG BENAR:**
+        is_plt = False
+        if kepala_sekolah and sekolah:
+            print(f"DEBUG - Sekolah ID: {sekolah.id}")
+            print(f"DEBUG - Kepala Sekolah ID: {kepala_sekolah.id}")
+            print(f"DEBUG - Kepala Sekolah - Sekolah ID: {kepala_sekolah.sekolah_id}")
+            
+            # **PLT = Kepala sekolah berasal dari sekolah YANG BERBEDA**
+            if kepala_sekolah.sekolah_id != sekolah.id:
+                is_plt = True
+                print(f"DEBUG - STATUS PLT: TRUE (kepala sekolah dari sekolah berbeda)")
+            else:
+                print(f"DEBUG - STATUS PLT: FALSE (kepala sekolah dari sekolah sama)")
+        else:
+            print(f"DEBUG - Tidak bisa cek PLT: data tidak lengkap")
+
+        print(f"DEBUG - FINAL is_plt: {is_plt}")
+
         siswa_list = Siswa.query.filter_by(kelas_id=kelas.id).order_by(Siswa.nama_siswa).all()
 
         kebiasaan_fields = [
@@ -146,8 +164,9 @@ def laporan_rchk(kelas_id, bulan):
             },
             'kepala_sekolah': {
                 'nama': kepala_sekolah.nama if kepala_sekolah else '',
-                'nip': kepala_sekolah.nip if kepala_sekolah else ''
-            } if kepala_sekolah else {'nama': '', 'nip': ''},
+                'nip': kepala_sekolah.nip if kepala_sekolah else '',
+                'is_plt': is_plt  # **INI YANG DITAMBAHKAN**
+            } if kepala_sekolah else {'nama': '', 'nip': '', 'is_plt': False},
             'wali_kelas': {
                 'nama': wali_kelas.nama if wali_kelas else '',
                 'nip': wali_kelas.nip if wali_kelas else ''
@@ -370,6 +389,16 @@ def laporan_penilaian(kelas_id, bulan):
         wali_kelas = Pegawai.query.get(kelas.wali_kelas_id)
         kepala_sekolah = Pegawai.query.get(tahun_ajaran.kepala_sekolah_id) if tahun_ajaran else None
 
+        # **TAMBAHKAN LOGIKA PLT DI SINI**
+        is_plt = False
+        if kepala_sekolah and sekolah:
+            # PLT = Kepala sekolah berasal dari sekolah YANG BERBEDA
+            if kepala_sekolah.sekolah_id != sekolah.id:
+                is_plt = True
+                print(f"DEBUG PLT - STATUS: TRUE (kepala sekolah dari sekolah berbeda)")
+            else:
+                print(f"DEBUG PLT - STATUS: FALSE (kepala sekolah dari sekolah sama)")
+
         # Data kecamatan, kabupaten, provinsi
         kecamatan = Kecamatan.query.get(sekolah.kecamatan_id) if sekolah else None
         kabupaten = Kabupaten.query.get(kecamatan.kabupaten_id) if kecamatan else None
@@ -425,8 +454,9 @@ def laporan_penilaian(kelas_id, bulan):
             },
             'kepala_sekolah': {
                 'nama': kepala_sekolah.nama if kepala_sekolah else '',
-                'nip': kepala_sekolah.nip if kepala_sekolah else ''
-            } if kepala_sekolah else {'nama': '', 'nip': ''},
+                'nip': kepala_sekolah.nip if kepala_sekolah else '',
+                'is_plt': is_plt  # **TAMBAHKAN INI**
+            } if kepala_sekolah else {'nama': '', 'nip': '', 'is_plt': False},
             'wali_kelas': {
                 'nama': wali_kelas.nama if wali_kelas else '',
                 'nip': wali_kelas.nip if wali_kelas else ''
@@ -742,14 +772,76 @@ def laporan_penilaian_siswa(siswa_id):
         if not tahun_ajaran:
             abort(404, description="Tahun ajaran tidak ditemukan")
 
-        # Extract tahun dari tahun ajaran (format: "2023/2024")
-        tahun_parts = tahun_ajaran.tahun_ajaran.split('/')
-        if len(tahun_parts) == 2:
-            tahun_awal = int(tahun_parts[0])  # 2023
-            tahun_akhir = int(tahun_parts[1]) # 2024
-        else:
-            tahun_awal = int(tahun_parts[0])
-            tahun_akhir = tahun_awal + 1
+        # PERBAIKAN: Ekstrak tahun dari tahun ajaran dengan handle kedua format (2023/2024 atau 2023-2024)
+        def extract_years_from_tahun_ajaran(tahun_ajaran_str):
+            """
+            Ekstrak tahun awal dan tahun akhir dari string tahun ajaran.
+            Mendukung format '2023/2024', '2023-2024', atau '20232024'
+            """
+            # Normalisasi string
+            tahun_str = str(tahun_ajaran_str).strip()
+            
+            # Coba split dengan berbagai separator
+            for separator in ['/', '-']:
+                if separator in tahun_str:
+                    parts = tahun_str.split(separator)
+                    if len(parts) >= 2:
+                        try:
+                            tahun_awal = int(parts[0].strip())
+                            tahun_akhir = int(parts[1].strip())
+                            # Pastikan tahun_akhir > tahun_awal
+                            if tahun_akhir > tahun_awal:
+                                return tahun_awal, tahun_akhir
+                        except (ValueError, IndexError):
+                            continue
+            
+            # Jika tidak ada separator, cari 4 digit angka berturut-turut
+            import re
+            years = re.findall(r'\d{4}', tahun_str)
+            if len(years) >= 2:
+                try:
+                    tahun_awal = int(years[0])
+                    tahun_akhir = int(years[1])
+                    if tahun_akhir > tahun_awal:
+                        return tahun_awal, tahun_akhir
+                except ValueError:
+                    pass
+            
+            # Fallback: cari angka 4 digit
+            numbers = re.findall(r'\d+', tahun_str)
+            if len(numbers) >= 2:
+                try:
+                    tahun_awal = int(numbers[0][:4]) if len(numbers[0]) >= 4 else int(numbers[0])
+                    tahun_akhir = int(numbers[1][:4]) if len(numbers[1]) >= 4 else int(numbers[1])
+                    if tahun_akhir > tahun_awal:
+                        return tahun_awal, tahun_akhir
+                except ValueError:
+                    pass
+            
+            # Jika semua gagal, coba ekstrak dari string
+            try:
+                # Contoh: "2023/2024" atau "2023-2024" tanpa separator yang jelas
+                if len(tahun_str) >= 9:  # Minimal 9 karakter untuk "2023/2024"
+                    # Ambil 4 digit pertama dan 4 digit terakhir
+                    tahun_awal = int(tahun_str[:4])
+                    tahun_akhir = int(tahun_str[-4:])
+                    if tahun_akhir > tahun_awal:
+                        return tahun_awal, tahun_akhir
+            except (ValueError, IndexError):
+                pass
+            
+            # Default fallback: asumsikan tahun ajaran normal
+            try:
+                tahun_awal = int(tahun_str[:4])
+                return tahun_awal, tahun_awal + 1
+            except (ValueError, IndexError):
+                # Ultimate fallback
+                print(f"WARNING: Tidak bisa parse tahun ajaran: '{tahun_ajaran_str}', menggunakan default 2024/2025")
+                return 2024, 2025
+
+        # Gunakan fungsi ekstraksi yang baru
+        tahun_awal, tahun_akhir = extract_years_from_tahun_ajaran(tahun_ajaran.tahun_ajaran)
+        print(f"DEBUG: Tahun ajaran '{tahun_ajaran.tahun_ajaran}' -> {tahun_awal}/{tahun_akhir}")
 
         # Tentukan bulan yang akan ditampilkan berdasarkan semester
         bulan_data = []
@@ -779,6 +871,16 @@ def laporan_penilaian_siswa(siswa_id):
         sekolah = Sekolah.query.get(kelas.sekolah_id)
         wali_kelas = Pegawai.query.get(kelas.wali_kelas_id)
         kepala_sekolah = Pegawai.query.get(tahun_ajaran.kepala_sekolah_id) if tahun_ajaran else None
+
+        # **LOGIKA PLT**
+        is_plt = False
+        if kepala_sekolah and sekolah:
+            # PLT = Kepala sekolah berasal dari sekolah YANG BERBEDA
+            if kepala_sekolah.sekolah_id != sekolah.id:
+                is_plt = True
+                print(f"DEBUG PLT - STATUS: TRUE (kepala sekolah dari sekolah berbeda)")
+            else:
+                print(f"DEBUG PLT - STATUS: FALSE (kepala sekolah dari sekolah sama)")
 
         # Data kecamatan, kabupaten, provinsi
         kecamatan = Kecamatan.query.get(sekolah.kecamatan_id) if sekolah else None
@@ -850,7 +952,7 @@ def laporan_penilaian_siswa(siswa_id):
         rata_rata = {}
         for field in total_nilai:
             if jumlah_bulan_terisi[field] > 0:
-                rata_rata[field] = total_nilai[field] / jumlah_bulan_terisi[field]
+                rata_rata[field] = round(total_nilai[field] / jumlah_bulan_terisi[field], 2)
                 # Cek status kebiasaan berdasarkan rata-rata
                 status_kebiasaan[field] = rata_rata[field] >= 20
             else:
@@ -890,8 +992,9 @@ def laporan_penilaian_siswa(siswa_id):
             },
             'kepala_sekolah': {
                 'nama': kepala_sekolah.nama if kepala_sekolah else '',
-                'nip': kepala_sekolah.nip if kepala_sekolah else ''
-            } if kepala_sekolah else {'nama': '', 'nip': ''},
+                'nip': kepala_sekolah.nip if kepala_sekolah else '',
+                'is_plt': is_plt  # **TAMBAHKAN INI**
+            } if kepala_sekolah else {'nama': '', 'nip': '', 'is_plt': False},
             'wali_kelas': {
                 'nama': wali_kelas.nama if wali_kelas else '',
                 'nip': wali_kelas.nip if wali_kelas else ''

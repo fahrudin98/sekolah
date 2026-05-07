@@ -2,11 +2,13 @@ import os
 from dotenv import load_dotenv
 from penilaiansiswa import db
 from penilaiansiswa.models.users import User
+from flask_mail import Mail
+mail = Mail()
 
 # Load environment variables first
 load_dotenv()
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -118,17 +120,45 @@ def create_app(config_name="default"):
         if user and check_password_hash(user.password, password):
             login_user(user)
             
+            # Clear session lama
+            session.pop('kepala_sekolah_tahun_ajaran_id', None)
+            session.pop('kepala_sekolah_sekolah_id', None)
+            session.pop('is_plt', None)
+            
+            # ========== UPDATE BAGIAN INI ==========
             # Redirect berdasarkan role
-            if user.role == "superadmin":
+            if user.is_superadmin:
                 return redirect(url_for("superadmin.dashboard"))
-            else:
-                # Cek apakah user memiliki data pegawai
-                from penilaiansiswa.models.users import Pegawai
-                pegawai = Pegawai.query.filter_by(user_id=user.id).first()
+            
+            elif user.is_kepala_dinas:
+                return redirect(url_for("dinas.dashboard"))
+            
+            elif user.is_kepala_sekolah():
+                # Cek apakah user kepala sekolah di satu atau lebih sekolah
+                from penilaiansiswa.models.sekolah import TahunAjaran
+                pegawai = user.pegawai
+                
                 if pegawai:
-                    return redirect(url_for("tahun_ajaran.dashboard"))
-                else:
-                    return redirect(url_for("home"))
+                    sekolah_kepala_list = TahunAjaran.query.filter_by(
+                        kepala_sekolah_id=pegawai.id,
+                        aktif=True
+                    ).all()
+                    
+                    if len(sekolah_kepala_list) == 1:
+                        # Hanya 1 sekolah -> langsung set session & redirect
+                        ta = sekolah_kepala_list[0]
+                        session['kepala_sekolah_tahun_ajaran_id'] = ta.id
+                        session['kepala_sekolah_sekolah_id'] = ta.sekolah_id
+                        session['is_plt'] = (ta.sekolah_id != pegawai.sekolah_id)
+                        return redirect(url_for("tahun_ajaran.dashboard_kepala_sekolah"))
+                    elif len(sekolah_kepala_list) > 1:
+                        # Multiple sekolah -> redirect ke pilihan
+                        return redirect(url_for("tahun_ajaran.dashboard_multi_sekolah"))
+            
+            else:
+                # Guru / Wali Kelas biasa
+                return redirect(url_for("tahun_ajaran.dashboard"))
+            # =======================================
         else:
             flash("Username atau password salah!", "danger")
         
@@ -154,7 +184,11 @@ def create_app(config_name="default"):
     @app.route("/logout")
     @login_required
     def logout():
+        # Clear semua session
+        session.clear()
+        
         logout_user()
+        flash("Anda telah berhasil logout.", "info")
         return redirect(url_for("index"))
     
     @app.route("/change-password", methods=["POST"])
@@ -207,6 +241,47 @@ def create_app(config_name="default"):
         else:
             return "No passwords need migration"
     
+    @app.route("/submit_contact", methods=["POST"])
+    def submit_contact():
+        from flask_mail import Message
+
+        first_name = request.form.get("first_name")
+        last_name = request.form.get("last_name")
+        email = request.form.get("email")
+        address = request.form.get("address")
+        phone = request.form.get("phone")
+        message = request.form.get("message")
+
+        # Validasi sederhana
+        if not first_name or not email:
+            flash("Nama depan dan email harus diisi!", "danger")
+            return redirect(url_for("index"))
+
+        # Siapkan subject dan body email
+        subject = f"Pesan Kontak dari {first_name} {last_name}"
+        body = f"""
+        <h2>Pesan dari Landing Page</h2>
+        <p><strong>Nama:</strong> {first_name} {last_name}</p>
+        <p><strong>Email:</strong> {email}</p>
+        <p><strong>Alamat:</strong> {address or '-'}</p>
+        <p><strong>Telepon:</strong> {phone or '-'}</p>
+        """
+
+        try:
+            msg = Message(
+                subject=subject,
+                recipients=[app.config['CONTACT_RECIPIENT']],
+                html=body,
+                sender=app.config['MAIL_DEFAULT_SENDER']
+            )
+            mail.send(msg)
+            flash("Pesan Anda berhasil dikirim. Terima kasih!", "success")
+        except Exception as e:
+            app.logger.error(f"Gagal kirim email kontak: {e}")
+            flash("Maaf, terjadi kesalahan. Silakan coba lagi nanti.", "danger")
+
+        return redirect(url_for("index"))
+
     # =============================
     # BLUEPRINT REGISTRATION
     # =============================
@@ -221,6 +296,8 @@ def create_app(config_name="default"):
         app.register_blueprint(tahun_ajaran_bp, url_prefix="/tahun_ajaran")
     except ImportError as e:
         app.logger.warning(f"Tahun ajaran blueprint not found: {e}")
+    except Exception as e:
+        app.logger.error(f"Error registering tahun_ajaran blueprint: {e}")
     
     try:
         from penilaiansiswa.routes.kelas_routes import kelas_bp
@@ -243,7 +320,6 @@ def create_app(config_name="default"):
     try:
         from penilaiansiswa.routes.lupa_password_routes import lupa_password_bp
         app.register_blueprint(lupa_password_bp)
-        app.logger.info("Lupa password blueprint registered successfully")
     except ImportError as e:
         app.logger.warning(f"Lupa password blueprint not found: {e}")
     
@@ -256,9 +332,14 @@ def create_app(config_name="default"):
     try:
         from penilaiansiswa.routes.superadmin_routes import superadmin_bp
         app.register_blueprint(superadmin_bp)
-        app.logger.info("Superadmin blueprint registered successfully")
     except ImportError as e:
         app.logger.warning(f"Superadmin blueprint not found: {e}")
+    
+    try:
+        from penilaiansiswa.routes.dinas_routes import dinas_bp
+        app.register_blueprint(dinas_bp)
+    except ImportError as e:
+        app.logger.warning(f"Dinas blueprint not found: {e}")
     
     # =============================
     # JINJA2 FILTERS
@@ -269,14 +350,38 @@ def create_app(config_name="default"):
             return calendar.month_name[int(month_number)]
         except (ValueError, IndexError):
             return ""
+    # =============================
+    # CONTEXT PROCESSOR UNTUK STATISTIK LANDING PAGE
+    # =============================
+    @app.context_processor
+    def inject_stats():
+        from penilaiansiswa import db
+        from penilaiansiswa.models.sekolah import Sekolah, Kabupaten, Siswa
+        from penilaiansiswa.models.users import Pegawai
+        
+        # Sekolah terdaftar
+        stat_sekolah = Sekolah.query.count()
+        # Guru terdaftar (semua pegawai)
+        stat_guru = Pegawai.query.count()
+        # Siswa terdaftar (semua siswa)
+        stat_siswa = db.session.query(Siswa.nisn).distinct().count()
+        # Kabupaten terdaftar
+        stat_kabupaten = Kabupaten.query.count()
+        
+        return {
+            'stat_sekolah': stat_sekolah,
+            'stat_guru': stat_guru,
+            'stat_siswa': stat_siswa,
+            'stat_kabupaten': stat_kabupaten
+        }
     
     return app
 
 # Create application instance
 app = create_app()
 
-# ✅ TAMBAHKAN INI UNTUK PASSENGER WSGI - EKSPOR application
-application = app  # Alias untuk passenger_wsgi.py
+# Alias untuk passenger_wsgi.py
+application = app
 
 if __name__ == "__main__":
     env = os.environ.get("FLASK_ENV", "development")
@@ -288,4 +393,3 @@ if __name__ == "__main__":
     else:
         print("🔧 Running in DEVELOPMENT mode")
         app.run(debug=True, host="0.0.0.0", port=5000)
-        

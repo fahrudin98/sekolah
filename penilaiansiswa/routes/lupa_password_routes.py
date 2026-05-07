@@ -5,12 +5,12 @@ from penilaiansiswa.models.users import User
 from penilaiansiswa.forms import RequestResetForm, ResetPasswordForm
 from penilaiansiswa.email_utils import send_reset_email
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
-from flask_bcrypt import Bcrypt  # ✅ GUNAKAN FLAKS-BCRYPT
+from flask_bcrypt import Bcrypt
 
 # Definisikan blueprint
 lupa_password_bp = Blueprint("lupa_password", __name__)
 
-# ✅ INISIALISASI BCRYPT
+# Inisialisasi Bcrypt
 bcrypt = Bcrypt()
 
 def verify_reset_token(token):
@@ -41,12 +41,18 @@ def reset_request():
         
         if user:
             try:
-                send_reset_email(user)
-                flash("Link reset password telah dikirim ke email Anda. Silakan cek inbox atau folder spam.", "info")
+                email_sent = send_reset_email(user)
+                
+                if email_sent:
+                    flash("Link reset password telah dikirim ke email Anda. Silakan cek inbox atau folder spam.", "info")
+                else:
+                    flash("Terjadi error saat mengirim email reset. Silakan coba lagi atau hubungi administrator.", "danger")
+                    
             except Exception as e:
-                current_app.logger.error(f"Error sending reset email: {e}")
-                flash("Terjadi error saat mengirim email reset. Silakan coba lagi atau hubungi administrator.", "danger")
+                current_app.logger.error(f"Error in reset process: {e}")
+                flash("Terjadi error. Silakan coba lagi.", "danger")
         else:
+            # Untuk keamanan, selalu beri respon sama
             flash("Jika email terdaftar, link reset sudah dikirim. Silakan cek inbox atau folder spam email Anda.", "info")
         
         return redirect(url_for("index"))
@@ -72,7 +78,7 @@ def reset_token(token):
     
     if form.validate_on_submit():
         try:
-            # ✅ GUNAKAN FLAKS-BCRYPT - SAMA DENGAN USERS.PY
+            # Gunakan Flask-Bcrypt
             user.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             db.session.commit()
             

@@ -1,99 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Landing Page Sekolah</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-  html, body {
-      height: 100%;
-      margin: 0;
-      font-family: Arial, sans-serif;
-  }
-  body {
-      display: flex;
-      flex-direction: column;
-  }
-  .navbar-custom {
-      padding: 2rem 4rem;
-      flex-shrink: 0; /* agar navbar tidak mengecil */
-  }
-  .navbar-brand {
-    padding-left: 100px;  /* atur sesuai kebutuhan */
-  }
-  .content {
-      flex: 1 0 auto; /* isi menyesuaikan sisa tinggi layar */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
-  }
-  .hero img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 10px;
-  }
-  footer {
-      background-color: #f8f9fa;
-      padding: 0.5rem 0;
-      text-align: center;
-      flex-shrink: 0; /* footer tetap terlihat */
-  }
-
-  .hero-text {
-      text-align: left;      /* teks rata kiri */
-      padding-left: -15px;    /* geser sedikit ke kiri */
-  }
-  .hero-title {
-      font-size: 3rem;       /* lebih besar */
-      font-weight: bold;
-      margin: 0;
-  }
-  .hero-subtitle {
-      font-size: 1.5rem;     /* lebih kecil */
-      margin-bottom: 0.5rem;
-      color: #333;
-  }
-  footer {
-      background-color: #f8f9fa;
-      padding: 1rem 0;
-      text-align: center;
-      flex-shrink: 0;
-  }
-  footer .social-icons a {
-      margin: 0 10px;
-      font-size: 1.5rem;
-      color: black;
-      text-decoration: none;
-  }
-
-  .hero-image {
-    max-height: 700px;       /* atur tinggi maksimum gambar */
-    object-fit: cover;       /* biar proporsional */
-    border-radius: 15px;     /* frame membulat */
-}
-
-#heroCarousel {
-    max-width: min(100%,875px);        /* perbesar ukuran container gambar */
-    margin: 0 auto;          /* posisi tengah */
-    border: 8px solid #fff;  /* frame putih */
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); /* bayangan keluar */
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page - Barokah Digital Nusantara</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #fff;
+        }
+        :root {
+            --green-color: #2e7d32;
+        }
+        /* Navbar tanpa logo dan running text */
+        .navbar-custom {
+            padding: 0.8rem 2rem;
+            background-color: #fff !important;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .navbar .btn-link {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        .navbar .btn-link:hover {
+            color: var(--green-color);
+        }
+        /* Statistik (opsional, bisa dihapus jika tidak perlu) */
+        .stat-section {
+            background-color: #f8f9fa;
+            padding: 1rem 0;
+            margin: 1rem 0;
+        }
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+        .stat-label {
+            font-size: 1rem;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        /* Card untuk 7 kebiasaan */
+        .habit-card {
+            margin-bottom: 2rem;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .habit-card:hover {
+            transform: translateY(-5px);
+        }
+        .habit-card img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 0 !important;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .habit-card h4 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 1rem;
+            color: var(--green-color);
+        }
+        .habit-card p {
+            font-size: 0.9rem;
+            color: #555;
+            padding: 0 0.5rem;
+        }
+        .btn-outline-dark-custom {
+            border: 1px solid #333;
+            background: transparent;
+            padding: 0.5rem 2rem;
+            transition: 0.3s;
+        }
+        .btn-outline-dark-custom:hover {
+            background-color: #333;
+            color: #fff;
+        }
+        .join-now {
+            background-color: #f1f1f1;
+            padding: 3rem 2rem;
+            text-align: center;
+            margin: 3rem 0;
+        }
+        .join-now .form-control {
+            max-width: 300px;
+            margin: 0 auto 1rem;
+        }
+        footer {
+            background-color: #f8f9fa;
+            padding: 3rem 0 1rem;
+            margin-top: 3rem;
+        }
+        .footer-title {
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .footer-link {
+            display: block;
+            color: #555;
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+        }
+        .footer-link:hover {
+            color: #000;
+        }
+        .contact-form .form-control {
+            margin-bottom: 1rem;
+        }
+        .contact-form button {
+            background-color: #333;
+            border: none;
+            padding: 0.5rem 2rem;
+        }
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid #ddd;
+            font-size: 0.85rem;
+        }
+        .logo-footer {
+            max-width: 150px;
+            margin-bottom: 1rem;
+        }
+        img {
+            border-radius: 0 !important;
+        }
+        @media (max-width: 768px) {
+            .stat-number {
+                font-size: 2rem;
+            }
+            .habit-card h4 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<!-- Navbar -->
+<!-- Navbar baru dengan logo 380px dan running text hijau -->
 <nav class="navbar navbar-expand-lg navbar-light bg-light navbar-custom">
-    <a class="navbar-brand" href="#">
-        <img src="{{ url_for('static', filename='img/loggo.png') }}" alt="Logo" width="480">
-    </a>
-    <div class="ms-auto d-flex gap-2">
-        <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#signupModal">Sign Up</button>
-        <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
-        <a class="btn btn-link" href="{{ url_for('lupa_password.reset_request') }}">Lupa Password?</a>
+    <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between">
+        <a class="navbar-brand" href="#">
+            <img src="{{ url_for('static', filename='img/loggo.png') }}" alt="Logo" style="width: 380px; max-width: 100%; height: auto;">
+        </a>
+        <div class="running-text flex-grow-1 text-center mx-2">
+            <marquee behavior="scroll" direction="left" scrollamount="4" style="color: var(--green-color); font-weight: 600; font-size: 1.2rem;">
+                --- Mengalirkan Keberkahan Melalui Teknologi ---
+            </marquee>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#signupModal">Sign Up</button>
+            <button class="btn btn-link" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
+            <a class="btn btn-link" href="{{ url_for('lupa_password.reset_request') }}">Lupa Password?</a>
+        </div>
     </div>
 </nav>
 
@@ -111,125 +188,187 @@
 {% endif %}
 {% endwith %}
 
-<!-- Hero Section -->
-<div class="content container">
-  <div class="row align-items-center w-100">
-      <div class="col-md-6 text-center text-md-start">
-          <h1 class="hero-subtitle">Selamat Datang Di Platform Penilaian Digital</h1>
-          <p class="hero-title">7 KEBIASAAN SISWA</p>
-      </div>
-      <div class="col-md-6 text-center">
-          <!-- Carousel -->
-          <div id="heroCarousel" class="carousel slide shadow-lg rounded-4" data-bs-ride="carousel">
-              <div class="carousel-inner">
-                  <div class="carousel-item active">
-                      <img src="{{ url_for('static', filename='img/hero1.png') }}" class="d-block w-100 hero-image" alt="Hero 1">
-                  </div>
-                  <div class="carousel-item">
-                      <img src="{{ url_for('static', filename='img/hero2.png') }}" class="d-block w-100 hero-image" alt="Hero 2">
-                  </div>
-                  <div class="carousel-item">
-                      <img src="{{ url_for('static', filename='img/hero3.png') }}" class="d-block w-100 hero-image" alt="Hero 3">
-                  </div>
-                  <div class="carousel-item">
-                    <img src="{{ url_for('static', filename='img/hero4.png') }}" class="d-block w-100 hero-image" alt="Hero 4">
-                  </div>
-              </div>
-              <!-- Controls -->
-              <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-                  <span class="carousel-control-prev-icon"></span>
-              </button>
-              <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-                  <span class="carousel-control-next-icon"></span>
-              </button>
-          </div>
-      </div>
-  </div>
+<!-- Main content (sama seperti sebelumnya, biarkan tetap) -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto text-center">
+            <h1 class="display-4 fw-bold">Selamat Datang di Platform Penilaian Digital</h1>
+            <p class="lead mt-3">Membentuk siswa berkarakter dengan 7 Kebiasaan Unggul</p>
+        </div>
+    </div>
 </div>
+
+<!-- Statistik (40K,800,140,1) -->
+<div class="stat-section">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-number">{{ stat_sekolah }}</div>
+                <div class="stat-label">SEKOLAH TERDAFTAR</div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-number">{{ stat_guru }}</div>
+                <div class="stat-label">GURU TERDAFTAR</div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-number">{{ stat_siswa }}</div>
+                <div class="stat-label">SISWA TERDAFTAR</div>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <div class="stat-number">{{ stat_kabupaten }}</div>
+                <div class="stat-label">KABUPATEN TERDAFTAR</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- About -->
+<div class="container my-5">
+    <div class="row align-items-center">
+       
+        <div class="col-md-6"><h2 class="fw-bold">Anak Indonesia Hebat</h2><p class="mt-3">Gerakan 7 Kebiasaan Anak Indonesia Hebat adalah program Kemendikdasmen untuk membentuk karakter generasi emas 2045 melalui disiplin positif. Kebiasaan ini meliputi bangun pagi, beribadah, berolahraga (termasuk senam), makan makanan sehat, gemar belajar, aktif bermasyarakat, dan tidur cepat untuk membangun anak cerdas, sehat, dan berakhlak mulia.</p></div>
+        <div class="col-md-6 mt-4 mt-md-0"><img src="{{ url_for('static', filename='img/hero.png') }}" class="img-fluid"></div>
+    </div>
+</div>
+
+<!-- Upcoming Projects -->
+<div class="container my-5">
+    <h2 class="section-title">7 (Tujuh) Kebiasaan Unggul Anak Indonesia Hebat</h2>
+<!-- BARIS KEDUA: 7 GAMBAR & 7 KETERANGAN (7 Kebiasaan) -->
+<div class="container my-5">
+    <div class="row g-4">
+        <!-- 1. Bangun Pagi -->
+        <div class="col-lg-3 col-md-4 col-sm-6 habit-card">
+            <img src="{{ url_for('static', filename='img/hero1.png') }}" alt="Bangun Pagi">
+            <h4>🌅 Bangun Pagi</h4>
+            <p>Disiplin memulai hari lebih awal, menyegarkan pikiran dan tubuh untuk beraktivitas.</p>
+        </div>
+        <!-- 2. Beribadah -->
+        <div class="col-lg-3 col-md-4 col-sm-6 habit-card">
+            <img src="{{ url_for('static', filename='img/hero2.png') }}" alt="Beribadah">
+            <h4>🕌 Beribadah</h4>
+            <p>Mendekatkan diri kepada Tuhan, membentuk karakter spiritual dan moral.</p>
+        </div>
+        <!-- 3. Berolahraga -->
+        <div class="col-lg-3 col-md-4 col-sm-6 habit-card">
+            <img src="{{ url_for('static', filename='img/hero3.png') }}" alt="Berolahraga">
+            <h4>🏃 Berolahraga</h4>
+            <p>Menjaga kesehatan fisik dan mental melalui gerakan aktif setiap hari.</p>
+        </div>
+        <!-- 4. Makan Sehat -->
+        <div class="col-lg-3 col-md-4 col-sm-6 habit-card">
+            <img src="{{ url_for('static', filename='img/hero4.png') }}" alt="Makan Sehat">
+            <h4>🥗 Makan Sehat & Bergizi</h4>
+            <p>Memenuhi nutrisi seimbang untuk tumbuh kembang optimal.</p>
+        </div>
+        <!-- 5. Gemar Belajar -->
+        <div class="col-lg-3 col-md-4 col-sm-6 habit-card">
+            <img src="{{ url_for('static', filename='img/hero5.png') }}" alt="Gemar Belajar">
+            <h4>📚 Gemar Belajar</h4>
+            <p>Menumbuhkan rasa ingin tahu dan belajar sepanjang hayat.</p>
+        </div>
+        <!-- 6. Aktif Bermasyarakat -->
+        <div class="col-lg-3 col-md-4 col-sm-6 habit-card">
+            <img src="{{ url_for('static', filename='img/hero6.png') }}" alt="Bermasyarakat">
+            <h4>🤝 Aktif Bermasyarakat</h4>
+            <p>Berkontribusi dan peduli terhadap lingkungan sosial.</p>
+        </div>
+        <!-- 7. Tidur Cepat -->
+        <div class="col-lg-3 col-md-4 col-sm-6 habit-card">
+            <img src="{{ url_for('static', filename='img/hero7.png') }}" alt="Tidur Cepat">
+            <h4>😴 Tidur Cepat</h4>
+            <p>Istirahat cukup untuk memulihkan energi dan konsentrasi.</p>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- Who Can You Help? -->
+<div class="container my-5">
+    <div class="row align-items-center">
+       
+        <div class="col-md-6"><h2 class="fw-bold">Mens sana in corpore sano</h2><p class="mt-3">Olahraga merupakan pembiasaan yang sangat penting dalam menjaga kesehatan tubuh dan pikiran. Anak-anak yang aktif berolahraga akan memiliki tubuh yang lebih kuat, daya tahan yang lebih baik, dan kemampuan untuk berkonsentrasi lebih lama. Selain itu, olahraga juga mengajarkan mereka pentingnya kerja sama, disiplin, serta kemampuan untuk menerima kemenangan dan kekalahan dengan lapang dada. Dengan tubuh yang sehat, anak-anak Indonesia akan mampu menghadapi berbagai tantangan hidup dengan lebih percaya diri.
+
+           </p></div>
+        <div class="col-md-6 mt-4 mt-md-0"><img src="{{ url_for('static', filename='img/hero3.png') }}" class="img-fluid"></div>
+    </div>
+</div>
+
+<!-- Latest News -->
+<div class="container my-5">
+    <h2 class="section-title">LATEST NEWS</h2>
+    <div class="row">
+        <div class="col-md-4 article-card"><img src="{{ url_for('static', filename='img/hero8.png') }}" class="img-fluid"><h4>Siswa Berpresensi</h4><p>“Aku memulai hari lebih cepat untuk meraih lebih banyak kesempatan.”</p></div>
+        <div class="col-md-4 article-card"><img src="{{ url_for('static', filename='img/hero10.png') }}" class="img-fluid"><h4>Juara Olimpiade Sains</h4><p>“Olahraga mengajarkanku kerja keras dan pantang menyerah.”.</p></div>
+        <div class="col-md-4 article-card"><img src="{{ url_for('static', filename='img/hero11.png') }}" class="img-fluid"><h4>Kebersihan bagian dari Iman</h4><p>Lingkungan yang bersih akan mendukung kenyamanan belajar mengajar. </p></div>
+    </div>
+</div>
+
 
 <!-- Footer -->
 <footer>
-<p>JL.KARTINI NO 76, TRENGGALEK, JAWA TIMUR</p>
-<div class="social-icons">
-  <!--  
-  <a href="https://www.facebook.com/ahmad.fahrudin.180" target="_blank">
-        <img src="{{ url_for('static', filename='img/facebook.png') }}" alt="Facebook" width="30">
-    </a>
-  -->
-    <a href="https://www.instagram.com/dikpora.trenggalek" target="_blank">
-        <img src="{{ url_for('static', filename='img/instagram.png') }}" alt="Instagram" width="30">
-    </a>
-  <!--
-    <a href="https://https://x.com/dikpora.trenggalek" target="_blank">
-        <img src="{{ url_for('static', filename='img/twitter.png') }}" alt="Twitter" width="30">
-    </a>
-    <a href="https://tiktok.com/." target="_blank">
-        <img src="{{ url_for('static', filename='img/Tiktok.png') }}" alt="Tiktok" width="30">
-    </a>
-  -->
-</div>
+    <div class="container">
+        <div class="row">
+            <!-- Kolom Kiri: Form Kontak -->
+            <div class="col-md-6 mb-4">
+                <h5 class="footer-title">Hubungi Kami</h5>
+                <form class="contact-form" method="POST" action="{{ url_for('submit_contact') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <input type="text" class="form-control" name="first_name" placeholder="Nama depan *" required>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <input type="text" class="form-control" name="last_name" placeholder="Nama belakang">
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <input type="email" class="form-control" name="email" placeholder="Email *" required>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" class="form-control" name="address" placeholder="Alamat">
+                    </div>
+                    <div class="mb-2">
+                        <input type="tel" class="form-control" name="phone" placeholder="Telepon">
+                    </div>
+                    <!-- TAMBAHKAN TEXTAREA UNTUK PESAN -->
+                    <div class="mb-2">
+                        <textarea class="form-control" name="message" rows="3" placeholder="Pesan Anda..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-dark">✉️ Kirim</button>
+                </form>
+            </div>
+
+            <!-- Kolom Kanan: Informasi Kantor & Tautan (sama seperti sebelumnya) -->
+            <div class="col-md-6 mb-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="footer-title">Informasi</h5>
+                        <p>Ahmad Fahrudin</p>
+                        <p>fahrudinahmad98@gmail.com</p>
+                        <p>085853916708</p>
+
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="footer-title">Kantor Kami</h5>
+                        <p>PT.Barakah Digital Nusantara</p>
+                        <p>Surya Asri 2  Blok F3 No.12</p>
+                        <p>Sidoarjo, Jawa Timur</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2035 by Barokah Digital Nusantara. Powered by Teknologi Digital.</p>
+        </div>
+    </div>
 </footer>
-<!-- Sign Up Modal -->
-<!-- Modal Sign Up -->
-<div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="signupModalLabel">Sign Up</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" action="/signup">
-            <div class="mb-3">
-              <label for="namaLengkap" class="form-label">Nama Lengkap</label>
-              <input type="text" class="form-control" id="namaLengkap" name="nama" required>
-            </div>
-            <div class="mb-3">
-              <label for="username" class="form-label">Username</label>
-              <input type="text" class="form-control" id="username" name="username" required>
-            </div>
-            <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" required>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Daftar</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-  
 
-<!-- Modal Login -->
-<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="loginModalLabel">Login</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form method="POST" action="{{ url_for('login') }}">
-          <div class="mb-3">
-            <label for="loginUsername" class="form-label">Username</label>
-            <input type="text" class="form-control" id="loginUsername" name="username" required>
-          </div>
-          <div class="mb-3">
-            <label for="loginPassword" class="form-label">Password</label>
-            <input type="password" class="form-control" id="loginPassword" name="password" required>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Login</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Modal Sign Up & Login (sama seperti sebelumnya) -->
+<div class="modal fade" id="signupModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Sign Up</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form method="POST" action="/signup"><div class="mb-3"><label>Nama Lengkap</label><input type="text" class="form-control" name="nama" required></div><div class="mb-3"><label>Username</label><input type="text" class="form-control" name="username" required></div><div class="mb-3"><label>Email</label><input type="email" class="form-control" name="email" required></div><div class="mb-3"><label>Password</label><input type="password" class="form-control" name="password" required></div><button type="submit" class="btn btn-primary w-100">Daftar</button></form></div></div></div></div>
 
-<!-- Bootstrap JS -->
+<div class="modal fade" id="loginModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Login</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form method="POST" action="{{ url_for('login') }}"><div class="mb-3"><label>Username</label><input type="text" class="form-control" name="username" required></div><div class="mb-3"><label>Password</label><input type="password" class="form-control" name="password" required></div><button type="submit" class="btn btn-primary w-100">Login</button></form></div></div></div></div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -2,10 +2,8 @@ from datetime import datetime
 from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
-from flask_bcrypt import Bcrypt
-from penilaiansiswa import db  # gunakan db yang di-init di __init__.py
-
-bcrypt = Bcrypt()
+from passlib.hash import bcrypt
+from penilaiansiswa import db  
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -21,7 +19,35 @@ class User(UserMixin, db.Model):
     @property
     def is_superadmin(self):
         return self.role == "superadmin"
+    @property
+    def is_kepala_dinas(self):
+        return self.role == "kepala_dinas"  
+    @property
+    def is_guru(self):
+        return self.role == "guru"
+    
+    # 🔹 Untuk kepala sekolah: cek dari relasi TahunAjaran
+    def is_kepala_sekolah(self):
+        """Cek apakah user terdaftar sebagai kepala sekolah di tahun ajaran aktif"""
+        if not self.pegawai:
+            return False
+        # Cek apakah ada tahun ajaran aktif dengan kepala_sekolah_id = pegawai.id
+        from penilaiansiswa.models.sekolah import TahunAjaran
+        aktif_tahun = TahunAjaran.query.filter_by(aktif=True).first()
+        if aktif_tahun and aktif_tahun.kepala_sekolah_id == self.pegawai.id:
+            return True
+        return False
+    
+    def get_sekolah_kepala(self):
+        """Ambil daftar sekolah tempat user menjadi kepala sekolah (untuk multi sekolah)"""
+        if not self.pegawai:
+            return []
+        from penilaiansiswa.models.sekolah import TahunAjaran
+        tahun_ajaran_list = TahunAjaran.query.filter_by(
+            kepala_sekolah_id=self.pegawai.id,
 
+        ).all()
+        return tahun_ajaran_list
     # ✅ TAMBAHAN UNTUK RESET PASSWORD - INDENTASI DIPERBAIKI
     # 🔹 hash password baru
     def set_password(self, password):

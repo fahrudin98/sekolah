@@ -6,47 +6,44 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 5mm 10mm 10mm 10mm;
+            margin: 0;
+            padding: 2mm 8mm 5mm 8mm;
             font-size: 11px;
-            width: 180mm; /* lebih dekat ke ukuran A4 */
-            max-width: 180mm;
+            width: 180mm;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 0px;
+            margin: 0 0 5px 0;
             border-bottom: 2px solid #333;
-            padding-bottom: 0 0 8px 0;
+            padding-bottom: 5px;
         }
         .header h1 {
-            margin: 0;
+            margin: 2px 0;
             font-size: 16px;
         }
         .header h2 {
-            margin: 2px 0 0 0;
+            margin: 2px 0;
             font-size: 13px;
             font-weight: normal;
         }
 
         .info-sekolah {
-            margin: 10px 0 15px 0;
-            line-height: 1.4;
-        }
-        .info-sekolah p {
-            margin: 3px 0;
+            margin: 5px 0 8px 0;
+            line-height: 1.3;
         }
 
         table {
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             width: 100%;
-            page-break-inside: avoid; /* hindari terpotong */
+            page-break-inside: avoid;
         }
         th, td {
             border: 1px solid #000;
-            padding: 4px 6px;
+            padding: 3px 4px;
             text-align: center;
-            font-size: 10px;
+            font-size: 9px;
         }
         th {
             background-color: #f2f2f2;
@@ -55,57 +52,6 @@
 
         .text-left { text-align: left; }
         .bold { font-weight: bold; }
-
-        .row-flex {
-            display: table; /* ganti flex agar stabil di PDF */
-            width: 100%;
-            margin-bottom: 15px;
-        }
-        .column-left,
-        .column-right {
-            display: table-cell;
-            vertical-align: top;
-            width: 50%;
-            padding-right: 10px;
-        }
-
-        .summary {
-            font-size: 10px;
-            background-color: #f8f9fa;
-            border-left: 3px solid #007bff;
-            padding: 8px;
-        }
-
-        .footer {
-            margin-top: 20px;
-            font-size: 10px;
-            text-align: center;
-            color: #666;
-        }
-
-        .no-print {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .no-print button {
-            padding: 8px 15px;
-            margin: 0 5px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .no-print button:hover {
-            background-color: #0056b3;
-        }
-
-        @media print {
-            body { margin: 10mm; }
-            .no-print { display: none; }
-            table { font-size: 9.5px; }
-            .summary { font-size: 9.5px; }
-        }
 
         .info-grid {
             display: table;
@@ -116,11 +62,138 @@
         }
         .info-label, .info-colon, .info-value {
             display: table-cell;
-            padding: 2px 5px;
+            padding: 1px 3px;
+            font-size: 9px;
+        }
+        .info-label { white-space: nowrap; font-weight: bold; width: 110px; }
+        .info-colon { width: 8px; }
+
+        /* Style untuk bagian tanda tangan */
+        .signature-section {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            page-break-inside: avoid;
+        }
+        
+        .signature-left, .signature-right {
+            width: 45%;
+            text-align: center;
+        }
+        
+        .signature-space {
+            height: 40px;
+            margin-bottom: 3px;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            margin-top: 3px;
+            text-decoration: underline;
             font-size: 10px;
         }
-        .info-label { white-space: nowrap; font-weight: bold; width: 120px; }
-        .info-colon { width: 10px; }
+        
+        .signature-nip {
+            font-size: 8px;
+            margin-top: 1px;
+        }
+        
+        .date-info {
+            text-align: right;
+            margin-bottom: 15px;
+            font-size: 9px;
+        }
+
+        .footer {
+            margin-top: 10px;
+            font-size: 9px;
+            text-align: center;
+            color: #666;
+        }
+
+        .no-print {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .no-print button {
+            padding: 6px 12px;
+            margin: 0 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        h3 {
+            margin: 6px 0 4px 0;
+            font-size: 11px;
+        }
+
+        @media print {
+            body { 
+                margin: 0;
+                padding: 2mm 8mm 5mm 8mm;
+            }
+            .no-print { display: none; }
+        }
+        .info-grid {
+            display: table;
+            width: 100%;
+            table-layout: fixed; /* Tambahkan ini untuk lebar konsisten */
+        }
+        .info-row {
+            display: table-row;
+        }
+        .info-label, .info-colon, .info-value {
+            display: table-cell;
+            padding: 1px 3px;
+            font-size: 9px;
+            vertical-align: top; /* Pastikan sejajar di atas */
+        }
+        .info-label { 
+            white-space: nowrap; 
+            font-weight: bold; 
+            width: 140px; /* Perlebar sedikit untuk "PLT. Kepala Sekolah" */
+            text-align: left;
+        }
+        .info-colon { 
+            width: 8px; 
+            text-align: center;
+        }
+        .info-value { 
+            text-align: left;
+            word-wrap: break-word;
+            padding-left: 5px;
+        }
+
+        /* Style untuk bagian tanda tangan yang lebih rapi */
+        .name-align-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .name-align-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .signature-name {
+            font-weight: bold;
+            margin-top: 3px;
+            text-decoration: underline;
+            font-size: 10px;
+            text-align: center;
+            width: 100%;
+        }
+        .signature-nip {
+            font-size: 8px;
+            margin-top: 1px;
+            text-align: center;
+            width: 100%;
+        }
     </style>
 
     <!-- html2pdf -->
@@ -145,7 +218,13 @@
                 <div class="info-value">{{ data.sekolah.kabupaten }}, {{ data.sekolah.provinsi }}</div>
             </div>
             <div class="info-row">
-                <div class="info-label">Kepala Sekolah</div>
+                <div class="info-label">
+                    {% if data.kepala_sekolah.is_plt %}
+                    PLT. Kepala Sekolah
+                    {% else %}
+                    Kepala Sekolah
+                    {% endif %}
+                </div>
                 <div class="info-colon">:</div>
                 <div class="info-value">{{ data.kepala_sekolah.nama }} (NIP. {{ data.kepala_sekolah.nip }})</div>
             </div>
@@ -157,60 +236,6 @@
         </div>
     </div>
 
-    <div class="row-flex">
-        <div class="column-left">
-            <table>
-                <!---
-                <tr>
-                    <th rowspan="2">No</th>
-                    <th rowspan="2">Jenis Kelamin</th>
-                    <th rowspan="2">Jml Siswa</th>
-                    <th colspan="2">Status</th>
-                </tr>
-            
-                <tr>
-                    <th>Terbiasa</th>
-                    <th>Belum Terbiasa</th>
-                </tr>
-                <tr>
-                    <td>1</td>
-                    <td class="text-left">Perempuan</td>
-                    <td>{{ data.rekap_siswa.perempuan.total }}</td>
-                    <td>{{ data.rekap_siswa.perempuan.terbiasa }}</td>
-                    <td>{{ data.rekap_siswa.perempuan.belum }}</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td class="text-left">Laki-laki</td>
-                    <td>{{ data.rekap_siswa.laki.total }}</td>
-                    <td>{{ data.rekap_siswa.laki.terbiasa }}</td>
-                    <td>{{ data.rekap_siswa.laki.belum }}</td>
-                </tr>
-                <tr class="bold">
-                    <td colspan="2">Total</td>
-                    <td>{{ data.rekap_siswa.total.total }}</td>
-                    <td>{{ data.rekap_siswa.total.terbiasa }}</td>
-                    <td>{{ data.rekap_siswa.total.belum }}</td>
-                </tr>
-            </table>
-        </div>
-        -->
-<!---
-        <div class="column-right">
-            <div class="summary">
-                <p>Dari total <strong>{{ data.rekap_siswa.total.total }} murid</strong>,
-                {% if data.rekap_siswa.total.terbiasa == 0 %}
-                    <strong>tidak ada murid</strong> yang sudah terbiasa
-                {% else %}
-                    <strong>{{ data.rekap_siswa.total.terbiasa }} murid</strong> sudah terbiasa
-                    dan <strong>{{ data.rekap_siswa.total.belum }} murid</strong> belum terbiasa
-                {% endif %}
-                dalam menerapkan Gerakan 7 Kebiasaan Anak Indonesia Hebat (G7KAIH)
-                pada Bulan <strong>{{ data.bulan | format_bulan }}</strong> Tahun Ajaran <strong>{{ data.tahun_ajaran }}</strong>.</p>
-            </div>
-        </div>
-    </div>
--->
     <!-- Tabel Rekap Umum -->
     <h3>Rekap Umum</h3>
     <table>
@@ -284,8 +309,54 @@
         {% endfor %}
     </table>
 
-    <div class="footer">
+    <!-- Bagian Tanda Tangan -->
+    <div class="date-info">
         <p>Dicetak pada: <span id="print-date"></span></p>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-left">
+            <div class="name-align-container">
+                <div style="margin-bottom: 10px;">
+                    <p style="margin: 0;">Mengetahui</p>
+                    <p style="margin: 0; font-weight: bold; font-size: 11px;">
+                        {% if data.kepala_sekolah.is_plt %}
+                        PLT. Kepala Sekolah
+                        {% else %}
+                        Kepala Sekolah
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="name-align-wrapper">
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ data.kepala_sekolah.nama }}</div>
+                    {% if data.kepala_sekolah.nip %}
+                    <div class="signature-nip">NIP: {{ data.kepala_sekolah.nip }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="signature-right">
+            <div class="name-align-container">
+                <div style="margin-bottom: 10px;">
+                    <p style="margin: 0; font-weight: bold; font-size: 11px;">
+                        Wali Kelas {{ data.nama_kelas }}
+                    </p>
+                </div>
+                <div class="name-align-wrapper">
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ data.wali_kelas.nama }}</div>
+                    {% if data.wali_kelas.nip %}
+                    <div class="signature-nip">NIP: {{ data.wali_kelas.nip }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Laporan ini dicetak secara elektronik</p>
     </div>
 
     <div class="no-print">
@@ -297,14 +368,35 @@
     <script>
         function exportToPDF() {
             const element = document.body;
+            
+            // Sembunyikan tombol saat export
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => {
+                el.style.display = 'none';
+            });
+
             const options = {
-                margin: [10, 10, 10, 10],
+                margin: [2, 8, 5, 8], // Top, Right, Bottom, Left (dalam mm)
                 filename: `RCHK_${'{{ data.nama_kelas }}'}_${'{{ data.bulan }}'}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait' 
+                }
             };
-            html2pdf().set(options).from(element).save();
+            
+            html2pdf().set(options).from(element).save().then(() => {
+                // Tampilkan kembali tombol setelah export selesai
+                noPrintElements.forEach(el => {
+                    el.style.display = 'block';
+                });
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {

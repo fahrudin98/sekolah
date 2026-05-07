@@ -1,7 +1,7 @@
 # tahun_ajaran_routes.py
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, abort, flash
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, abort, flash, session
 from flask_login import login_required, current_user
-from penilaiansiswa.models import TahunAjaran, Pegawai, Sekolah, User, Kelas, Siswa, Kebiasaan
+from penilaiansiswa.models import TahunAjaran, Pegawai, Sekolah, User, Kelas, Siswa, Kebiasaan, Kecamatan
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func, case
 from penilaiansiswa import db
@@ -102,6 +102,332 @@ def get_kelas_for_current_user(sekolah, tahun_ajaran):
             kelas_list = q.filter_by(wali_kelas_id=current_user.pegawai.id).all()
     return kelas_list
 
+# ----------------------
+# Helper functions baru untuk API
+# ----------------------
+def get_habits_data_by_kelas_terbaik(sekolah_id, tahun_ajaran_id, bulan_filter=''):
+    """Ambil data kebiasaan untuk 10 KELAS TERBAIK"""
+    # Query untuk mendapatkan kelas dengan rata-rata tertinggi
+    subquery = db.session.query(
+        Kelas.id,
+        Kelas.nama_kelas,
+        func.avg(
+            (Kebiasaan.bangun_pagi + Kebiasaan.beribadah + Kebiasaan.berolahraga + 
+             Kebiasaan.sehat_dan_lemar + Kebiasaan.belajar + Kebiasaan.bermasyarakat + 
+             Kebiasaan.tidur_cepat) / 7.0
+        ).label('rata_rata')
+    ).join(Siswa, Kelas.id == Siswa.kelas_id)\
+     .join(Kebiasaan, Siswa.id == Kebiasaan.siswa_id)\
+     .filter(
+        Kelas.sekolah_id == sekolah_id,
+        Kelas.tahun_ajaran_id == tahun_ajaran_id
+    )
+    
+    if bulan_filter:
+        subquery = subquery.filter(Kebiasaan.bulan == bulan_filter)
+    
+    subquery = subquery.group_by(Kelas.id, Kelas.nama_kelas)\
+                      .order_by(db.desc('rata_rata'))\
+                      .limit(10)\
+                      .subquery()
+    
+    # Ambil data detail untuk 10 kelas terbaik
+    kelas_terbaik = db.session.query(
+        subquery.c.id,
+        subquery.c.nama_kelas,
+        subquery.c.rata_rata
+    ).all()
+    
+    habits = {
+        'bangun_pagi': {'labels': [], 'data': []},
+        'beribadah': {'labels': [], 'data': []},
+        'berolahraga': {'labels': [], 'data': []},
+        'sehat_dan_lemar': {'labels': [], 'data': []},
+        'belajar': {'labels': [], 'data': []},
+        'bermasyarakat': {'labels': [], 'data': []},
+        'tidur_cepat': {'labels': [], 'data': []}
+    }
+    
+    for kelas in kelas_terbaik:
+        # Hitung rata-rata per kebiasaan untuk kelas ini
+        avg_query = db.session.query(
+            func.avg(Kebiasaan.bangun_pagi).label('bangun_pagi'),
+            func.avg(Kebiasaan.beribadah).label('beribadah'),
+            func.avg(Kebiasaan.berolahraga).label('berolahraga'),
+            func.avg(Kebiasaan.sehat_dan_lemar).label('sehat_dan_lemar'),
+            func.avg(Kebiasaan.belajar).label('belajar'),
+            func.avg(Kebiasaan.bermasyarakat).label('bermasyarakat'),
+            func.avg(Kebiasaan.tidur_cepat).label('tidur_cepat')
+        ).join(Siswa).filter(Siswa.kelas_id == kelas.id)
+        
+        if bulan_filter:
+            avg_query = avg_query.filter(Kebiasaan.bulan == bulan_filter)
+        
+        result = avg_query.first()
+        
+        if result:
+            for habit in habits.keys():
+                habits[habit]['labels'].append(kelas.nama_kelas)
+                habits[habit]['data'].append(round(result._asdict()[habit] or 0, 1))
+    
+    return habits
+
+def get_siswa_stats(sekolah_id, tahun_ajaran_id, bulan_filter='', kelas_filter='all'):
+    """Ambil data statistik per siswa dengan filter"""
+    query = db.session.query(
+        Siswa.id,
+        Siswa.nama_siswa,
+        Kelas.nama_kelas.label('kelas'),
+        Kelas.id.label('kelas_id'),
+        Kebiasaan.bulan,
+        Kebiasaan.bangun_pagi,
+        Kebiasaan.beribadah,
+        Kebiasaan.berolahraga,
+        Kebiasaan.sehat_dan_lemar.label('sehat_dan_bergizi'),
+        Kebiasaan.belajar,
+        Kebiasaan.bermasyarakat,
+        Kebiasaan.tidur_cepat
+    ).join(Kelas, Siswa.kelas_id == Kelas.id)\
+     .join(Kebiasaan, Siswa.id == Kebiasaan.siswa_id)\
+     .filter(
+        Kelas.sekolah_id == sekolah_id,
+        Kelas.tahun_ajaran_id == tahun_ajaran_id
+    )
+    
+    if bulan_filter:
+        query = query.filter(Kebiasaan.bulan == bulan_filter)
+    
+    if kelas_filter != 'all':
+        query = query.filter(Kelas.id == kelas_filter)
+    
+    results = query.all()
+    
+    siswa_data = []
+    for row in results:
+        # Hitung rata-rata per siswa
+        totals = [
+            float(row.bangun_pagi or 0),
+            float(row.beribadah or 0),
+            float(row.berolahraga or 0),
+            float(row.sehat_dan_bergizi or 0),
+            float(row.belajar or 0),
+            float(row.bermasyarakat or 0),
+            float(row.tidur_cepat or 0)
+        ]
+        rata_rata = sum(totals) / len(totals)
+        
+        siswa_data.append({
+            'id': row.id,
+            'nama_siswa': row.nama_siswa,
+            'kelas': row.kelas,
+            'kelas_id': row.kelas_id,
+            'bulan': row.bulan,
+            'bangun_pagi': float(row.bangun_pagi or 0),
+            'beribadah': float(row.beribadah or 0),
+            'berolahraga': float(row.berolahraga or 0),
+            'sehat_dan_bergizi': float(row.sehat_dan_bergizi or 0),
+            'belajar': float(row.belajar or 0),
+            'bermasyarakat': float(row.bermasyarakat or 0),
+            'tidur_cepat': float(row.tidur_cepat or 0),
+            'rata_rata': float(rata_rata)
+        })
+    
+    return siswa_data
+
+def get_kelas_list(sekolah_id, tahun_ajaran_id):
+    """Ambil list semua kelas untuk filter - DIPERBAIKI"""
+    kelas_list = Kelas.query.filter_by(
+        sekolah_id=sekolah_id,
+        tahun_ajaran_id=tahun_ajaran_id
+    ).options(
+        db.joinedload(Kelas.wali_kelas)
+    ).all()
+    
+    return [{'id': k.id, 'nama_kelas': k.nama_kelas} for k in kelas_list]
+
+def calculate_rata_rata_sekolah(sekolah_id, tahun_ajaran_id, bulan_filter=''):
+    """Hitung rata-rata seluruh sekolah"""
+    query = db.session.query(
+        func.avg(
+            (Kebiasaan.bangun_pagi + Kebiasaan.beribadah + Kebiasaan.berolahraga + 
+             Kebiasaan.sehat_dan_lemar + Kebiasaan.belajar + Kebiasaan.bermasyarakat + 
+             Kebiasaan.tidur_cepat) / 7.0
+        )
+    ).join(Siswa, Kebiasaan.siswa_id == Siswa.id)\
+     .join(Kelas, Siswa.kelas_id == Kelas.id)\
+     .filter(
+        Kelas.sekolah_id == sekolah_id,
+        Kelas.tahun_ajaran_id == tahun_ajaran_id
+    )
+    
+    if bulan_filter:
+        query = query.filter(Kebiasaan.bulan == bulan_filter)
+    
+    result = query.scalar()
+    return result or 0
+
+
+def get_trend_data_kepala_sekolah(sekolah_id, tahun_ajaran_id):
+    """Ambil data trend perkembangan per bulan untuk 7 kebiasaan"""
+    # Ambil bulan-bulan dalam tahun ajaran
+    tahun_ajaran = TahunAjaran.query.get(tahun_ajaran_id)
+    bulan_list = generate_bulan_list_for_semester(tahun_ajaran)
+    
+    labels = [bulan['label'] for bulan in bulan_list]
+    bulan_values = [bulan['value'] for bulan in bulan_list]
+    
+    # Data untuk 7 kebiasaan
+    datasets = []
+    
+    # Warna untuk setiap kebiasaan
+    colors = [
+        '#FF6384',  # Bangun Pagi - Merah
+        '#36A2EB',  # Beribadah - Biru
+        '#FFCE56',  # Berolahraga - Kuning
+        '#4BC0C0',  # Sehat & Bergizi - Hijau Muda
+        '#9966FF',  # Belajar - Ungu
+        '#FF9F40',  # Bermasyarakat - Oranye
+        '#2E8B57'   # Tidur Cepat - Hijau
+    ]
+    
+    # Mapping nama kebiasaan untuk label
+    habit_names = {
+        'bangun_pagi': 'Bangun Pagi',
+        'beribadah': 'Beribadah',
+        'berolahraga': 'Gemar Berolahraga',
+        'sehat_dan_lemar': 'Makan Sehat & Bergizi',
+        'belajar': 'Gemar Belajar',
+        'bermasyarakat': 'Bermasyarakat',
+        'tidur_cepat': 'Tidur Cepat'
+    }
+    
+    habits = ['bangun_pagi', 'beribadah', 'berolahraga', 'sehat_dan_lemar', 'belajar', 'bermasyarakat', 'tidur_cepat']
+    
+    for i, habit in enumerate(habits):
+        data_per_bulan = []
+        
+        for bulan_value in bulan_values:
+            # Hitung rata-rata nilai untuk kebiasaan tertentu di bulan tertentu
+            # Untuk semua siswa di sekolah tersebut
+            avg_query = db.session.query(
+                func.avg(getattr(Kebiasaan, habit))
+            ).join(Siswa).join(Kelas).filter(
+                Kelas.sekolah_id == sekolah_id,
+                Kelas.tahun_ajaran_id == tahun_ajaran_id,
+                Kebiasaan.bulan == bulan_value
+            )
+            
+            result = avg_query.scalar()
+            data_per_bulan.append(round(result or 0, 1))
+        
+        datasets.append({
+            'label': habit_names[habit],
+            'data': data_per_bulan,
+            'borderColor': colors[i],
+            'backgroundColor': colors[i] + '20',
+            'tension': 0.4,
+            'fill': False
+        })
+    
+    return {
+        'labels': labels,
+        'datasets': datasets
+    }
+
+def get_kelas_stats(sekolah_id, tahun_ajaran_id):
+    """Ambil statistik detail per kelas"""
+    kelas_list = Kelas.query.filter_by(
+        sekolah_id=sekolah_id, 
+        tahun_ajaran_id=tahun_ajaran_id
+    ).all()
+    
+    stats = []
+    
+    for kelas in kelas_list:
+        # Hitung jumlah siswa
+        jumlah_siswa = Siswa.query.filter_by(kelas_id=kelas.id).count()
+        
+        # Hitung rata-rata per kebiasaan
+        avg_query = db.session.query(
+            func.avg(Kebiasaan.bangun_pagi).label('bangun_pagi'),
+            func.avg(Kebiasaan.beribadah).label('beribadah'),
+            func.avg(Kebiasaan.berolahraga).label('berolahraga'),
+            func.avg(Kebiasaan.sehat_dan_lemar).label('sehat_dan_lemar'),
+            func.avg(Kebiasaan.belajar).label('belajar'),
+            func.avg(Kebiasaan.bermasyarakat).label('bermasyarakat'),
+            func.avg(Kebiasaan.tidur_cepat).label('tidur_cepat')
+        ).join(Siswa).filter(Siswa.kelas_id == kelas.id)
+        
+        result = avg_query.first()
+        
+        if result:
+            # Konversi semua nilai ke float sebelum perhitungan
+            totals = [
+                float(result.bangun_pagi or 0), 
+                float(result.beribadah or 0), 
+                float(result.berolahraga or 0),
+                float(result.sehat_dan_lemar or 0), 
+                float(result.belajar or 0), 
+                float(result.bermasyarakat or 0),
+                float(result.tidur_cepat or 0)
+            ]
+            rata_rata = sum(totals) / len(totals)
+            
+            stats.append({
+                'kelas': kelas.nama_kelas,
+                'wali_kelas': kelas.wali_kelas.nama if kelas.wali_kelas else '-',
+                'jumlah_siswa': jumlah_siswa,
+                'bangun_pagi': float(result.bangun_pagi or 0),
+                'beribadah': float(result.beribadah or 0),
+                'berolahraga': float(result.berolahraga or 0),
+                'sehat_dan_lemar': float(result.sehat_dan_lemar or 0),
+                'belajar': float(result.belajar or 0),
+                'bermasyarakat': float(result.bermasyarakat or 0),
+                'tidur_cepat': float(result.tidur_cepat or 0),
+                'rata_rata': float(rata_rata)
+            })
+    
+    return stats
+
+def is_kepala_sekolah(user):
+    """
+    Cek apakah user adalah kepala sekolah (bisa multiple sekolah)
+    """
+    if not hasattr(user, 'pegawai') or not user.pegawai:
+        return False
+    
+    # Cek apakah user kepala sekolah di SATU ATAU LEBIH sekolah
+    count = TahunAjaran.query.filter_by(
+        kepala_sekolah_id=user.pegawai.id,
+        aktif=True
+    ).count()
+    
+    return count > 0
+
+def get_sekolah_kepala_aktif(user):
+    """
+    Get sekolah aktif untuk kepala sekolah (dari session)
+    """
+    # PERBAIKAN: Gunakan session keys yang sama dengan set_sekolah_aktif
+    tahun_ajaran_id = session.get('kepala_sekolah_tahun_ajaran_id')
+    sekolah_id = session.get('kepala_sekolah_sekolah_id')
+    is_plt = session.get('is_plt', False)
+    
+    if not tahun_ajaran_id or not sekolah_id:
+        return None
+    
+    tahun_ajaran = TahunAjaran.query.get(tahun_ajaran_id)
+    sekolah = Sekolah.query.get(sekolah_id)
+    
+    # Validasi: pastikan user memang kepala sekolah di sekolah ini
+    if tahun_ajaran and sekolah:
+        if tahun_ajaran.kepala_sekolah_id == user.pegawai.id:
+            return {
+                'tahun_ajaran': tahun_ajaran,
+                'sekolah': sekolah,
+                'is_plt': is_plt
+            }
+    return None
 
 # ----------------------
 # Dashboard route
@@ -143,11 +469,12 @@ def dashboard():
 
     # Pegawai list (profil)
     pegawai_q = []
-    if sekolah:
+    if sekolah and sekolah.kecamatan_id:
         pegawai_q = (
             Pegawai.query
             .join(User, User.id == Pegawai.user_id)
-            .filter(Pegawai.sekolah_id == sekolah.id)
+            .join(Sekolah, Sekolah.id == Pegawai.sekolah_id)
+            .filter(Sekolah.kecamatan_id == sekolah.kecamatan_id)
             .order_by(User.nama_lengkap)
             .all()
         )
@@ -159,6 +486,9 @@ def dashboard():
     else:
         bulan_list = []
 
+    # Cek apakah user adalah kepala sekolah
+    is_kepala_sekolah_flag = is_kepala_sekolah(current_user)
+
     return render_template(
         "dashboard.html",
         username=current_user.username,
@@ -168,7 +498,8 @@ def dashboard():
         pegawai_dengan_profil=pegawai_q,
         kelas_list=kelas_list,
         bulan_list=bulan_list,
-        current_user=current_user
+        current_user=current_user,
+        is_kepala_sekolah=is_kepala_sekolah_flag
     )
 
 
@@ -271,20 +602,275 @@ def update_kepala_sekolah():
     try:
         # Hanya update kepala_sekolah_id saja
         # Property nama_kepala_sekolah dan nip_kepala_sekolah akan otomatis ter-update
+
+        # **MODIFIKASI: Cek apakah kepala sekolah dari kecamatan yang sama**
+        is_plt = False
+        if tahun_ajaran.sekolah.kecamatan_id != pegawai.sekolah.kecamatan_id:
+            is_plt = True
+        
+        # Update kepala_sekolah_id
         tahun_ajaran.kepala_sekolah_id = kepala_sekolah_id
+
+        # **MODIFIKASI: Tambahkan field is_plt jika ada di model**
+        if hasattr(tahun_ajaran, 'is_plt'):
+            tahun_ajaran.is_plt = is_plt
         
         db.session.commit()
         
-        return jsonify({
+        # **MODIFIKASI: Tambahkan status PLT dalam response**
+        response_data = {
             'success': True, 
             'message': 'Kepala sekolah berhasil diperbarui',
             'data': {
-                'nama_kepala_sekolah': tahun_ajaran.nama_kepala_sekolah,  # Property akan otomatis ter-update
-                'nip_kepala_sekolah': tahun_ajaran.nip_kepala_sekolah     # Property akan otomatis ter-update
+                'nama_kepala_sekolah': tahun_ajaran.nama_kepala_sekolah,
+                'nip_kepala_sekolah': tahun_ajaran.nip_kepala_sekolah,
+                'is_plt': is_plt
             }
-        })
+        }
+
+        return jsonify(response_data)
         
     except Exception as e:
         db.session.rollback()
         print(f"Error updating kepala sekolah: {str(e)}")
         return jsonify({'success': False, 'message': f'Terjadi kesalahan: {str(e)}'})
+
+@tahun_ajaran_bp.route("/dashboard_kepala_sekolah")
+@login_required
+def dashboard_kepala_sekolah():
+    """Dashboard khusus untuk kepala sekolah - DIPERBAIKI"""
+    # Cek session untuk sekolah aktif
+    sekolah_aktif = get_sekolah_kepala_aktif(current_user)
+    
+    if not sekolah_aktif:
+        # Jika belum pilih sekolah, redirect ke multi sekolah
+        flash('Silakan pilih sekolah terlebih dahulu', 'warning')
+        return redirect(url_for("tahun_ajaran.dashboard_multi_sekolah"))
+    
+    # **PERBAIKAN: Jangan hitung statistik di sini, biarkan API yang handle**
+    # Karena data akan di-load via JavaScript dan bisa berubah dengan filter
+    
+    # Tentukan status kepala sekolah
+    status_kepala_sekolah = "Kepala Sekolah PLT" if sekolah_aktif['is_plt'] else "Kepala Sekolah"
+    
+    return render_template(
+        "dashboard_kepala_sekolah.html",
+        tahun_ajaran=sekolah_aktif['tahun_ajaran'].tahun_ajaran,
+        tahun_ajaran_id=sekolah_aktif['tahun_ajaran'].id,  # **PERBAIKAN: Pastikan ID benar**
+        sekolah_aktif=sekolah_aktif['sekolah'],
+        status_kepala_sekolah=status_kepala_sekolah,
+        pegawai=current_user.pegawai,
+        # **PERBAIKAN: Hapus total_kelas, total_siswa, total_pegawai dari sini**
+        # Biarkan JavaScript yang mengambil dari API
+        current_user=current_user
+    )
+
+# ----------------------
+# API untuk Dashboard Kepala Sekolah (YANG DIPERBAIKI)
+# ----------------------
+@tahun_ajaran_bp.route("/api/kepala_sekolah/statistik", methods=["GET"])
+@login_required
+def api_kepala_sekolah_statistik():
+    """API untuk data statistik kepala sekolah - DIPERBAIKI"""
+    try:
+        sekolah_id = request.args.get('sekolah_id')
+        tahun_ajaran_id = request.args.get('tahun_ajaran_id')
+        bulan_filter = request.args.get('bulan', '')
+        kelas_filter = request.args.get('kelas', 'all')
+        
+        print(f"Debug API: sekolah_id={sekolah_id}, tahun_ajaran_id={tahun_ajaran_id}")
+        
+        # Validasi parameter
+        if not sekolah_id or not tahun_ajaran_id:
+            return jsonify({'error': 'Parameter sekolah_id dan tahun_ajaran_id diperlukan'}), 400
+        
+        # Ambil data sekolah dan tahun ajaran
+        sekolah = Sekolah.query.get(sekolah_id)
+        tahun_ajaran_aktif = TahunAjaran.query.get(tahun_ajaran_id)
+        
+        if not sekolah or not tahun_ajaran_aktif:
+            return jsonify({'error': 'Data sekolah atau tahun ajaran tidak ditemukan'}), 404
+        
+        # **PERBAIKAN 1: Hitung statistik dengan query yang lebih akurat**
+        total_kelas = Kelas.query.filter_by(
+            sekolah_id=sekolah_id, 
+            tahun_ajaran_id=tahun_ajaran_id
+        ).count()
+        
+        total_siswa = Siswa.query.join(Kelas).filter(
+            Kelas.sekolah_id == sekolah_id, 
+            Kelas.tahun_ajaran_id == tahun_ajaran_id
+        ).count()
+        
+        # **PERBAIKAN 2: Hitung total pegawai/guru dengan cara yang aman**
+        # Cek dulu struktur model Pegawai
+        total_guru = 0
+        
+        # Cara 1: Jika ada kolom jabatan
+        if hasattr(Pegawai, 'jabatan'):
+            total_guru = Pegawai.query.filter_by(
+                sekolah_id=sekolah_id
+            ).filter(
+                Pegawai.jabatan.ilike('%guru%') | 
+                Pegawai.jabatan.ilike('%wali%') |
+                Pegawai.jabatan.ilike('%pengajar%')
+            ).count()
+        
+        # Cara 2: Jika tidak ada kolom jabatan, hitung semua pegawai kecuali kepala sekolah
+        if total_guru == 0:
+            total_guru = Pegawai.query.filter_by(sekolah_id=sekolah_id).filter(
+                Pegawai.id != tahun_ajaran_aktif.kepala_sekolah_id
+            ).count()
+            
+            # Jika masih 0, hitung semua pegawai di sekolah
+            if total_guru == 0:
+                total_guru = Pegawai.query.filter_by(sekolah_id=sekolah_id).count()
+        
+        print(f"Debug Statistik: Kelas={total_kelas}, Siswa={total_siswa}, Guru={total_guru}")
+        
+        # Data untuk grafik kebiasaan per kelas (10 KELAS TERBAIK)
+        habits_data = get_habits_data_by_kelas_terbaik(sekolah_id, tahun_ajaran_id, bulan_filter)
+        
+        # Data trend perkembangan (SATU SEKOLAH - SEMESTER)
+        trend_data = get_trend_data_kepala_sekolah(sekolah_id, tahun_ajaran_id)
+        
+        # Data statistik per siswa dengan filter
+        siswa_data = get_siswa_stats(sekolah_id, tahun_ajaran_id, bulan_filter, kelas_filter)
+        
+        # Data list kelas untuk filter
+        kelas_list = get_kelas_list(sekolah_id, tahun_ajaran_id)
+        
+        # Hitung rata-rata sekolah
+        rata_rata_sekolah = calculate_rata_rata_sekolah(sekolah_id, tahun_ajaran_id, bulan_filter)
+        
+        return jsonify({
+            "success": True,
+            "tahun_ajaran": tahun_ajaran_aktif.tahun_ajaran,
+            "sekolah_nama": sekolah.nama_sekolah,
+            "data": {
+                "total_kelas": total_kelas,
+                "total_siswa": total_siswa,
+                "total_pegawai": total_guru,
+                "rata_rata_sekolah": round(rata_rata_sekolah, 1)
+            },
+            "habits_data": habits_data,
+            "trend_data": trend_data,
+            "siswa_data": siswa_data,
+            "kelas_list": kelas_list
+        })
+        
+    except Exception as e:
+        print(f"Error in api_kepala_sekolah_statistik: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Terjadi kesalahan server'}), 500
+
+
+@tahun_ajaran_bp.route("/api/kepala_sekolah/bulan", methods=["GET"])
+@login_required
+def api_kepala_sekolah_bulan():
+    """API untuk mendapatkan list bulan dalam tahun ajaran"""
+    try:
+        tahun_ajaran_id = request.args.get('tahun_ajaran_id')
+        
+        if not tahun_ajaran_id:
+            return jsonify({'error': 'Parameter tahun_ajaran_id diperlukan'}), 400
+        
+        tahun_ajaran = TahunAjaran.query.get(tahun_ajaran_id)
+        if not tahun_ajaran:
+            return jsonify({'error': 'Tahun ajaran tidak ditemukan'}), 404
+        
+        bulan_list = generate_bulan_list_for_semester(tahun_ajaran)
+        
+        return jsonify({
+            "success": True,
+            "bulan_list": bulan_list
+        })
+        
+    except Exception as e:
+        print(f"Error in api_kepala_sekolah_bulan: {str(e)}")
+        return jsonify({'error': 'Terjadi kesalahan server'}), 500
+
+@tahun_ajaran_bp.route("/dashboard_multi_sekolah")
+@login_required
+def dashboard_multi_sekolah():
+    """Dashboard untuk kepala sekolah yang memimpin multiple sekolah"""
+    pegawai = current_user.pegawai
+    
+    # Ambil semua sekolah dimana user adalah kepala sekolah
+    sekolah_kepala_list = TahunAjaran.query.filter_by(
+        kepala_sekolah_id=pegawai.id,
+        aktif=True
+    ).join(Sekolah).all()
+    
+    # Kategorikan: Tetap vs PLT
+    sekolah_data = []
+    for ta in sekolah_kepala_list:
+        is_plt = ta.sekolah_id != pegawai.sekolah_id
+        status = "PLT" if is_plt else "Kepala Sekolah Tetap"
+        status_color = "warning" if is_plt else "success"
+        
+        sekolah_data.append({
+            'tahun_ajaran_id': ta.id,
+            'tahun_ajaran': ta.tahun_ajaran,
+            'sekolah_id': ta.sekolah_id,
+            'sekolah_nama': ta.sekolah.nama_sekolah,
+            'is_plt': is_plt,
+            'status': status,
+            'status_color': status_color
+        })
+    
+    return render_template(
+        "dashboard_multi_sekolah.html",
+        sekolah_data=sekolah_data,
+        current_user=current_user,
+        pegawai=pegawai
+    )
+
+@tahun_ajaran_bp.route("/set_sekolah_aktif", methods=["POST"])
+@login_required
+def set_sekolah_aktif():
+    """Set sekolah aktif untuk session kepala sekolah"""
+    tahun_ajaran_id = request.form.get("tahun_ajaran_id")
+    sekolah_id = request.form.get("sekolah_id")
+    
+    # Validasi: pastikan user memang kepala sekolah di sekolah ini
+    ta = TahunAjaran.query.filter_by(
+        id=tahun_ajaran_id,
+        kepala_sekolah_id=current_user.pegawai.id,
+        aktif=True
+    ).first()
+    
+    if not ta:
+        flash("Akses ditolak!", "danger")
+        return redirect(url_for("tahun_ajaran.dashboard"))
+    
+    # Simpan di session
+    session['kepala_sekolah_tahun_ajaran_id'] = tahun_ajaran_id
+    session['kepala_sekolah_sekolah_id'] = sekolah_id
+    session['is_plt'] = (int(sekolah_id) != current_user.pegawai.sekolah_id)
+    
+    flash("Mode kepala sekolah diaktifkan!", "success")
+    return redirect(url_for("tahun_ajaran.dashboard_kepala_sekolah"))
+
+@tahun_ajaran_bp.route("/switch_to_wali_kelas")
+@login_required
+def switch_to_wali_kelas():
+    """Switch dari mode kepala sekolah ke mode wali kelas"""
+    session.pop('kepala_sekolah_tahun_ajaran_id', None)
+    session.pop('kepala_sekolah_sekolah_id', None)
+    session.pop('is_plt', None)
+    
+    flash("Berhasil beralih ke mode Wali Kelas", "info")
+    return redirect(url_for("tahun_ajaran.dashboard"))
+
+@tahun_ajaran_bp.route("/switch_sekolah")
+@login_required
+def switch_sekolah():
+    """Switch ke sekolah lain (untuk kepala sekolah multi-sekolah)"""
+    # Clear session untuk memaksa pilih sekolah lagi
+    session.pop('kepala_sekolah_tahun_ajaran_id', None)
+    session.pop('kepala_sekolah_sekolah_id', None)
+    session.pop('is_plt', None)
+    
+    return redirect(url_for("tahun_ajaran.dashboard_multi_sekolah"))

@@ -209,7 +209,19 @@
                     </li>
                     </ul>
                 </li>
-    
+                {% if is_kepala_sekolah %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="kepalaSekolahDropdown" role="button" 
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-tie me-1"></i>Mode Kepala Sekolah
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="kepalaSekolahDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('tahun_ajaran.dashboard_multi_sekolah') }}">
+                            <i class="fas fa-school me-2"></i>Akses Dashboard Kepala Sekolah
+                        </a></li>
+                    </ul>
+                </li>
+                {% endif %}
                 {% if current_user.is_superadmin %}
                 <li class="nav-item">
                   <a class="nav-link" href="{{ url_for('tahun_ajaran.dashboard') }}">Settings</a>
@@ -285,23 +297,38 @@
                         <label class="form-label">Kepala Sekolah</label>
                         {% if pegawai_dengan_profil and pegawai_dengan_profil|length > 0 %}
                             <select class="form-select" id="kepalaSelect" name="kepala_sekolah_id" required>
+
+                                <option value="">-- Pilih Kepala Sekolah --</option>
                                 {% for p in pegawai_dengan_profil %}
-                                <option value="{{ p.id }}" data-nip="{{ p.nip }}"
+                                <!-- MODIFIKASI: Tampilkan sekolah asal dan tandai PLT jika beda kecamatan -->
+                                <option value="{{ p.id }}" data-nip="{{ p.nip }}" data-sekolah-id="{{ p.sekolah_id }}" 
+                                    data-sekolah-nama="{{ p.sekolah.nama_sekolah }}" data-kecamatan-id="{{ p.sekolah.kecamatan_id }}"
                                     {% if current_user.pegawai and p.id == current_user.pegawai.id %}selected{% endif %}>
-                                    {{ p.nama }} (NIP: {{ p.nip }})
+                                    {{ p.nama }} (NIP: {{ p.nip }}) - {{ p.sekolah.nama_sekolah }}
+                                    {% if p.sekolah_id != sekolah.id %}[PLT]{% endif %}
                                 </option>
                                 {% endfor %}
                             </select>
+                            <small class="text-muted">
+                                *Pegawai dari kecamatan {{ sekolah.kecamatan.nama_kecamatan if sekolah.kecamatan else 'yang sama' }}
+                            </small>
                         {% else %}
+
                             <div class="alert alert-warning">
                                 Belum ada pegawai yang mengisi profil. Silakan minta pegawai mengisi profil terlebih dahulu.
                             </div>
                         {% endif %}
                     </div>
-        
+                    
                     <div class="mb-2">
                         <label class="form-label">NIP</label>
                         <input type="text" class="form-control" id="kepalaNip" readonly>
+                    </div>
+
+                    <!-- MODIFIKASI: Tambahkan info sekolah asal -->
+                    <div class="mb-2">
+                        <label class="form-label">Asal Sekolah</label>
+                        <input type="text" class="form-control" id="kepalaSekolahAsal" readonly>
                     </div>
         
                     <button type="submit" class="btn btn-primary"
@@ -348,23 +375,42 @@
                                         <label class="form-label">Pilih Kepala Sekolah Baru</label>
                                         {% if pegawai_dengan_profil and pegawai_dengan_profil|length > 0 %}
                                             <select class="form-select" id="editKepalaSelect" name="kepala_sekolah_id" required>
+                                                <option value="">-- Pilih Kepala Sekolah --</option>
                                                 {% for p in pegawai_dengan_profil %}
-                                                <option value="{{ p.id }}" data-nip="{{ p.nip }}"
+                                                <!-- MODIFIKASI: Tampilkan sekolah asal dan tandai PLT -->
+                                                <option value="{{ p.id }}" data-nip="{{ p.nip }}" data-sekolah-id="{{ p.sekolah_id }}" 
+                                                    data-sekolah-nama="{{ p.sekolah.nama_sekolah }}" data-kecamatan-id="{{ p.sekolah.kecamatan_id }}"
                                                     {% if active_tahun_ajaran.kepala_sekolah_id == p.id %}selected{% endif %}>
-                                                    {{ p.nama }} (NIP: {{ p.nip }})
+                                                    {{ p.nama }} (NIP: {{ p.nip }}) - {{ p.sekolah.nama_sekolah }}
+                                                    {% if p.sekolah_id != sekolah.id %}[PLT]{% endif %}
                                                 </option>
                                                 {% endfor %}
                                             </select>
+                                            <small class="text-muted">
+                                                *Pegawai dari kecamatan {{ sekolah.kecamatan.nama_kecamatan if sekolah.kecamatan else 'yang sama' }}
+                                            </small>
                                         {% else %}
                                             <div class="alert alert-warning">
                                                 Belum ada pegawai yang mengisi profil. Silakan minta pegawai mengisi profil terlebih dahulu.
                                             </div>
                                         {% endif %}
                                     </div>
-                
+                    
                                     <div class="mb-3">
                                         <label class="form-label">NIP</label>
                                         <input type="text" class="form-control" id="editKepalaNip" readonly>
+                                    </div>
+
+                                    <!-- MODIFIKASI: Tambahkan info sekolah asal -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Asal Sekolah</label>
+                                        <input type="text" class="form-control" id="editKepalaSekolahAsal" readonly>
+                                    </div>
+
+                                    <!-- MODIFIKASI: Tambahkan info status PLT -->
+                                    <div class="alert alert-info" id="pltInfo" style="display: none;">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Pegawai ini berasal dari sekolah berbeda dan akan ditetapkan sebagai <strong>PLT (Pelaksana Tugas) Kepala Sekolah</strong>
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -688,7 +734,8 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Modal lainnya -->
     <!-- MODAL EDIT SISWA -->
     <div class="modal fade" id="editSiswaModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -795,67 +842,7 @@
         </div>
     </div>
     
-    <!-- MODAL LAPORAN SEMESTER -->
-    <div class="modal fade" id="laporanSemesterModal" tabindex="-1" aria-labelledby="laporanSemesterModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="laporanSemesterForm" method="get" target="_blank">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="laporanSemesterModalLabel">Pilih Laporan Semester</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <label for="kelasSemesterSelect" class="form-label">Kelas</label>
-                        <select class="form-select" id="kelasSemesterSelect" name="kelas_id" required>
-                            <option value="">-- Pilih Kelas --</option>
-                            {% for k in kelas_list if k.wali_kelas_id == current_user.pegawai.id %}
-                                <option value="{{ k.id }}">{{ k.nama_kelas }}</option>
-                            {% endfor %}
-                        </select>
-    
-                        <label for="semesterSelect" class="form-label mt-3">Semester</label>
-                        <select class="form-select" id="semesterSelect" name="semester" required>
-                            <option value="">-- Pilih Semester --</option>
-                            <option value="ganjil">Ganjil</option>
-                            <option value="genap">Genap</option>
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Lihat Laporan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    
-    <!-- MODAL LAPORAN TAHUNAN -->
-    <div class="modal fade" id="laporanTahunanModal" tabindex="-1" aria-labelledby="laporanTahunanModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="laporanTahunanForm" method="get" target="_blank">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="laporanTahunanModalLabel">Pilih Laporan Tahunan</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <label for="kelasTahunanSelect" class="form-label">Kelas</label>
-                        <select class="form-select" id="kelasTahunanSelect" name="kelas_id" required>
-                            <option value="">-- Pilih Kelas --</option>
-                            {% for k in kelas_list if k.wali_kelas_id == current_user.pegawai.id %}
-                                <option value="{{ k.id }}">{{ k.nama_kelas }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success">Lihat Laporan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    
-    <!-- MODAL LAPORAN PENILAIAN SISWA - VERSI DIPERBAIKI -->
+    <!-- MODAL LAPORAN PENILAIAN SISWA -->
     <div class="modal fade" id="laporanPenilaianSiswaModal" tabindex="-1" aria-labelledby="laporanPenilaianSiswaModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -873,7 +860,6 @@
                                 <label for="tahunAjaranPenilaianSelect" class="form-label">Tahun Ajaran</label>
                                 <select class="form-select" id="tahunAjaranPenilaianSelect" name="tahun_ajaran_id" required>
                                     <option value="">-- Pilih Tahun Ajaran --</option>
-                                    <!-- Options akan di-load via JavaScript -->
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -926,7 +912,6 @@
     
     <script>
 // ✅ FUNCTION GLOBAL UNTUK GENERATE REPORT - DIPANGGIL DARI ONCLICK
-// ✅ FUNCTION GENERATE REPORT YANG BENAR
 function generateReport() {
     console.log('=== GENERATE REPORT FUNCTION CALLED ===');
     
@@ -950,7 +935,6 @@ function generateReport() {
         return;
     }
     
-    // ✅ PERBAIKAN: URL YANG BENAR UNTUK LAPORAN PENILAIAN DETAIL
     const url = `/laporan/penilaian/${kelasId}/${bulan}`;
     console.log('Opening URL:', url);
     window.open(url, '_blank');
@@ -958,8 +942,8 @@ function generateReport() {
 
 // Pastikan fungsi ini global
 window.generateReport = generateReport;
-// ========== DOMCONTENTLOADED - SEMUA EVENT LISTENER ==========
 
+// ========== DOMCONTENTLOADED - SEMUA EVENT LISTENER ==========
 document.addEventListener("DOMContentLoaded", function() {
     console.log("Dashboard loaded successfully");
     
@@ -985,22 +969,38 @@ document.addEventListener("DOMContentLoaded", function() {
         kepalaSelect.addEventListener("change", function() {
             const selected = this.options[this.selectedIndex];
             document.getElementById("kepalaNip").value = selected.getAttribute("data-nip") || "";
+            document.getElementById("kepalaSekolahAsal").value = selected.getAttribute("data-sekolah-nama") || "";
         });
         kepalaSelect.dispatchEvent(new Event("change"));
     }
-    // Kepala Sekolah Select untuk modal edit - TAMBAHAN BARU
+
+    // Kepala Sekolah Select untuk modal edit - MODIFIKASI: tambahkan handler PLT
     const editKepalaSelect = document.getElementById("editKepalaSelect");
     if (editKepalaSelect) {
         editKepalaSelect.addEventListener("change", function() {
             const selected = this.options[this.selectedIndex];
+            const sekolahAsalInput = document.getElementById("editKepalaSekolahAsal");
+            const pltInfo = document.getElementById("pltInfo");
+            
             document.getElementById("editKepalaNip").value = selected.getAttribute("data-nip") || "";
+            sekolahAsalInput.value = selected.getAttribute("data-sekolah-nama") || "";
+            
+            // MODIFIKASI: Tampilkan info PLT jika sekolah asal berbeda
+            const sekolahIdSelected = selected.getAttribute("data-sekolah-id");
+            const currentSekolahId = "{{ sekolah.id }}"; // ID sekolah saat ini dari template
+            
+            if (sekolahIdSelected && currentSekolahId && sekolahIdSelected !== currentSekolahId) {
+                pltInfo.style.display = 'block';
+            } else {
+                pltInfo.style.display = 'none';
+            }
         });
-        // Trigger change event untuk set nilai awal
         editKepalaSelect.dispatchEvent(new Event("change"));
     }
 
     // Form Edit Kepala Sekolah
     document.getElementById("formEditKepalaSekolah")?.addEventListener("submit", handleEditKepalaSekolah);
+
     // ========== KELAS ==========
     
     const formKelas = document.getElementById("formKelas");
@@ -1059,99 +1059,99 @@ document.addEventListener("DOMContentLoaded", function() {
     
     initializeLaporanModals();
 
-    // ========== FUNGSI HANDLER (HANYA DIPANGGIL INTERNAL) ==========
+    // ========== FUNGSI HANDLER ==========
 
-    // Handler Tahun Ajaran
-    async function handleTahunAjaranSubmit(e) {
+    // Handler Tahun Ajaran - PERBAIKAN: tanpa async/await
+    function handleTahunAjaranSubmit(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
         
-        try {
-            const response = await fetch("{{ url_for('tahun_ajaran.add_tahun_ajaran') }}", {
-                method: "POST",
-                body: formData
-            });
-            const result = await response.json();
-            
+        fetch("{{ url_for('tahun_ajaran.add_tahun_ajaran') }}", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
             if(result.success){
                 alert("Tahun ajaran berhasil ditambahkan");
                 location.reload();
             } else {
                 alert(result.message);
             }
-        } catch (error) {
+        })
+        .catch(error => {
             console.error('Error:', error);
             alert("Terjadi kesalahan saat menambah tahun ajaran");
-        }
+        });
     }
 
-    async function handleToggleTahunAjaran(e) {
+    // PERBAIKAN BESAR: handleToggleTahunAjaran tanpa async/await
+    function handleToggleTahunAjaran(e) {
         e.preventDefault();
         const form = e.target;
         const action = form.action || "{{ url_for('tahun_ajaran.toggle_tahun_ajaran') }}";
         
-        try {
-            const response = await fetch(action, {
-                method: "POST",
-                body: new FormData(form)
-            });
-
-            const result = await response.json();
+        fetch(action, {
+            method: "POST",
+            body: new FormData(form)
+        })
+        .then(response => response.json())
+        .then(result => {
             if(result.success){
                 alert("Status tahun ajaran diperbarui");
                 location.reload();
             } else {
                 alert(result.message);
             }
-        } catch (error) {
+        })
+        .catch(error => {
             console.error('Error:', error);
             alert("Terjadi kesalahan saat mengubah status tahun ajaran");
-        }
+        });
     }
 
-    // ========== HANDLER EDIT KEPALA SEKOLAH ========== - TAMBAHAN BARU
-    
-    async function handleEditKepalaSekolah(e) {
+    // Handler Edit Kepala Sekolah - PERBAIKAN: tanpa async/await
+    function handleEditKepalaSekolah(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
         
-        try {
-            const response = await fetch("{{ url_for('tahun_ajaran.update_kepala_sekolah') }}", {
-                method: "POST",
-                body: formData
-            });
-            
-            const result = await response.json();
-            
+        fetch("{{ url_for('tahun_ajaran.update_kepala_sekolah') }}", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
             if(result.success){
-                alert("Kepala sekolah berhasil diperbarui");
-                // Tutup modal
+                let message = "Kepala sekolah berhasil diperbarui";
+                if (result.data && result.data.is_plt) {
+                    message += " sebagai PLT (Pelaksana Tugas)";
+                }
+                alert(message);
                 const modalEl = document.getElementById('editKepalaModal');
                 const modal = bootstrap.Modal.getInstance(modalEl);
-                modal.hide();
-                // Refresh halaman untuk update tampilan
+                if (modal) modal.hide();
                 location.reload();
             } else {
                 alert(result.message || "Terjadi kesalahan saat memperbarui kepala sekolah");
             }
-        } catch (error) {
+        })
+        .catch(error => {
             console.error('Error:', error);
             alert("Terjadi kesalahan saat memperbarui kepala sekolah");
-        }
+        });
     }
 
-    // Handler Kelas
-    async function handleKelasSubmit(e) {
+    // Handler Kelas - PERBAIKAN: tanpa async/await
+    function handleKelasSubmit(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
 
-        try {
-            const response = await fetch("{{ url_for('kelas.create_kelas') }}", {
-                method: "POST",
-                body: formData
-            });
-            const result = await response.json();
-
+        fetch("{{ url_for('kelas.create_kelas') }}", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
             if(result.success){
                 alert(result.message);
                 updateKelasTable(result.kelas);
@@ -1159,13 +1159,14 @@ document.addEventListener("DOMContentLoaded", function() {
             } else {
                 alert(result.message);
             }
-        } catch (err) {
+        })
+        .catch(err => {
             console.error(err);
             alert("Terjadi kesalahan saat menyimpan kelas.");
-        }
+        });
     }
 
-    async function handleKelasActions(e) {
+    function handleKelasActions(e) {
         const target = e.target;
         const row = target.closest("tr");
         const id = row?.dataset.id;
@@ -1174,50 +1175,52 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if(target.classList.contains("delete-btn")){
             if (!confirm("Hapus kelas ini?")) return;
-            await deleteKelas(id, row);
+            deleteKelas(id, row);
         }
 
         if(target.classList.contains("edit-btn")){
-            await editKelas(id, row);
+            editKelas(id, row);
         }
     }
 
-    async function deleteKelas(id, row) {
-        try {
-            const resp = await fetch(`/kelas/delete/${id}`, { method: "POST" });
-            const result = await resp.json();
+    function deleteKelas(id, row) {
+        fetch(`/kelas/delete/${id}`, { method: "POST" })
+        .then(resp => resp.json())
+        .then(result => {
             if(result.success){
                 row.remove();
             } else {
                 alert(result.message);
             }
-        } catch (err) {
+        })
+        .catch(err => {
             console.error(err);
             alert("Gagal menghapus kelas.");
-        }
+        });
     }
 
-    async function editKelas(id, row) {
+    function editKelas(id, row) {
         const currentNama = row.querySelector(".nama-kelas").innerText;
         const newNama = prompt("Ubah Nama Kelas:", currentNama);
         if(!newNama || newNama === currentNama) return;
 
-        try {
-            const resp = await fetch(`/kelas/edit/${id}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nama_kelas: newNama })
-            });
-            const result = await resp.json();
+        fetch(`/kelas/edit/${id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nama_kelas: newNama })
+        })
+        .then(resp => resp.json())
+        .then(result => {
             if(result.success){
                 row.querySelector(".nama-kelas").innerText = newNama;
             } else {
                 alert(result.message);
             }
-        } catch (err) {
+        })
+        .catch(err => {
             console.error(err);
             alert("Gagal mengedit kelas.");
-        }
+        });
     }
 
     function updateKelasTable(kelas) {
@@ -1238,37 +1241,38 @@ document.addEventListener("DOMContentLoaded", function() {
         kelasTableBody.appendChild(row);
     }
 
-    // Handler Siswa
-    async function handleKelasChange() {
+    // Handler Siswa - PERBAIKAN: tanpa async/await
+    function handleKelasChange() {
         const kelasId = this.value;
         const kelasIdInput = document.getElementById("kelasIdInput");
         
         if (!kelasId) {
             formSiswa?.classList.add("d-none");
             if (siswaTableBody) {
-                siswaTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Pilih kelas terlebih dahulu</td></tr>`;
+                siswaTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Pilih kelas terlebih dahulu</td></tr>';
             }
             return;
         }
 
         formSiswa?.classList.remove("d-none");
         if (kelasIdInput) kelasIdInput.value = kelasId;
-        await loadSiswa(kelasId);
+        loadSiswa(kelasId);
     }
 
-    async function loadSiswa(kelasId) {
-        try {
-            const resp = await fetch(`/siswa/list/${kelasId}`);
-            const data = await resp.json();
+    function loadSiswa(kelasId) {
+        fetch(`/siswa/list/${kelasId}`)
+        .then(resp => resp.json())
+        .then(data => {
             if (data.success) {
                 renderSiswaTable(data.siswa);
             } else {
                 alert(data.message);
             }
-        } catch (error) {
+        })
+        .catch(error => {
             console.error('Error loading siswa:', error);
             alert('Gagal memuat data siswa');
-        }
+        });
     }
 
     function renderSiswaTable(siswaList) {
@@ -1276,7 +1280,7 @@ document.addEventListener("DOMContentLoaded", function() {
         
         siswaTableBody.innerHTML = "";
         if (siswaList.length === 0) {
-            siswaTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Belum ada siswa</td></tr>`;
+            siswaTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Belum ada siswa</td></tr>';
             return;
         }
         siswaList.forEach(s => addSiswaRow(s));
@@ -1301,28 +1305,39 @@ document.addEventListener("DOMContentLoaded", function() {
             openEditModal(s);
         });
 
-        row.querySelector(".delete-btn").addEventListener("click", async function() {
+        row.querySelector(".delete-btn").addEventListener("click", function() {
             if (!confirm("Hapus siswa ini?")) return;
-            const resp = await fetch(`/siswa/delete/${s.id}`, { method: "POST" });
-            const del = await resp.json();
-            if (del.success) row.remove();
-            else alert(del.message);
+            fetch(`/siswa/delete/${s.id}`, { method: "POST" })
+            .then(resp => resp.json())
+            .then(del => {
+                if (del.success) row.remove();
+                else alert(del.message);
+            });
         });
     }
 
-    async function handleSiswaSubmit(e) {
+    function handleSiswaSubmit(e) {
         e.preventDefault();
         const rows = document.querySelectorAll("#siswaFormBody tr");
         const kelasId = kelasDropdown.value;
         let successCount = 0;
+        let processed = 0;
 
-        for (let row of rows) {
+        rows.forEach(row => {
             const nama = row.querySelector('input[name="nama_siswa[]"]').value;
             const nisn = row.querySelector('input[name="nisn[]"]').value;
             const jk = row.querySelector('select[name="jenis_kelamin[]"]').value;
             const status = row.querySelector('select[name="status[]"]').value;
 
-            if (!nama || !jk) continue;
+            if (!nama || !jk) {
+                processed++;
+                if (processed === rows.length && successCount > 0) {
+                    alert(successCount + " siswa berhasil ditambahkan.");
+                    loadSiswa(kelasId);
+                    resetSiswaForm();
+                }
+                return;
+            }
 
             const formData = new FormData();
             formData.append("kelas_id", kelasId);
@@ -1331,28 +1346,31 @@ document.addEventListener("DOMContentLoaded", function() {
             formData.append("jenis_kelamin", jk);
             formData.append("status", status);
 
-            try {
-                const resp = await fetch(`/siswa/create`, {
-                    method: "POST",
-                    body: formData
-                });
-                const result = await resp.json();
+            fetch('/siswa/create', {
+                method: "POST",
+                body: formData
+            })
+            .then(resp => resp.json())
+            .then(result => {
                 if (result.success) {
                     successCount++;
                 } else {
                     alert("Gagal tambah siswa: " + result.message);
                 }
-            } catch (error) {
+            })
+            .catch(error => {
                 console.error('Error adding siswa:', error);
                 alert("Terjadi kesalahan saat menambah siswa");
-            }
-        }
-
-        if (successCount > 0) {
-            alert(successCount + " siswa berhasil ditambahkan.");
-            await loadSiswa(kelasId);
-            resetSiswaForm();
-        }
+            })
+            .finally(() => {
+                processed++;
+                if (processed === rows.length && successCount > 0) {
+                    alert(successCount + " siswa berhasil ditambahkan.");
+                    loadSiswa(kelasId);
+                    resetSiswaForm();
+                }
+            });
+        });
     }
 
     function addSiswaInputRow() {
@@ -1415,24 +1433,22 @@ document.addEventListener("DOMContentLoaded", function() {
         modal.show();
     }
 
-    async function handleEditSiswa(e) {
+    function handleEditSiswa(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
         const id = formData.get("id");
 
-        try {
-            const resp = await fetch(`/siswa/update/${id}`, {
-                method: "POST",
-                body: formData
-            });
-            const result = await resp.json();
-
+        fetch(`/siswa/update/${id}`, {
+            method: "POST",
+            body: formData
+        })
+        .then(resp => resp.json())
+        .then(result => {
             if (result.success) {
                 alert("Data siswa berhasil diupdate");
                 const modalEl = document.getElementById("editSiswaModal");
                 bootstrap.Modal.getInstance(modalEl).hide();
 
-                // Update baris langsung di tabel
                 const row = document.querySelector(`#siswaTable tr[data-id="${id}"]`);
                 if (row) {
                     row.children[0].textContent = result.siswa.nama_siswa;
@@ -1443,21 +1459,23 @@ document.addEventListener("DOMContentLoaded", function() {
             } else {
                 alert(result.message);
             }
-        } catch (error) {
+        })
+        .catch(error => {
             console.error('Error updating siswa:', error);
             alert("Terjadi kesalahan saat mengupdate siswa");
-        }
+        });
     }
 
-    // Handler Penilaian Kebiasaan
+    // Handler Penilaian Kebiasaan - PERBAIKAN: tanpa async/await
     function initializePenilaianKebiasaan() {
-        kelasSelectPenilaian.addEventListener("change", () => 
-            loadSiswaPenilaian(kelasSelectPenilaian.value));
+        kelasSelectPenilaian.addEventListener("change", function() {
+            loadSiswaPenilaian(this.value);
+        });
         
-        bulanSelectPenilaian.addEventListener("change", () => {
+        bulanSelectPenilaian.addEventListener("change", function() {
             updateMaxValuesPenilaian();
-            if (kelasSelectPenilaian.value && bulanSelectPenilaian.value) {
-                loadNilaiPenilaian(kelasSelectPenilaian.value, bulanSelectPenilaian.value);
+            if (kelasSelectPenilaian.value && this.value) {
+                loadNilaiPenilaian(kelasSelectPenilaian.value, this.value);
             }
         });
 
@@ -1465,28 +1483,27 @@ document.addEventListener("DOMContentLoaded", function() {
             siswaTableBodyPenilaian.addEventListener("click", handlePenilaianActions);
         }
         
-        document.addEventListener("input", (e) => {
+        document.addEventListener("input", function(e) {
             if (e.target.classList.contains("nilai-input") && e.target.type === "number") {
                 validateNilaiInput(e.target);
             }
         });
     }
 
-    async function loadSiswaPenilaian(kelasId) {
+    function loadSiswaPenilaian(kelasId) {
         if (!siswaTableBodyPenilaian) return;
         
         siswaTableBodyPenilaian.innerHTML = "";
         if (!kelasId) {
-            siswaTableBodyPenilaian.innerHTML = `<tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td></tr>`;
+            siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td></tr>';
             return;
         }
         
-        try {
-            const res = await fetch(`/penilaian/siswa/list/${kelasId}`);
-            const siswaList = await res.json();
-            
+        fetch(`/penilaian/siswa/list/${kelasId}`)
+        .then(res => res.json())
+        .then(siswaList => {
             if (!siswaList || !siswaList.length) {
-                siswaTableBodyPenilaian.innerHTML = `<tr><td colspan="11" class="text-center">Belum ada siswa di kelas ini</td></tr>`;
+                siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Belum ada siswa di kelas ini</td></tr>';
                 return;
             }
 
@@ -1516,9 +1533,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         </div>
                     </td>
                 `;
-                if (siswaTableBodyPenilaian) {
-                    siswaTableBodyPenilaian.appendChild(row);
-                }
+                siswaTableBodyPenilaian.appendChild(row);
             });
 
             updateMaxValuesPenilaian();
@@ -1526,13 +1541,11 @@ document.addEventListener("DOMContentLoaded", function() {
             if (bulanSelectPenilaian.value) {
                 loadNilaiPenilaian(kelasId, bulanSelectPenilaian.value);
             }
-
-        } catch (err) {
+        })
+        .catch(err => {
             console.error(err);
-            if (siswaTableBodyPenilaian) {
-                siswaTableBodyPenilaian.innerHTML = `<tr><td colspan="11" class="text-center text-danger">Gagal memuat data siswa</td></tr>`;
-            }
-        }
+            siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Gagal memuat data siswa</td></tr>';
+        });
     }
 
     function updateMaxValuesPenilaian() {
@@ -1553,11 +1566,10 @@ document.addEventListener("DOMContentLoaded", function() {
         return new Date(tahun, bulan, 0).getDate();
     }
 
-    async function loadNilaiPenilaian(kelasId, bulan) {
-        try {
-            const res = await fetch(`/penilaian/kebiasaan/get/${kelasId}/${bulan}`);
-            const data = await res.json();
-
+    function loadNilaiPenilaian(kelasId, bulan) {
+        fetch(`/penilaian/kebiasaan/get/${kelasId}/${bulan}`)
+        .then(res => res.json())
+        .then(data => {
             if (siswaTableBodyPenilaian) {
                 siswaTableBodyPenilaian.querySelectorAll("tr").forEach(tr => {
                     tr.querySelectorAll("input").forEach(i => {
@@ -1601,101 +1613,179 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                 });
             }
-        } catch (err) {
+        })
+        .catch(err => {
             console.error("Gagal load nilai:", err);
-        }
+        });
     }
 
-    async function handlePenilaianActions(e) {
-        const row = e.target.closest("tr");
-        if (!row) return;
-        
-        const siswaId = row.dataset.siswaId;
-        const kelasId = row.dataset.kelasId;
-        const bulan = bulanSelectPenilaian?.value;
-        
-        if (!bulan) { 
-            alert("Pilih bulan terlebih dahulu"); 
-            return; 
-        }
+    function handlePenilaianActions(e) {
+    const row = e.target.closest("tr");
+    if (!row) return;
+    
+    const siswaId = row.dataset.siswaId;
+    const kelasId = row.dataset.kelasId;
+    const bulan = bulanSelectPenilaian?.value;
+    
+    if (!bulan) { 
+        alert("Pilih bulan terlebih dahulu"); 
+        return; 
+    }
 
-        // Validasi nilai sebelum simpan
-        const maxHari = getDaysInMonth(bulan);
-        const inputs = row.querySelectorAll('.nilai-input[type="number"]');
-        let valid = true;
-        
-        inputs.forEach(input => {
-            const value = parseInt(input.value) || 0;
-            if (value > maxHari) {
-                alert(`Nilai ${input.name} tidak boleh lebih dari ${maxHari} (jumlah hari dalam bulan)`);
-                input.focus();
-                valid = false;
+    // Validasi nilai sebelum simpan
+    const maxHari = getDaysInMonth(bulan);
+    const inputs = row.querySelectorAll('.nilai-input[type="number"]');
+    let valid = true;
+    
+    inputs.forEach(input => {
+        const value = parseInt(input.value) || 0;
+        if (value > maxHari) {
+            alert(`Nilai ${input.name} tidak boleh lebih dari ${maxHari} (jumlah hari dalam bulan)`);
+            input.focus();
+            valid = false;
+        }
+    });
+    
+    if (!valid) return;
+
+    // ========== PERBAIKAN 1: PISAHKAN LOGIKA SAVE DAN UPDATE ==========
+    // KLIK TOMBOL SAVE (untuk menyimpan data baru atau update)
+    if (e.target.classList.contains("btn-save")) {
+        const formData = new FormData();
+        formData.append("siswa_id", siswaId);
+        formData.append("kelas_id", kelasId);
+        formData.append("bulan", bulan);
+        row.querySelectorAll("input").forEach(i => {
+            if (!["siswa_id","kelas_id"].includes(i.name)) {
+                formData.append(i.name, i.value || "");
             }
         });
+
+        // ========== PERBAIKAN 2: TAMBAH LOADING STATE ==========
+        const originalText = e.target.textContent;
+        e.target.textContent = "Menyimpan...";
+        e.target.disabled = true;
+
+        fetch("/penilaian/kebiasaan/save_row", {
+            method: "POST", 
+            body: formData
+        })
+        .then(res => res.json())
+        .then(result => {
+            alert(result.message);
+            if (result.success) {
+                // ========== PERBAIKAN 3: UBAH STATUS SETELAH SIMPAN ==========
+                // 1. Input menjadi readonly
+                row.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
+                
+                // 2. Tombol SIMPAN hilang, tombol UPDATE muncul
+                const saveBtn = row.querySelector(".btn-save");
+                const updateBtn = row.querySelector(".btn-update");
+                if (saveBtn) {
+                    saveBtn.style.display = "none";
+                    saveBtn.textContent = "Simpan"; // Reset teks
+                    saveBtn.disabled = false;
+                }
+                if (updateBtn) {
+                    updateBtn.style.display = "inline-block";
+                    updateBtn.disabled = false;
+                }
+            }
+        })
+        .catch(err => { 
+            console.error(err); 
+            alert("Terjadi kesalahan saat menyimpan"); 
+        })
+        .finally(() => {
+            // ========== PERBAIKAN 4: RESET BUTTON STATE ==========
+            e.target.textContent = originalText;
+            e.target.disabled = false;
+        });
+    }
+
+    // ========== PERBAIKAN 5: LOGIKA TOMBOL UPDATE TERPISAH ==========
+    // KLIK TOMBOL UPDATE (untuk mengaktifkan mode edit)
+    if (e.target.classList.contains("btn-update")) {
+        // 1. Hapus readonly dari semua input (bisa diedit)
+        row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
         
-        if (!valid) return;
-
-        // SAVE / UPDATE
-        if (e.target.classList.contains("btn-save") || e.target.classList.contains("btn-update")) {
-            const formData = new FormData();
-            formData.append("siswa_id", siswaId);
-            formData.append("kelas_id", kelasId);
-            formData.append("bulan", bulan);
-            row.querySelectorAll("input").forEach(i => {
-                if (!["siswa_id","kelas_id"].includes(i.name)) {
-                    formData.append(i.name, i.value || "");
-                }
-            });
-
-            try {
-                const res = await fetch("/penilaian/kebiasaan/save_row", {method:"POST", body:formData});
-                const result = await res.json();
-                alert(result.message);
-                if (result.success) {
-                    row.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
-                    const saveBtn = row.querySelector(".btn-save");
-                    const updateBtn = row.querySelector(".btn-update");
-                    if (saveBtn) saveBtn.style.display = "none";
-                    if (updateBtn) updateBtn.style.display = "inline-block";
-                }
-            } catch(err){ 
-                console.error(err); 
-                alert("Terjadi kesalahan saat menyimpan"); 
-            }
+        // 2. Tombol UPDATE hilang, tombol SIMPAN muncul
+        const saveBtn = row.querySelector(".btn-save");
+        const updateBtn = row.querySelector(".btn-update");
+        if (saveBtn) {
+            saveBtn.style.display = "inline-block";
+            saveBtn.disabled = false;
         }
-
-        // DELETE
-        if (e.target.classList.contains("btn-delete")) {
-            if (!confirm("Hapus semua nilai kebiasaan siswa ini?")) return;
-            try {
-                const res = await fetch(`/penilaian/kebiasaan/delete_row/${siswaId}/${bulan}`, {method:"POST"});
-                const result = await res.json();
-                alert(result.message);
-                if (result.success) {
-                    row.querySelectorAll("input").forEach(i => { 
-                        if(!["siswa_id","kelas_id"].includes(i.name)) i.value=""; 
-                    });
-                    row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
-                    const saveBtn = row.querySelector(".btn-save");
-                    const updateBtn = row.querySelector(".btn-update");
-                    if (saveBtn) saveBtn.style.display = "inline-block";
-                    if (updateBtn) updateBtn.style.display = "none";
-                }
-            } catch(err){ 
-                console.error(err); 
-                alert("Terjadi kesalahan saat hapus data"); 
-            }
+        if (updateBtn) {
+            updateBtn.style.display = "none";
         }
-
-        // UNLOCK untuk UPDATE
-        if (e.target.classList.contains("btn-update")) {
-            row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
-            const saveBtn = row.querySelector(".btn-save");
-            const updateBtn = row.querySelector(".btn-update");
-            if (saveBtn) saveBtn.style.display = "inline-block";
-            if (updateBtn) updateBtn.style.display = "none";
+        
+        // ========== PERBAIKAN 6: FOKUS KE INPUT PERTAMA ==========
+        const firstInput = row.querySelector('.nilai-input');
+        if (firstInput) {
+            setTimeout(() => firstInput.focus(), 100);
         }
     }
+
+    // DELETE (dengan perbaikan kecil)
+    if (e.target.classList.contains("btn-delete")) {
+        if (!confirm("Hapus semua nilai kebiasaan siswa ini?")) return;
+        
+        // ========== PERBAIKAN 7: TAMBAH LOADING STATE UNTUK DELETE ==========
+        const originalText = e.target.textContent;
+        e.target.textContent = "Menghapus...";
+        e.target.disabled = true;
+        
+        fetch(`/penilaian/kebiasaan/delete_row/${siswaId}/${bulan}`, {
+            method: "POST"
+        })
+        .then(res => res.json())
+        .then(result => {
+            alert(result.message);
+            if (result.success) {
+                // ========== PERBAIKAN 8: RESET SETELAH DELETE ==========
+                // 1. Kosongkan semua input
+                row.querySelectorAll("input").forEach(i => { 
+                    if(!["siswa_id","kelas_id"].includes(i.name)) i.value=""; 
+                });
+                
+                // 2. Hapus readonly (bisa diisi lagi)
+                row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
+                
+                // 3. Tampilkan tombol SIMPAN, sembunyikan UPDATE
+                const saveBtn = row.querySelector(".btn-save");
+                const updateBtn = row.querySelector(".btn-update");
+                if (saveBtn) {
+                    saveBtn.style.display = "inline-block";
+                    saveBtn.disabled = false;
+                }
+                if (updateBtn) {
+                    updateBtn.style.display = "none";
+                }
+            }
+        })
+        .catch(err => { 
+            console.error(err); 
+            alert("Terjadi kesalahan saat hapus data"); 
+        })
+        .finally(() => {
+            // ========== PERBAIKAN 9: RESET BUTTON STATE DELETE ==========
+            e.target.textContent = originalText;
+            e.target.disabled = false;
+        });
+    }
+
+    // ========== PERBAIKAN 10: HAPUS BAGIAN "UNLOCK untuk UPDATE" YANG LAMA ==========
+    // (karena sudah diganti dengan logika di atas)
+    // Bagian ini dihapus karena menyebabkan konflik:
+    // if (e.target.classList.contains("btn-update")) {
+    //     row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
+    //     const saveBtn = row.querySelector(".btn-save");
+    //     const updateBtn = row.querySelector(".btn-update");
+    //     if (saveBtn) saveBtn.style.display = "inline-block";
+    //     if (updateBtn) updateBtn.style.display = "none";
+    // }
+}
 
     function validateNilaiInput(input) {
         const bulanTahun = bulanSelectPenilaian?.value;
@@ -1723,8 +1813,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Handler Change Password
-    async function handleChangePassword(e) {
+    // Handler Change Password - PERBAIKAN: tanpa async/await
+    function handleChangePassword(e) {
         e.preventDefault();
         const form = e.target;
         const msgDiv = document.getElementById("changePasswordMessage");
@@ -1739,14 +1829,13 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        try {
-            const res = await fetch("{{ url_for('change_password') }}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ current_password, new_password })
-            });
-            const result = await res.json();
-
+        fetch("{{ url_for('change_password') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ current_password, new_password })
+        })
+        .then(res => res.json())
+        .then(result => {
             if (result.success) {
                 alert(result.message || "Password berhasil diubah!");
                 const modal = bootstrap.Modal.getInstance(document.getElementById("changePasswordModal"));
@@ -1755,10 +1844,11 @@ document.addEventListener("DOMContentLoaded", function() {
             } else {
                 msgDiv.textContent = result.message || "Terjadi kesalahan!";
             }
-        } catch (err) {
+        })
+        .catch(err => {
             console.error(err);
             msgDiv.textContent = "Terjadi kesalahan saat mengubah password!";
-        }
+        });
     }
 
     // Handler Laporan (Modals)
@@ -1829,8 +1919,8 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Fungsi load siswa untuk laporan
-    async function loadSiswaForLaporan(kelasId, siswaSelect) {
+    // Fungsi load siswa untuk laporan - PERBAIKAN: tanpa async/await
+    function loadSiswaForLaporan(kelasId, siswaSelect) {
         if (!siswaSelect) return;
         
         siswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
@@ -1840,10 +1930,9 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        try {
-            const response = await fetch(`/siswa/list/${kelasId}`);
-            const data = await response.json();
-            
+        fetch(`/siswa/list/${kelasId}`)
+        .then(response => response.json())
+        .then(data => {
             if (data.success && data.siswa) {
                 data.siswa.forEach(siswa => {
                     const option = document.createElement("option");
@@ -1855,14 +1944,15 @@ document.addEventListener("DOMContentLoaded", function() {
             } else {
                 siswaSelect.disabled = true;
             }
-        } catch (error) {
+        })
+        .catch(error => {
             console.error("Error loading siswa:", error);
             siswaSelect.disabled = true;
-        }
+        });
     }
 
-    // Fungsi untuk mencari siswa yang sudah ada
-    window.searchExistingSiswa = async function() {
+    // Fungsi untuk mencari siswa yang sudah ada - PERBAIKAN: tanpa async/await
+    window.searchExistingSiswa = function() {
         const searchTerm = document.getElementById('searchSiswa').value.trim();
         const kelasId = document.getElementById('kelasDropdown').value;
         
@@ -1876,15 +1966,15 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        try {
-            const response = await fetch(`/siswa/search?q=${encodeURIComponent(searchTerm)}&kelas_id=${kelasId}`);
-            const data = await response.json();
-            
+        fetch(`/siswa/search?q=${encodeURIComponent(searchTerm)}&kelas_id=${kelasId}`)
+        .then(response => response.json())
+        .then(data => {
             displaySearchResults(data.siswa);
-        } catch (error) {
+        })
+        .catch(error => {
             console.error('Error searching siswa:', error);
             alert('Gagal mencari siswa');
-        }
+        });
     };
 
     // Fungsi untuk menampilkan hasil pencarian
@@ -1934,40 +2024,39 @@ document.addEventListener("DOMContentLoaded", function() {
         resultsContainer.innerHTML = html;
     }
 
-    // Fungsi untuk menambahkan siswa yang sudah ada ke kelas
-    window.addExistingSiswa = async function(siswaId) {
+    // Fungsi untuk menambahkan siswa yang sudah ada ke kelas - PERBAIKAN: tanpa async/await
+    window.addExistingSiswa = function(siswaId) {
         const kelasId = document.getElementById('kelasDropdown').value;
         
         if (!confirm('Tambahkan siswa ini ke kelas?')) return;
 
-        try {
-            const response = await fetch('/siswa/add_to_class', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    siswa_id: siswaId,
-                    kelas_id: kelasId
-                })
-            });
-
-            const result = await response.json();
-            
+        fetch('/siswa/add_to_class', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                siswa_id: siswaId,
+                kelas_id: kelasId
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
             if (result.success) {
                 alert('Siswa berhasil ditambahkan ke kelas!');
                 // Refresh daftar siswa
-                await loadSiswa(kelasId);
+                loadSiswa(kelasId);
                 // Clear search results
                 document.getElementById('searchResults').innerHTML = '';
                 document.getElementById('searchSiswa').value = '';
             } else {
                 alert('Gagal menambahkan siswa: ' + result.message);
             }
-        } catch (error) {
+        })
+        .catch(error => {
             console.error('Error adding siswa:', error);
             alert('Terjadi kesalahan saat menambahkan siswa');
-        }
+        });
     };
 
 }); // ← AKHIR DARI DOMContentLoaded
@@ -2034,11 +2123,11 @@ function initializeLaporanPenilaianSiswaModal() {
     });
 }
 
-async function loadTahunAjaranForLaporan() {
-    try {
-        const response = await fetch('/laporan/api/tahun-ajaran');
-        const data = await response.json();
-        
+// PERBAIKAN: Fungsi-fungsi async diubah ke then/catch
+function loadTahunAjaranForLaporan() {
+    fetch('/laporan/api/tahun-ajaran')
+    .then(response => response.json())
+    .then(data => {
         const select = document.getElementById('tahunAjaranPenilaianSelect');
         select.innerHTML = '<option value="">-- Pilih Tahun Ajaran --</option>';
         
@@ -2048,16 +2137,16 @@ async function loadTahunAjaranForLaporan() {
             option.textContent = `${ta.tahun_ajaran} (${ta.semester}) - ${ta.status}`;
             select.appendChild(option);
         });
-    } catch (error) {
+    })
+    .catch(error => {
         console.error('Error loading tahun ajaran:', error);
-    }
+    });
 }
 
-async function loadKelasByTahunAjaran(tahunAjaranId) {
-    try {
-        const response = await fetch(`/laporan/api/kelas-by-tahun-ajaran/${tahunAjaranId}`);
-        const data = await response.json();
-        
+function loadKelasByTahunAjaran(tahunAjaranId) {
+    fetch(`/laporan/api/kelas-by-tahun-ajaran/${tahunAjaranId}`)
+    .then(response => response.json())
+    .then(data => {
         const select = document.getElementById('kelasPenilaianSelect');
         select.innerHTML = '<option value="">-- Pilih Kelas --</option>';
         
@@ -2070,16 +2159,16 @@ async function loadKelasByTahunAjaran(tahunAjaranId) {
         
         // Reset siswa select
         resetSiswa();
-    } catch (error) {
+    })
+    .catch(error => {
         console.error('Error loading kelas:', error);
-    }
+    });
 }
 
-async function loadSiswaByKelas(kelasId) {
-    try {
-        const response = await fetch(`/laporan/api/siswa-by-kelas/${kelasId}`);
-        const data = await response.json();
-        
+function loadSiswaByKelas(kelasId) {
+    fetch(`/laporan/api/siswa-by-kelas/${kelasId}`)
+    .then(response => response.json())
+    .then(data => {
         const select = document.getElementById('siswaPenilaianSelect');
         select.innerHTML = '<option value="">-- Pilih Siswa --</option>';
         
@@ -2091,9 +2180,10 @@ async function loadSiswaByKelas(kelasId) {
                 select.appendChild(option);
             });
         }
-    } catch (error) {
+    })
+    .catch(error => {
         console.error('Error loading siswa:', error);
-    }
+    });
 }
 
 function resetKelasAndSiswa() {

@@ -145,9 +145,15 @@
                                 <i class="fas fa-users-cog me-1"></i>User Settings
                             </a>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('tahun_ajaran.dashboard') }}">
                                 <i class="fas fa-tachometer-alt me-1"></i>User Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('superadmin.upload_wilayah') }}">
+                                <i class="fas fa-upload me-1"></i>Upload Data Sekolah
                             </a>
                         </li>
                         <span class="navbar-text me-3">Halo, {{ user.username }}</span>
@@ -219,35 +225,58 @@
         <div class="row">
             <div class="col-12">
                 <div class="chart-container">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Rangkuman Performa Sekolah 
-                            <small class="text-muted" id="tahunAjaranText3"></small>
-                        </h5>
-                        <select class="form-select w-auto" id="sekolahFilter">
-                            <option value="all">Semua Sekolah</option>
-                        </select>
+                    <!-- HEADER DENGAN FILTER KABUPATEN DAN SEARCH -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                        <h5 class="mb-0">Rangkuman Performa Sekolah <small class="text-muted" id="tahunAjaranText3"></small></h5>
+                        <div class="d-flex gap-2">
+                            <!-- Filter Kabupaten -->
+                            <select class="form-select" id="kabupatenFilter" style="width: 220px;">
+                                <option value="all">-- Pilih Kabupaten --</option>
+                            </select>
+                            <select class="form-select" id="bulanFilter" style="width: 180px;">
+                                <option value="all">-- Semua Bulan (Rata-rata) --</option>
+                            </select>
+                            <!-- Search Box -->
+                            <input type="text" class="form-control" id="searchSekolah" placeholder="Cari sekolah..." style="width: 200px;">
+                            <!-- Tombol Cari -->
+                            <button class="btn btn-primary" id="searchBtn">🔍 Cari</button>
+                            <!-- Tombol Reset -->
+                            <button class="btn btn-outline-secondary" id="resetFilterBtn">Reset</button>
+                            <!-- Pilihan Page Size -->
+                            <select class="form-select" id="pageSizeSelect" style="width: 120px;">
+                                <option value="25" selected>25 baris</option>
+                                <option value="50">50 baris</option>
+                                <option value="100">100 baris</option>
+                            </select>
+                        </div>
                     </div>
+                    
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="table table-striped table-bordered">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Sekolah</th>
+                                    <th style="min-width: 200px;">Sekolah</th>
+                                    <th style="min-width: 120px;">Kabupaten</th>
                                     <th>Bangun Pagi</th>
                                     <th>Beribadah</th>
-                                    <th>Gemar Berolahraga</th>
-                                    <th>Makan Sehat & Bergizi</th>
-                                    <th>Gemar Belajar</th>
+                                    <th>Berolahraga</th>
+                                    <th>Makan Sehat</th>
+                                    <th>Belajar</th>
                                     <th>Bermasyarakat</th>
                                     <th>Tidur Cepat</th>
                                     <th>Rata-rata</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
-                                <tr>
-                                    <td colspan="9" class="text-center">Data sekolah sedang dimuat...</td>
-                                </tr>
+                                <tr><td colspan="10" class="text-center">Data sekolah sedang dimuat...</td></tr>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Pagination Controls -->
+                    <div class="pagination-container" id="paginationContainer" style="display: none; margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <div class="page-info" id="pageInfo"></div>
+                        <div class="pagination-buttons" id="paginationButtons"></div>
                     </div>
                 </div>
             </div>
@@ -340,6 +369,41 @@
         </div>
     </div>
     
+    <!-- MODAL EDIT ROLE -->
+    <div class="modal fade" id="editRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="fas fa-user-tag me-2"></i>Edit Role User</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editRoleUserId">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" id="editRoleUsername" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role Saat Ini</label>
+                        <input type="text" class="form-control" id="editRoleCurrent" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role Baru</label>
+                        <select class="form-select" id="editRoleNew">
+                            <option value="user">User Biasa (Guru)</option>
+                            <option value="superadmin">Superadmin</option>
+                            <option value="kepala_dinas">Kepala Dinas</option>
+                        </select>
+                    </div>
+                    <div id="editRoleMessage" class="alert d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-info" onclick="submitEditRole()">Simpan Perubahan</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Modal Ganti Password -->
     <div class="modal fade" id="changeUserPasswordModal" tabindex="-1" aria-labelledby="changeUserPasswordModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -413,372 +477,312 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script>
-        let trendChart;
-        let allSchoolData = [];
-
-        // Load data saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', function() {
-            loadDashboardData();
-        });
-
-        // Fungsi untuk menampilkan/menyembunyikan loading spinner
+        // ========== VARIABEL GLOBAL ==========
+        let currentPage = 1;
+        let currentBulan = 'all';
+        let pageSize = 25;
+        let currentKabupaten = 'all';
+        let currentSearch = '';
+        let totalData = 0;
+        let totalPages = 0;
+        
+        // ========== FUNGSI LOADING & ERROR ==========
         function showLoading(show) {
-            document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+            const spinner = document.getElementById('loadingSpinner');
+            if (spinner) spinner.style.display = show ? 'block' : 'none';
         }
-
-        // Fungsi untuk menampilkan error message
+        
         function showError(show, message = '') {
             const errorElement = document.getElementById('errorMessage');
-            if (message) {
-                errorElement.textContent = message;
+            if (errorElement) {
+                if (message) errorElement.textContent = message;
+                errorElement.style.display = show ? 'block' : 'none';
             }
-            errorElement.style.display = show ? 'block' : 'none';
         }
-
-        // Fungsi untuk mengambil data dashboard
-        async function loadDashboardData() {
+        
+        // ========== ESCAPE HTML ==========
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // ========== LOAD STATISTIK RINGKASAN ==========
+        async function loadStatistics(kabupaten = null) {
+            try {
+                let url = '/superadmin/api/statistik_summary_by_kabupaten';
+                if (kabupaten && kabupaten !== 'all') {
+                    url += `?kabupaten=${encodeURIComponent(kabupaten)}`;
+                }
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('tahunAjaranBadge').textContent = result.tahun_ajaran || '2024/2025';
+                    document.getElementById('overallPerformance').textContent = `Rata-rata: ${result.overall_performance || 0}`;
+                    document.getElementById('totalUsers').textContent = result.total_users || 0;
+                    document.getElementById('totalPegawai').textContent = result.total_pegawai || 0;
+                    document.getElementById('totalSekolah').textContent = result.total_sekolah || 0;
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+        
+        // ========== LOAD DAFTAR KABUPATEN ==========
+        async function loadKabupatenList() {
+            try {
+                const response = await fetch('/superadmin/api/kabupaten_list');
+                const result = await response.json();
+                
+                if (result.success && result.kabupaten_list) {
+                    const select = document.getElementById('kabupatenFilter');
+                    select.innerHTML = '<option value="all">-- Pilih Kabupaten --</option>';
+                    result.kabupaten_list.forEach(kab => {
+                        select.innerHTML += `<option value="${escapeHtml(kab.nama)}">${escapeHtml(kab.nama)}</option>`;
+                    });
+                    
+                    // Tambahkan event listener untuk filter kabupaten
+                    select.addEventListener('change', function() {
+                        currentKabupaten = this.value;
+                        currentPage = 1;
+                        
+                        if (currentKabupaten === 'all') {
+                            clearAllData();
+                            loadStatistics('all');
+                        } else {
+                            loadStatistics(currentKabupaten);
+                            loadSchoolData();
+                            loadHabitsAndTrendsByKabupaten(currentKabupaten);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading kabupaten list:', error);
+            }
+        }
+        
+        // ========== LOAD DAFTAR BULAN ==========
+        async function loadBulanList() {
+            try {
+                const response = await fetch('/superadmin/api/bulan_list');
+                const result = await response.json();
+                
+                if (result.success && result.bulan_list) {
+                    const select = document.getElementById('bulanFilter');
+                    select.innerHTML = '<option value="all">-- Semua Bulan (Rata-rata) --</option>';
+                    result.bulan_list.forEach(bulan => {
+                        select.innerHTML += `<option value="${bulan.value}">${bulan.display} (${bulan.jumlah} data)</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading bulan list:', error);
+            }
+        }
+        
+        // ========== KOSONGKAN SEMUA DATA ==========
+        function clearAllData() {
+            document.getElementById('tableBody').innerHTML = '<tr><td colspan="10" class="text-center">Silakan pilih kabupaten terlebih dahulu</td></tr>';
+            const paginationContainer = document.getElementById('paginationContainer');
+            if (paginationContainer) paginationContainer.style.display = 'none';
+            document.getElementById('habitsContainer').innerHTML = '<div class="col-12 text-center"><p class="text-muted">Pilih kabupaten untuk melihat grafik</p></div>';
+            
+            const trendCanvas = document.getElementById('trendChart');
+            if (trendCanvas && window.trendChartInstance) {
+                window.trendChartInstance.destroy();
+                window.trendChartInstance = null;
+            }
+            
+            totalData = 0;
+            totalPages = 0;
+            
+            document.getElementById('totalUsers').textContent = '0';
+            document.getElementById('totalPegawai').textContent = '0';
+            document.getElementById('totalSekolah').textContent = '0';
+            document.getElementById('overallPerformance').textContent = 'Rata-rata: 0';
+        }
+        
+        // ========== RENDER TABEL ==========
+        function renderSchoolTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="10" class="text-center">Tidak ada data sekolah di kabupaten ini</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = data.map(school => {
+                const bangunPagi = parseFloat(school.bangun_pagi) || 0;
+                const beribadah = parseFloat(school.beribadah) || 0;
+                const berolahraga = parseFloat(school.berolahraga) || 0;
+                const sehatDanLemar = parseFloat(school.sehat_dan_lemar) || 0;
+                const belajar = parseFloat(school.belajar) || 0;
+                const bermasyarakat = parseFloat(school.bermasyarakat) || 0;
+                const tidurCepat = parseFloat(school.tidur_cepat) || 0;
+                const rataRata = parseFloat(school.rata_rata) || 0;
+                
+                return `
+                <tr>
+                    <td><strong>${escapeHtml(school.sekolah || 'N/A')}</strong></td>
+                    <td>${escapeHtml(school.kabupaten || '-')}</td>
+                    <td>${bangunPagi.toFixed(1)}</td> <td>${beribadah.toFixed(1)}</td> <td>${berolahraga.toFixed(1)}</td>
+                    <td>${sehatDanLemar.toFixed(1)}</td> <td>${belajar.toFixed(1)}</td> <td>${bermasyarakat.toFixed(1)}</td>
+                    <td>${tidurCepat.toFixed(1)}</td> <td><strong>${rataRata.toFixed(1)}</strong></td>
+                </tr>
+                `;
+            }).join('');
+        }
+        
+        // ========== LOAD DATA SEKOLAH ==========
+        async function loadSchoolData() {
+            if (currentKabupaten === 'all' || !currentKabupaten || currentKabupaten === '-- Pilih Kabupaten --') {
+                clearAllData();
+                return;
+            }
+            
             showLoading(true);
             showError(false);
             
             try {
-                // Mengambil semua data dari satu endpoint API
-                const response = await fetch('/superadmin/api/statistik');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                let url = `/superadmin/api/sekolah_stats_by_bulan?page=${currentPage}&limit=${pageSize}&kabupaten=${encodeURIComponent(currentKabupaten)}&bulan=${currentBulan}`;
+                if (currentSearch) {
+                    url += `&search=${encodeURIComponent(currentSearch)}`;
                 }
-                const data = await response.json();
-
-                // Update tahun ajaran
-                document.getElementById('tahunAjaranBadge').textContent = data.tahun_ajaran || '2024/2025';
-                document.getElementById('tahunAjaranText').textContent = data.tahun_ajaran ? `- ${data.tahun_ajaran}` : '';
-                document.getElementById('tahunAjaranText2').textContent = data.tahun_ajaran ? `- ${data.tahun_ajaran}` : '';
-                document.getElementById('tahunAjaranText3').textContent = data.tahun_ajaran ? `- ${data.tahun_ajaran}` : '';
-
-                // Update overall performance
-                document.getElementById('overallPerformance').textContent = `Rata-rata: ${data.overall_performance || 0}`;
-
-                // Update card statistik
-                document.getElementById('totalUsers').textContent = data.total_users || 0;
-                document.getElementById('totalPegawai').textContent = data.total_pegawai || 0;
-                document.getElementById('totalSekolah').textContent = data.total_sekolah || 0;
                 
-                // Render 7 grafik kebiasaan
-                renderHabitsCharts(data.habits_data);
+                const response = await fetch(url);
+                const result = await response.json();
                 
-                // Render grafik trend
-                renderTrendChart(data.trend_data);
-                
-                // Render tabel sekolah
-                renderTable(data.sekolah_stats);
-                
+                if (result.success) {
+                    totalData = result.total;
+                    totalPages = result.total_pages;
+                    renderSchoolTable(result.data);
+                    renderPagination();
+                } else {
+                    throw new Error(result.error || 'Gagal memuat data');
+                }
             } catch (error) {
-                console.error('Error loading dashboard data:', error);
-                showError(true, 'Terjadi kesalahan saat memuat data dashboard: ' + error.message);
+                console.error('Error:', error);
+                showError(true, 'Terjadi kesalahan: ' + error.message);
+                document.getElementById('tableBody').innerHTML = '<tr><td colspan="10" class="text-center text-danger">Gagal memuat数据</td></tr>';
             } finally {
                 showLoading(false);
             }
         }
-
-        // Fungsi untuk render grafik kebiasaan
-        function renderHabitsCharts(habitsData) {
-            const container = document.getElementById('habitsContainer');
-            const habitColors = [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
-                '#9966FF', '#FF9F40', '#2E8B57'
-            ];
-            
-            let html = '';
-            let habitIndex = 0;
-            
-            // Pastikan habitsData ada dan tidak kosong
-            if (!habitsData || Object.keys(habitsData).length === 0) {
-                container.innerHTML = `
-                    <div class="col-12 text-center">
-                        <p class="text-muted">Tidak ada data kebiasaan tersedia</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            Object.keys(habitsData).forEach(habitName => {
-                const habit = habitsData[habitName];
-                const canvasId = `habitChart${habitIndex}`;
-                
-                // Mapping nama kebiasaan untuk label yang konsisten - PERBAIKAN DI SINI
-                let displayName = getDisplayName(habitName);
-                
-                // Baris pertama: 4 chart, Baris kedua: 3 chart
-                const colClass = habitIndex < 4 ? 'col-md-3' : 'col-md-4';
-                
-                html += `
-                    <div class="${colClass} mb-3">
-                        <div class="habit-chart small-chart">
-                            <h6 class="text-center mb-2" style="font-size: 0.9rem;">${displayName}</h6>
-                            <canvas id="${canvasId}"></canvas>
-                        </div>
-                    </div>
-                `;
-                
-                habitIndex++;
-            });
-            
-            container.innerHTML = html;
-            
-            // Render charts setelah HTML di-update
-            setTimeout(() => {
-                let index = 0;
-                Object.keys(habitsData).forEach(habitName => {
-                    const habit = habitsData[habitName];
-                    const canvasId = `habitChart${index}`;
-                    
-                    // Mapping nama kebiasaan untuk label yang konsisten - PERBAIKAN DI SINI
-                    let displayName = getDisplayName(habitName);
-                    
-                    renderHabitChart(canvasId, displayName, habit, habitColors[index]);
-                    index++;
-                });
-            }, 100);
-        }
-
-        // Fungsi untuk mendapatkan nama tampilan yang konsisten
-        function getDisplayName(habitName) {
-            const nameMapping = {
-                'bangun_pagi': 'Bangun Pagi',
-                'beribadah': 'Beribadah',
-                'berolahraga': 'Gemar Berolahraga',
-                'sehat_dan_bergizi': 'Makan Sehat & Bergizi',
-                'sehat_dan_lemar': 'Makan Sehat & Bergizi',
-                'belajar': 'Gemar Belajar',
-                'bermasyarakat': 'Bermasyarakat',
-                'tidur_cepat': 'Tidur Cepat',
-                // Tambahan untuk nama yang mungkin muncul di API
-                'Bangun Pagi': 'Bangun Pagi',
-                'Beribadah': 'Beribadah',
-                'Berolahraga': 'Gemar Berolahraga',
-                'Sehat & Bergizi': 'Makan Sehat & Bergizi',
-                'Belajar': 'Gemar Belajar',
-                'Bermasyarakat': 'Bermasyarakat',
-                'Tidur Cepat': 'Tidur Cepat'
-            };
-            
-            return nameMapping[habitName] || habitName;
-        }
-
-        // Fungsi untuk render grafik kebiasaan individual
-        function renderHabitChart(canvasId, habitName, habitData, color) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            
-            const ctx = canvas.getContext('2d');
-            
-            // Pastikan data ada
-            if (!habitData || !habitData.labels || !habitData.data) {
-                console.warn(`Data tidak valid untuk ${habitName}`);
-                return;
-            }
-            
-            // Hitung jumlah data untuk menyesuaikan tinggi grafik
-            const jumlahData = habitData.labels.length;
-            const minHeight = 180; // tinggi minimum
-            const extraHeightPerItem = 15; // tambahan tinggi per item
-            
-            // Sesuaikan tinggi container berdasarkan jumlah data
-            const container = canvas.closest('.habit-chart');
-            if (container && jumlahData > 5) {
-                const newHeight = minHeight + (jumlahData - 5) * extraHeightPerItem;
-                container.style.height = `${newHeight}px`;
-            }
-            
-            // Reverse data untuk horizontal bar chart
-            const reversedLabels = [...habitData.labels].reverse();
-            const reversedData = [...habitData.data].reverse();
-            
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: reversedLabels,
-                    datasets: [{
-                        label: habitName,
-                        data: reversedData,
-                        backgroundColor: color,
-                        borderColor: color,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            max: 31,
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                font: {
-                                    size: 9
-                                }
-                            }
-                        },
-                        y: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                font: {
-                                    size: 8
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Fungsi untuk render grafik trend
-        function renderTrendChart(trendData) {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            
-            if (trendChart) {
-                trendChart.destroy();
-            }
-            
-            // Pastikan data trend ada
-            if (!trendData || !trendData.labels || !trendData.datasets) {
-                console.warn('Data trend tidak valid');
-                return;
-            }
-            
-            // Update label dataset untuk konsistensi - PERBAIKAN DI SINI
-            if (trendData.datasets && Array.isArray(trendData.datasets)) {
-                trendData.datasets.forEach(dataset => {
-                    // Mapping nama dataset untuk konsistensi
-                    if (dataset.label) {
-                        dataset.label = getDisplayName(dataset.label);
-                    }
-                });
-            }
-            
-            trendChart = new Chart(ctx, {
-                type: 'line',
-                data: trendData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                // Pastikan label legend juga menggunakan nama yang konsisten
-                                generateLabels: function(chart) {
-                                    const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                                    const labels = original.call(this, chart);
-                                    labels.forEach(label => {
-                                        label.text = getDisplayName(label.text);
-                                    });
-                                    return labels;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 31,
-                            title: {
-                                display: true,
-                                text: 'Rata-rata Nilai'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Bulan'
-                            }
-                        }
-                    },
-                    elements: {
-                        point: {
-                            radius: 5,
-                            hoverRadius: 7
-                        }
-                    }
-                }
-            });
-        }
-
-        // Fungsi untuk render tabel
-        function renderTable(schoolData) {
-            allSchoolData = schoolData || [];
-            const tableBody = document.getElementById('tableBody');
-            const sekolahFilter = document.getElementById('sekolahFilter');
-            
-            // Populate filter options
-            sekolahFilter.innerHTML = '<option value="all">Semua Sekolah</option>';
-            allSchoolData.forEach(school => {
-                if (school.sekolah) {
-                    sekolahFilter.innerHTML += `<option value="${school.sekolah}">${school.sekolah}</option>`;
-                }
-            });
-            
-            // Render table
-            updateTable('all');
-            
-            // Add filter event
-            sekolahFilter.addEventListener('change', function() {
-                updateTable(this.value);
-            });
-        }
-
-        // Fungsi untuk update tabel berdasarkan filter
-        function updateTable(filter) {
-            const tableBody = document.getElementById('tableBody');
-            let filteredData = allSchoolData;
-            
-            if (filter !== 'all') {
-                filteredData = allSchoolData.filter(school => school.sekolah === filter);
-            }
-            
-            if (filteredData.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" class="text-center">Tidak ada data sekolah</td></tr>';
-                return;
-            }
-            
-            tableBody.innerHTML = filteredData.map(school => `
-                <tr>
-                    <td><strong>${school.sekolah || 'N/A'}</strong></td>
-                    <td>${(school.bangun_pagi || 0).toFixed(1)}</td>
-                    <td>${(school.beribadah || 0).toFixed(1)}</td>
-                    <td>${(school.berolahraga || 0).toFixed(1)}</td>
-                    <td>${(school.sehat_dan_lemar || 0).toFixed(1)}</td>
-                    <td>${(school.belajar || 0).toFixed(1)}</td>
-                    <td>${(school.bermasyarakat || 0).toFixed(1)}</td>
-                    <td>${(school.tidur_cepat || 0).toFixed(1)}</td>
-                    <td><strong>${(school.rata_rata || 0).toFixed(1)}</strong></td>
-                </tr>
-            `).join('');
-        }
-
-        // ========== USER MANAGEMENT FUNCTIONS ==========
         
+        // ========== LOAD GRAFIK PER KABUPATEN ==========
+        async function loadHabitsAndTrendsByKabupaten(kabupaten) {
+            if (kabupaten === 'all') return;
+            
+            try {
+                const response = await fetch(`/superadmin/api/statistik_by_kabupaten?kabupaten=${encodeURIComponent(kabupaten)}`);
+                const data = await response.json();
+                
+                if (data.habits_data && Object.keys(data.habits_data).length > 0) {
+                    renderHabitsCharts(data.habits_data);
+                } else {
+                    document.getElementById('habitsContainer').innerHTML = '<div class="col-12 text-center"><p class="text-muted">Belum ada data kebiasaan untuk kabupaten ini</p></div>';
+                }
+                
+                if (data.trend_data && data.trend_data.datasets && data.trend_data.datasets.length > 0) {
+                    renderTrendChart(data.trend_data);
+                } else {
+                    const trendCanvas = document.getElementById('trendChart');
+                    if (trendCanvas && window.trendChartInstance) {
+                        window.trendChartInstance.destroy();
+                        window.trendChartInstance = null;
+                    }
+                }
+                
+                if (data.tahun_ajaran) {
+                    const elem = document.getElementById('tahunAjaranText2');
+                    if (elem) elem.textContent = `- ${data.tahun_ajaran}`;
+                }
+            } catch (error) {
+                console.error('Error loading charts:', error);
+                document.getElementById('habitsContainer').innerHTML = '<div class="col-12 text-center"><p class="text-danger">Gagal memuat grafik</p></div>';
+            }
+        }
+        
+        // ========== RENDER PAGINATION ==========
+        function renderPagination() {
+            const paginationContainer = document.getElementById('paginationContainer');
+            const pageInfo = document.getElementById('pageInfo');
+            const paginationButtons = document.getElementById('paginationButtons');
+            
+            if (!paginationContainer) return;
+            
+            if (totalPages <= 1) {
+                paginationContainer.style.display = 'none';
+                return;
+            }
+            
+            paginationContainer.style.display = 'flex';
+            
+            const start = (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, totalData);
+            pageInfo.textContent = `Menampilkan ${start} - ${end} dari ${totalData} sekolah`;
+            
+            let buttonsHtml = '';
+            buttonsHtml += `<button class="btn btn-sm btn-outline-secondary page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>« Prev</button>`;
+            
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (startPage > 1) {
+                buttonsHtml += `<button class="btn btn-sm btn-outline-secondary page-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) buttonsHtml += `<span class="px-1">...</span>`;
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                buttonsHtml += `<button class="btn btn-sm ${i === currentPage ? 'btn-primary' : 'btn-outline-secondary'} page-btn" onclick="goToPage(${i})">${i}</button>`;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) buttonsHtml += `<span class="px-1">...</span>`;
+                buttonsHtml += `<button class="btn btn-sm btn-outline-secondary page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            buttonsHtml += `<button class="btn btn-sm btn-outline-secondary page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next »</button>`;
+            paginationButtons.innerHTML = buttonsHtml;
+        }
+        
+        function goToPage(page) {
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            loadSchoolData();
+        }
+        
+        // ========== FILTER FUNCTIONS ==========
+        function applySearch() {
+            currentSearch = document.getElementById('searchSekolah').value;
+            currentPage = 1;
+            loadSchoolData();
+        }
+        
+        function resetFilters() {
+            document.getElementById('searchSekolah').value = '';
+            document.getElementById('bulanFilter').value = 'all';
+            currentSearch = '';
+            currentBulan = 'all';
+            currentPage = 1;
+            if (currentKabupaten !== 'all' && currentKabupaten !== '-- Pilih Kabupaten --') {
+                loadSchoolData();
+            }
+        }
+        
+        // ============================================================
+        // ========== USER MANAGEMENT (PENGGUNA) ==========
+        // ============================================================
+
         let allUsersData = [];
         let filteredUsersData = [];
-        let currentPage = 1;
+        let currentUserPage = 1;
         const usersPerPage = 10;
 
-        // Fungsi untuk load data users
+        // Load data users
         async function loadUsersData() {
             try {
                 const response = await fetch('/superadmin/api/users');
@@ -786,62 +790,26 @@
                     const data = await response.json();
                     allUsersData = data.users || [];
                 } else {
-                    console.warn('API users belum tersedia');
+                    console.warn('API users error:', response.status);
                     allUsersData = [];
                 }
-                
                 filteredUsersData = [...allUsersData];
-                currentPage = 1;
-                
+                currentUserPage = 1;
                 renderUsersTable();
-                updatePaginationInfo();
+                updateUserPaginationInfo();
             } catch (error) {
                 console.error('Error loading users data:', error);
                 allUsersData = [];
                 filteredUsersData = [];
                 renderUsersTable();
-                updatePaginationInfo();
+                updateUserPaginationInfo();
             }
         }
 
-        // Fungsi untuk apply filter
-        function applyFilters() {
-            const filterUsername = document.getElementById('filterUsername').value.toLowerCase();
-            const filterNama = document.getElementById('filterNama').value.toLowerCase();
-            const filterSekolah = document.getElementById('filterSekolah').value.toLowerCase();
-            const filterRole = document.getElementById('filterRole').value;
-            
-            filteredUsersData = allUsersData.filter(user => {
-                const matchUsername = user.username.toLowerCase().includes(filterUsername);
-                const matchNama = (user.nama_lengkap || '').toLowerCase().includes(filterNama);
-                const matchSekolah = (user.sekolah || '').toLowerCase().includes(filterSekolah);
-                const matchRole = !filterRole || user.role === filterRole;
-                
-                return matchUsername && matchNama && matchSekolah && matchRole;
-            });
-            
-            currentPage = 1;
-            renderUsersTable();
-            updatePaginationInfo();
-        }
-
-        // Fungsi untuk clear filter
-        function clearFilters() {
-            document.getElementById('filterUsername').value = '';
-            document.getElementById('filterNama').value = '';
-            document.getElementById('filterSekolah').value = '';
-            document.getElementById('filterRole').value = '';
-            
-            filteredUsersData = [...allUsersData];
-            currentPage = 1;
-            renderUsersTable();
-            updatePaginationInfo();
-        }
-
-        // Fungsi untuk render tabel users dengan pagination
+        // Render tabel users
         function renderUsersTable() {
             const tableBody = document.getElementById('usersTableBody');
-            const startIndex = (currentPage - 1) * usersPerPage;
+            const startIndex = (currentUserPage - 1) * usersPerPage;
             const endIndex = startIndex + usersPerPage;
             const usersToShow = filteredUsersData.slice(startIndex, endIndex);
             
@@ -852,82 +820,81 @@
             
             tableBody.innerHTML = usersToShow.map(user => `
                 <tr>
-                    <td><strong>${user.username}</strong></td>
-                    <td>${user.nama_lengkap || ''}</td>
-                    <td>${user.email || ''}</td>
+                    <td><strong>${escapeHtml(user.username)}</strong></td>
+                    <td>${escapeHtml(user.nama_lengkap || '')}</td>
+                    <td>${escapeHtml(user.email || '')}</td>
+                    <td><span class="badge ${user.role === 'superadmin' ? 'bg-danger' : (user.role === 'kepala_dinas' ? 'bg-success' : 'bg-primary')}">${escapeHtml(user.role)}</span></td>
+                    <td>${escapeHtml(user.sekolah || '')}</td>
+                    <td>${escapeHtml(user.nip || '')}</td>
                     <td>
-                        <span class="badge ${user.role === 'superadmin' ? 'bg-danger' : 'bg-primary'}">
-                            ${user.role}
-                        </span>
-                    </td>
-                    <td>${user.sekolah || ''}</td>
-                    <td>${user.nip || ''}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm me-1" onclick="openChangePasswordModal(${user.id}, '${user.username}', '${user.nama_lengkap}')">
-                            <i class="fas fa-key me-1"></i>Password
-                        </button>
-                        <button class="btn btn-info btn-sm" onclick="openChangeNIPModal(${user.id}, '${user.username}', '${user.nama_lengkap}', '${user.nip}')">
-                            <i class="fas fa-id-card me-1"></i>NIP
+                        <button class="btn btn-sm btn-info" onclick="openEditRoleModal(${user.id}, '${escapeHtml(user.username)}', '${escapeHtml(user.role)}')">
+                            <i class="fas fa-edit me-1"></i>Edit Role
                         </button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        // Fungsi untuk update pagination info
-        function updatePaginationInfo() {
+        // Update pagination info user
+        function updateUserPaginationInfo() {
             const totalUsers = filteredUsersData.length;
             const totalPages = Math.ceil(totalUsers / usersPerPage);
-            const startUser = (currentPage - 1) * usersPerPage + 1;
-            const endUser = Math.min(currentPage * usersPerPage, totalUsers);
+            const startUser = (currentUserPage - 1) * usersPerPage + 1;
+            const endUser = Math.min(currentUserPage * usersPerPage, totalUsers);
             
-            document.getElementById('paginationInfo').textContent = 
-                `Menampilkan ${startUser}-${endUser} dari ${totalUsers} pengguna`;
+            const paginationInfo = document.getElementById('paginationInfo');
+            const pageInfoUsers = document.getElementById('pageInfoUsers');
+            const prevPageBtn = document.getElementById('prevPage');
+            const nextPageBtn = document.getElementById('nextPage');
             
-            document.getElementById('pageInfo').textContent = `Halaman ${currentPage} dari ${totalPages}`;
-            
-            document.getElementById('prevPage').disabled = currentPage === 1;
-            document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+            if (paginationInfo) {
+                paginationInfo.textContent = `Menampilkan ${startUser}-${endUser} dari ${totalUsers} pengguna`;
+            }
+            if (pageInfoUsers) {
+                pageInfoUsers.textContent = `Halaman ${currentUserPage} dari ${totalPages || 1}`;
+            }
+            if (prevPageBtn) prevPageBtn.disabled = currentUserPage === 1;
+            if (nextPageBtn) nextPageBtn.disabled = currentUserPage === totalPages || totalPages === 0;
         }
 
-        // Event listeners untuk pagination
-        document.getElementById('prevPage').addEventListener('click', function() {
-            if (currentPage > 1) {
-                currentPage--;
-                renderUsersTable();
-                updatePaginationInfo();
-            }
-        });
-
-        document.getElementById('nextPage').addEventListener('click', function() {
-            const totalPages = Math.ceil(filteredUsersData.length / usersPerPage);
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderUsersTable();
-                updatePaginationInfo();
-            }
-        });
-
-        // Event listeners untuk filter (real-time search)
-        document.getElementById('filterUsername').addEventListener('input', debounce(applyFilters, 300));
-        document.getElementById('filterNama').addEventListener('input', debounce(applyFilters, 300));
-        document.getElementById('filterSekolah').addEventListener('input', debounce(applyFilters, 300));
-        document.getElementById('filterRole').addEventListener('change', applyFilters);
-
-        // Debounce function untuk optimasi performance
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
+        // Filter users
+        function applyUserFilters() {
+            const filterUsername = document.getElementById('filterUsername')?.value.toLowerCase() || '';
+            const filterNama = document.getElementById('filterNama')?.value.toLowerCase() || '';
+            const filterSekolah = document.getElementById('filterSekolah')?.value.toLowerCase() || '';
+            const filterRole = document.getElementById('filterRole')?.value || '';
+            
+            filteredUsersData = allUsersData.filter(user => {
+                const matchUsername = !filterUsername || user.username.toLowerCase().includes(filterUsername);
+                const matchNama = !filterNama || (user.nama_lengkap || '').toLowerCase().includes(filterNama);
+                const matchSekolah = !filterSekolah || (user.sekolah || '').toLowerCase().includes(filterSekolah);
+                const matchRole = !filterRole || user.role === filterRole;
+                return matchUsername && matchNama && matchSekolah && matchRole;
+            });
+            
+            currentUserPage = 1;
+            renderUsersTable();
+            updateUserPaginationInfo();
         }
 
-        // Fungsi untuk buka modal ganti password
+        function clearUserFilters() {
+            const usernameInput = document.getElementById('filterUsername');
+            const namaInput = document.getElementById('filterNama');
+            const sekolahInput = document.getElementById('filterSekolah');
+            const roleSelect = document.getElementById('filterRole');
+            
+            if (usernameInput) usernameInput.value = '';
+            if (namaInput) namaInput.value = '';
+            if (sekolahInput) sekolahInput.value = '';
+            if (roleSelect) roleSelect.value = '';
+            
+            filteredUsersData = [...allUsersData];
+            currentUserPage = 1;
+            renderUsersTable();
+            updateUserPaginationInfo();
+        }
+
+        // Modal Password
         function openChangePasswordModal(userId, username, namaLengkap) {
             document.getElementById('changePasswordUserId').value = userId;
             document.getElementById('userUsername').value = username;
@@ -935,162 +902,143 @@
             document.getElementById('newUserPassword').value = '';
             document.getElementById('confirmUserPassword').value = '';
             document.getElementById('passwordStrength').className = 'password-strength';
-            document.getElementById('changeUserPasswordMessage').textContent = '';
             document.getElementById('changeUserPasswordMessage').classList.add('d-none');
             
             const modal = new bootstrap.Modal(document.getElementById('changeUserPasswordModal'));
             modal.show();
         }
 
-        // Fungsi untuk buka modal ganti NIP
+        // Modal NIP
         function openChangeNIPModal(userId, username, namaLengkap, currentNIP) {
             document.getElementById('changeNIPUserId').value = userId;
             document.getElementById('nipUserUsername').value = username;
             document.getElementById('nipUserNama').value = namaLengkap;
             document.getElementById('newUserNIP').value = currentNIP || '';
-            document.getElementById('changeUserNIPMessage').textContent = '';
             document.getElementById('changeUserNIPMessage').classList.add('d-none');
             
             const modal = new bootstrap.Modal(document.getElementById('changeUserNIPModal'));
             modal.show();
         }
 
-        // Fungsi untuk submit ganti password
+        // Submit ganti password
         async function submitUserPasswordChange() {
             const userId = document.getElementById('changePasswordUserId').value;
             const newPassword = document.getElementById('newUserPassword').value;
             const confirmPassword = document.getElementById('confirmUserPassword').value;
             const messageDiv = document.getElementById('changeUserPasswordMessage');
             const submitBtn = document.querySelector('#changeUserPasswordModal .btn-primary');
-            
-            const originalBtnText = submitBtn.innerHTML;
+            const originalText = submitBtn?.innerHTML || 'Simpan';
             
             messageDiv.textContent = '';
-            messageDiv.classList.remove('alert-danger', 'alert-success');
             messageDiv.classList.add('d-none');
             
-            // Validasi
             if (!newPassword || !confirmPassword) {
-                showMessage(messageDiv, 'Password baru dan konfirmasi harus diisi!', 'danger');
+                messageDiv.textContent = 'Password baru dan konfirmasi harus diisi!';
+                messageDiv.classList.remove('d-none');
                 return;
             }
             
             if (newPassword !== confirmPassword) {
-                showMessage(messageDiv, 'Password baru dan konfirmasi tidak cocok!', 'danger');
+                messageDiv.textContent = 'Password baru dan konfirmasi tidak cocok!';
+                messageDiv.classList.remove('d-none');
                 return;
             }
             
             if (newPassword.length < 6) {
-                showMessage(messageDiv, 'Password minimal 6 karakter!', 'danger');
+                messageDiv.textContent = 'Password minimal 6 karakter!';
+                messageDiv.classList.remove('d-none');
                 return;
             }
             
-            // Loading state
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
-            submitBtn.disabled = true;
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+                submitBtn.disabled = true;
+            }
             
             try {
                 const response = await fetch('/superadmin/api/change_user_password', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        new_password: newPassword
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, new_password: newPassword })
                 });
-                
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage(messageDiv, result.message, 'success');
-                    setTimeout(() => {
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserPasswordModal'));
-                        modal.hide();
-                    }, 1500);
+                    alert(result.message);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserPasswordModal'));
+                    modal.hide();
                 } else {
-                    showMessage(messageDiv, result.message, 'danger');
+                    messageDiv.textContent = result.message;
+                    messageDiv.classList.remove('d-none');
                 }
             } catch (error) {
-                console.error('Error changing password:', error);
-                showMessage(messageDiv, 'Terjadi kesalahan saat mengubah password!', 'danger');
+                console.error('Error:', error);
+                messageDiv.textContent = 'Terjadi kesalahan saat mengubah password!';
+                messageDiv.classList.remove('d-none');
             } finally {
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
+                if (submitBtn) {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
             }
         }
 
-        // Fungsi untuk submit ganti NIP
+        // Submit ganti NIP
         async function submitUserNIPChange() {
             const userId = document.getElementById('changeNIPUserId').value;
             const newNIP = document.getElementById('newUserNIP').value;
             const messageDiv = document.getElementById('changeUserNIPMessage');
             const submitBtn = document.querySelector('#changeUserNIPModal .btn-primary');
-            
-            const originalBtnText = submitBtn.innerHTML;
+            const originalText = submitBtn?.innerHTML || 'Simpan';
             
             messageDiv.textContent = '';
-            messageDiv.classList.remove('alert-danger', 'alert-success');
             messageDiv.classList.add('d-none');
             
-            // Validasi
             if (!newNIP) {
-                showMessage(messageDiv, 'NIP baru harus diisi!', 'danger');
+                messageDiv.textContent = 'NIP baru harus diisi!';
+                messageDiv.classList.remove('d-none');
                 return;
             }
             
-            // Loading state
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
-            submitBtn.disabled = true;
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+                submitBtn.disabled = true;
+            }
             
             try {
                 const response = await fetch('/superadmin/api/change_user_nip', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        new_nip: newNIP
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, new_nip: newNIP })
                 });
-                
                 const result = await response.json();
                 
                 if (result.success) {
-                    showMessage(messageDiv, result.message, 'success');
-                    setTimeout(() => {
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserNIPModal'));
-                        modal.hide();
-                        // Refresh data users
-                        loadUsersData();
-                    }, 1500);
+                    alert(result.message);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('changeUserNIPModal'));
+                    modal.hide();
+                    loadUsersData(); // Refresh data users
                 } else {
-                    showMessage(messageDiv, result.message, 'danger');
+                    messageDiv.textContent = result.message;
+                    messageDiv.classList.remove('d-none');
                 }
             } catch (error) {
-                console.error('Error changing NIP:', error);
-                showMessage(messageDiv, 'Terjadi kesalahan saat mengubah NIP!', 'danger');
+                console.error('Error:', error);
+                messageDiv.textContent = 'Terjadi kesalahan saat mengubah NIP!';
+                messageDiv.classList.remove('d-none');
             } finally {
-                // Reset button state
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
+                if (submitBtn) {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
             }
         }
 
-        // Helper function untuk menampilkan pesan
-        function showMessage(element, message, type) {
-            element.textContent = message;
-            element.classList.remove('d-none', 'alert-danger', 'alert-success');
-            element.classList.add('alert', `alert-${type}`);
-        }
-
-        // Fungsi untuk mengecek kekuatan password
+        // Check password strength
         function checkPasswordStrength() {
-            const password = document.getElementById('newUserPassword').value;
+            const password = document.getElementById('newUserPassword')?.value || '';
             const strengthBar = document.getElementById('passwordStrength');
+            if (!strengthBar) return;
             
             if (password.length === 0) {
                 strengthBar.className = 'password-strength';
@@ -1098,32 +1046,265 @@
             }
             
             let strength = 0;
+            if (password.length >= 6) strength++;
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^a-zA-Z0-9]/.test(password)) strength++;
             
-            // Cek panjang password
-            if (password.length >= 6) strength += 1;
-            if (password.length >= 8) strength += 1;
-            
-            // Cek karakter
-            if (/[a-z]/.test(password)) strength += 1;
-            if (/[A-Z]/.test(password)) strength += 1;
-            if (/[0-9]/.test(password)) strength += 1;
-            if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
-            
-            // Update tampilan
-            if (strength <= 2) {
-                strengthBar.className = 'password-strength strength-weak';
-            } else if (strength <= 4) {
-                strengthBar.className = 'password-strength strength-medium';
-            } else {
-                strengthBar.className = 'password-strength strength-strong';
-            }
+            if (strength <= 2) strengthBar.className = 'password-strength strength-weak';
+            else if (strength <= 4) strengthBar.className = 'password-strength strength-medium';
+            else strengthBar.className = 'password-strength strength-strong';
         }
 
-        // Event listener untuk modal user settings
-        document.getElementById('userSettingsModal').addEventListener('shown.bs.modal', function () {
-            loadUsersData();
+        // ========== FUNGSI GRAFIK ==========
+        function getDisplayName(habitName) {
+            const mapping = {
+                'bangun_pagi': 'Bangun Pagi', 'beribadah': 'Beribadah', 'berolahraga': 'Gemar Berolahraga',
+                'sehat_dan_bergizi': 'Makan Sehat', 'sehat_dan_lemar': 'Makan Sehat', 'belajar': 'Gemar Belajar',
+                'bermasyarakat': 'Bermasyarakat', 'tidur_cepat': 'Tidur Cepat'
+            };
+            return mapping[habitName] || habitName;
+        }
+        
+        function renderHabitChart(canvasId, habitName, habitData, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!habitData || !habitData.labels || !habitData.data) return;
+            
+            const reversedLabels = [...habitData.labels].reverse();
+            const reversedData = [...habitData.data].reverse();
+            
+            if (canvas.chart) canvas.chart.destroy();
+            
+            canvas.chart = new Chart(ctx, {
+                type: 'bar', 
+                data: { 
+                    labels: reversedLabels, 
+                    datasets: [{ label: habitName, data: reversedData, backgroundColor: color, borderColor: color, borderWidth: 1 }] 
+                },
+                options: { 
+                    indexAxis: 'y', 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        x: { beginAtZero: true, max: 31 }, 
+                        y: { ticks: { font: { size: 8 } } } 
+                    } 
+                }
+            });
+        }
+        
+        function renderHabitsCharts(habitsData) {
+            const container = document.getElementById('habitsContainer');
+            if (!container) return;
+            
+            const habitColors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#2E8B57'];
+            
+            if (!habitsData || Object.keys(habitsData).length === 0) {
+                container.innerHTML = '<div class="col-12 text-center"><p class="text-muted">Tidak ada data kebiasaan</p></div>';
+                return;
+            }
+            
+            let html = '';
+            let habitIndex = 0;
+            Object.keys(habitsData).forEach(habitName => {
+                const colClass = habitIndex < 4 ? 'col-md-3' : 'col-md-4';
+                const displayName = getDisplayName(habitName);
+                html += `<div class="${colClass} mb-3"><div class="habit-chart small-chart"><h6 class="text-center mb-2" style="font-size: 0.9rem;">${displayName}</h6><canvas id="habitChart${habitIndex}"></canvas></div></div>`;
+                habitIndex++;
+            });
+            container.innerHTML = html;
+            
+            setTimeout(() => {
+                let index = 0;
+                Object.keys(habitsData).forEach(habitName => {
+                    const habit = habitsData[habitName];
+                    const displayName = getDisplayName(habitName);
+                    renderHabitChart(`habitChart${index}`, displayName, habit, habitColors[index % habitColors.length]);
+                    index++;
+                });
+            }, 100);
+        }
+        
+        function renderTrendChart(trendData) {
+            const canvas = document.getElementById('trendChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            if (window.trendChartInstance) window.trendChartInstance.destroy();
+            if (!trendData || !trendData.labels || !trendData.datasets) return;
+            
+            trendData.datasets.forEach(dataset => { 
+                if (dataset.label) dataset.label = getDisplayName(dataset.label); 
+            });
+            
+            window.trendChartInstance = new Chart(ctx, { 
+                type: 'line', 
+                data: trendData, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { y: { beginAtZero: true, max: 31 } } 
+                } 
+            });
+        }
+        
+        // ========== EVENT LISTENERS ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard loaded');
+            loadStatistics();
+            loadKabupatenList();
+            loadBulanList();
+            
+            const bulanFilter = document.getElementById('bulanFilter');
+            if (bulanFilter) {
+                bulanFilter.addEventListener('change', function() {
+                    currentBulan = this.value;
+                    currentPage = 1;
+                    if (currentKabupaten !== 'all' && currentKabupaten !== '-- Pilih Kabupaten --') {
+                        loadSchoolData();
+                    }
+                });
+            }
+            // ========== EVENT LISTENER UNTUK USER SETTINGS ==========
+            const userSettingsModal = document.getElementById('userSettingsModal');
+            if (userSettingsModal) {
+                userSettingsModal.addEventListener('shown.bs.modal', function() {
+                    loadUsersData();
+                });
+            }
+
+            // Event listener untuk tombol filter user
+            const applyFilterBtn = document.querySelector('#userSettingsModal .btn-primary[onclick="applyFilters()"]');
+            if (applyFilterBtn) {
+                applyFilterBtn.onclick = applyUserFilters;
+            }
+
+            const clearFilterBtn = document.querySelector('#userSettingsModal .btn-outline-secondary[onclick="clearFilters()"]');
+            if (clearFilterBtn) {
+                clearFilterBtn.onclick = clearUserFilters;
+            }
+
+            // Event listener untuk pagination user
+            const prevPageBtn = document.getElementById('prevPage');
+            const nextPageBtn = document.getElementById('nextPage');
+            if (prevPageBtn) {
+                prevPageBtn.onclick = function() {
+                    if (currentUserPage > 1) {
+                        currentUserPage--;
+                        renderUsersTable();
+                        updateUserPaginationInfo();
+                    }
+                };
+            }
+            if (nextPageBtn) {
+                nextPageBtn.onclick = function() {
+                    const totalPages = Math.ceil(filteredUsersData.length / usersPerPage);
+                    if (currentUserPage < totalPages) {
+                        currentUserPage++;
+                        renderUsersTable();
+                        updateUserPaginationInfo();
+                    }
+                };
+            }
+
+            // Event listener untuk filter input (debounce)
+            const filterUsername = document.getElementById('filterUsername');
+            const filterNama = document.getElementById('filterNama');
+            const filterSekolah = document.getElementById('filterSekolah');
+            const filterRole = document.getElementById('filterRole');
+
+            if (filterUsername) filterUsername.addEventListener('input', function() { setTimeout(applyUserFilters, 300); });
+            if (filterNama) filterNama.addEventListener('input', function() { setTimeout(applyUserFilters, 300); });
+            if (filterSekolah) filterSekolah.addEventListener('input', function() { setTimeout(applyUserFilters, 300); });
+            if (filterRole) filterRole.addEventListener('change', applyUserFilters);
+            
+            const searchBtn = document.getElementById('searchBtn');
+            const searchSekolah = document.getElementById('searchSekolah');
+            const resetFilterBtn = document.getElementById('resetFilterBtn');
+            const pageSizeSelect = document.getElementById('pageSizeSelect');
+            
+            if (searchBtn) searchBtn.addEventListener('click', applySearch);
+            if (searchSekolah) {
+                searchSekolah.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') applySearch();
+                });
+            }
+            if (resetFilterBtn) resetFilterBtn.addEventListener('click', resetFilters);
+            if (pageSizeSelect) {
+                pageSizeSelect.addEventListener('change', function() {
+                    pageSize = parseInt(this.value);
+                    currentPage = 1;
+                    loadSchoolData();
+                });
+            }
+            
+            clearAllData();
         });
-    </script>
+    
+   
+    
+        
+        // ========== EDIT ROLE USER ==========
+        function openEditRoleModal(userId, username, currentRole) {
+            document.getElementById('editRoleUserId').value = userId;
+            document.getElementById('editRoleUsername').value = username;
+            document.getElementById('editRoleCurrent').value = currentRole;
+            document.getElementById('editRoleNew').value = currentRole;
+            document.getElementById('editRoleMessage').classList.add('d-none');
+            
+            new bootstrap.Modal(document.getElementById('editRoleModal')).show();
+        }
+
+        async function submitEditRole() {
+            const userId = document.getElementById('editRoleUserId').value;
+            const newRole = document.getElementById('editRoleNew').value;
+            const messageDiv = document.getElementById('editRoleMessage');
+            const submitBtn = event.target;
+            const originalText = submitBtn.innerHTML;
+            
+            messageDiv.classList.add('d-none');
+            
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/superadmin/api/update_user_role', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, role: newRole })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    messageDiv.textContent = result.message;
+                    messageDiv.classList.remove('d-none');
+                    messageDiv.classList.add('alert-success');
+                    
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('editRoleModal')).hide();
+                        loadUsersData(); // Refresh tabel
+                    }, 1500);
+                } else {
+                    messageDiv.textContent = result.message;
+                    messageDiv.classList.remove('d-none');
+                    messageDiv.classList.add('alert-danger');
+                }
+            } catch (error) {
+                messageDiv.textContent = 'Terjadi kesalahan!';
+                messageDiv.classList.remove('d-none');
+                messageDiv.classList.add('alert-danger');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+        </script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

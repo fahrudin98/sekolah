@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from flask_login import login_required, current_user
 from sqlalchemy import func
 from penilaiansiswa import db
@@ -15,36 +15,42 @@ def create_siswa():
     kelas_id = request.form.get("kelas_id")
     status = request.form.get("status") or "Aktif"
 
-    # ✅ VALIDASI WAJIB NISN
+    # ✅ VALIDASI WAJIB
     if not nama or not jk or not kelas_id or not nisn:
         return jsonify({"success": False, "message": "Semua field harus diisi, termasuk NISN."}), 400
 
-    kelas = Kelas.query.get(kelas_id)
-    if not kelas:
-        return jsonify({"success": False, "message": "Kelas tidak ditemukan."}), 404
-
-    # Pastikan wali kelas yg login punya hak
-    if not current_user.pegawai or kelas.wali_kelas_id != current_user.pegawai.id:
-        return jsonify({"success": False, "message": "Anda bukan wali kelas dari kelas ini."}), 403
-
-    # ✅ VALIDASI NISN UNIK: Cek apakah sudah ada siswa dengan NISN yang sama 
-    # di SEKOLAH YANG SAMA dan TAHUN AJARAN YANG SAMA (di kelas mana pun)
-    existing_siswa = Siswa.query.join(Kelas).filter(
-        Siswa.nisn == nisn,
-        Kelas.sekolah_id == kelas.sekolah_id,
-        Kelas.tahun_ajaran_id == kelas.tahun_ajaran_id
-    ).first()
-    
-    if existing_siswa:
-        return jsonify({
-            "success": False, 
-            "message": f"NISN {nisn} sudah digunakan oleh siswa {existing_siswa.nama_siswa} di kelas {existing_siswa.kelas.nama_kelas} pada tahun ajaran yang sama."
-        }), 400
-
     try:
+        kelas = Kelas.query.get(kelas_id)
+        if not kelas:
+            return jsonify({"success": False, "message": "Kelas tidak ditemukan."}), 404
+
+        # Pastikan wali kelas yg login punya hak
+        if not current_user.pegawai or kelas.wali_kelas_id != current_user.pegawai.id:
+            return jsonify({"success": False, "message": "Anda bukan wali kelas dari kelas ini."}), 403
+
+        # ✅ VALIDASI NISN UNIK DENGAN LOCK UNTUK HINDARI RACE CONDITION
+        existing_siswa = Siswa.query.join(Kelas).filter(
+            Siswa.nisn == nisn,
+            Kelas.sekolah_id == kelas.sekolah_id,
+            Kelas.tahun_ajaran_id == kelas.tahun_ajaran_id
+        ).with_for_update().first()  # 🔒 Lock row untuk hindari race condition
+        
+        if existing_siswa:
+            return jsonify({
+                "success": False, 
+                "message": f"⚠️ NISN <strong>{nisn}</strong> sudah digunakan oleh siswa <strong>{existing_siswa.nama_siswa}</strong> di kelas <strong>{existing_siswa.kelas.nama_kelas}</strong>. Silakan gunakan NISN yang berbeda.",
+                "type": "warning",
+                "existing_data": {
+                    "nama_siswa": existing_siswa.nama_siswa,
+                    "kelas": existing_siswa.kelas.nama_kelas,
+                    "nisn": existing_siswa.nisn
+                }
+            }), 200
+
+        # ✅ BUAT SISWA BARU
         siswa = Siswa(
             nama_siswa=nama,
-            nisn=nisn,  # ✅ SEKARANG WAJIB, TIDAK ADA NULL
+            nisn=nisn,
             jenis_kelamin=jk,
             kelas_id=kelas.id,
             status=status
@@ -54,23 +60,49 @@ def create_siswa():
 
         return jsonify({
             "success": True,
-            "message": "Siswa berhasil ditambahkan.",
+            "message": "✅ Siswa berhasil ditambahkan!",
+            "type": "success",
             "siswa": {
                 "id": siswa.id,
                 "nama_siswa": siswa.nama_siswa,
                 "nisn": siswa.nisn,
                 "jenis_kelamin": siswa.jenis_kelamin,
                 "kelas": siswa.kelas.nama_kelas,
-                "status": siswa.status,
-                "sekolah": siswa.kelas.sekolah.nama_sekolah,
-                "kecamatan": siswa.kelas.sekolah.kecamatan.nama if siswa.kelas.sekolah.kecamatan else None,
-                "kabupaten": siswa.kelas.sekolah.kecamatan.kabupaten.nama if siswa.kelas.sekolah.kecamatan and siswa.kelas.sekolah.kecamatan.kabupaten else None,
-                "provinsi": siswa.kelas.sekolah.kecamatan.kabupaten.provinsi.nama if siswa.kelas.sekolah.kecamatan and siswa.kelas.sekolah.kecamatan.kabupaten and siswa.kelas.sekolah.kecamatan.kabupaten.provinsi else None
+                "status": siswa.status
             }
         })
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "message": f"Terjadi kesalahan: {str(e)}"}), 500
+        
+        # ✅ TANGANI ERROR DUPLIKASI DARI DATABASE
+        error_msg = str(e)
+        if "Duplicate entry" in error_msg and "nisn" in error_msg:
+            # Cari data existing yang menyebabkan conflict
+            conflicting_siswa = Siswa.query.join(Kelas).filter(
+                Siswa.nisn == nisn,
+                Kelas.sekolah_id == kelas.sekolah_id,
+                Kelas.tahun_ajaran_id == kelas.tahun_ajaran_id
+            ).first()
+            
+            if conflicting_siswa:
+                message = f"⚠️ NISN <strong>{nisn}</strong> sudah digunakan oleh siswa <strong>{conflicting_siswa.nama_siswa}</strong> di kelas <strong>{conflicting_siswa.kelas.nama_kelas}</strong>. Silakan gunakan NISN yang berbeda."
+            else:
+                message = f"⚠️ NISN <strong>{nisn}</strong> sudah digunakan. Silakan gunakan NISN yang berbeda."
+                
+            return jsonify({
+                "success": False, 
+                "message": message,
+                "type": "warning"
+            }), 200
+            
+        else:
+            # Error lainnya
+            return jsonify({
+                "success": False, 
+                "message": f"❌ Terjadi kesalahan sistem: {error_msg}",
+                "type": "error"
+            }), 500
 
 @siswa_bp.route("/list/<int:kelas_id>")
 @login_required
@@ -106,55 +138,62 @@ def delete_siswa(id):
 
     db.session.delete(siswa)
     db.session.commit()
-    return jsonify({"success": True, "message": "Siswa berhasil dihapus."})
+    return jsonify({
+        "success": True, 
+        "message": "✅ Siswa berhasil dihapus.",
+        "type": "success"
+    })
 
 @siswa_bp.route("/update/<int:id>", methods=["POST"])
 @login_required
 def update_siswa(id):
-    siswa = Siswa.query.get_or_404(id)
-    kelas = siswa.kelas
-
-    # cek apakah wali kelas yang login punya hak
-    if not current_user.pegawai or kelas.wali_kelas_id != current_user.pegawai.id:
-        return jsonify({"success": False, "message": "Anda bukan wali kelas kelas ini."}), 403
-
-    # ambil data dari form
-    nama = (request.form.get("nama_siswa") or "").strip()
-    nisn = (request.form.get("nisn") or "").strip() 
-    jk = request.form.get("jenis_kelamin")
-    status = request.form.get("status") or "Aktif"
-
-    # ✅ VALIDASI WAJIB NISN
-    if not nama or not jk or not nisn:
-        return jsonify({"success": False, "message": "Semua field harus diisi, termasuk NISN."}), 400
-
-    # ✅ VALIDASI NISN UNIK: Cek apakah sudah ada siswa lain dengan NISN yang sama 
-    # di SEKOLAH YANG SAMA dan TAHUN AJARAN YANG SAMA (di kelas mana pun)
-    if nisn != siswa.nisn:  # Hanya validasi jika NISN berubah
-        existing_siswa = Siswa.query.join(Kelas).filter(
-            Siswa.nisn == nisn,
-            Kelas.sekolah_id == kelas.sekolah_id,
-            Kelas.tahun_ajaran_id == kelas.tahun_ajaran_id,
-            Siswa.id != id  # Kecuali siswa yang sedang diupdate
-        ).first()
-        
-        if existing_siswa:
-            return jsonify({
-                "success": False, 
-                "message": f"NISN {nisn} sudah digunakan oleh siswa {existing_siswa.nama_siswa} di kelas {existing_siswa.kelas.nama_kelas} pada tahun ajaran yang sama."
-            }), 400
-
     try:
-        # update data siswa
+        siswa = Siswa.query.get_or_404(id)
+        kelas = siswa.kelas
+
+        if not current_user.pegawai or kelas.wali_kelas_id != current_user.pegawai.id:
+            return jsonify({"success": False, "message": "Anda bukan wali kelas kelas ini."}), 403
+
+        nama = (request.form.get("nama_siswa") or "").strip()
+        nisn = (request.form.get("nisn") or "").strip() 
+        jk = request.form.get("jenis_kelamin")
+        status = request.form.get("status") or "Aktif"
+
+        if not nama or not jk or not nisn:
+            return jsonify({"success": False, "message": "Semua field harus diisi, termasuk NISN."}), 400
+
+        # ✅ VALIDASI NISN UNIK DENGAN LOCK
+        if nisn != siswa.nisn:
+            existing_siswa = Siswa.query.join(Kelas).filter(
+                Siswa.nisn == nisn,
+                Kelas.sekolah_id == kelas.sekolah_id,
+                Kelas.tahun_ajaran_id == kelas.tahun_ajaran_id,
+                Siswa.id != id
+            ).with_for_update().first()
+            
+            if existing_siswa:
+                return jsonify({
+                    "success": False, 
+                    "message": f"⚠️ NISN <strong>{nisn}</strong> sudah digunakan oleh siswa <strong>{existing_siswa.nama_siswa}</strong> di kelas <strong>{existing_siswa.kelas.nama_kelas}</strong>. Silakan gunakan NISN yang berbeda.",
+                    "type": "warning",
+                    "existing_data": {
+                        "nama_siswa": existing_siswa.nama_siswa,
+                        "kelas": existing_siswa.kelas.nama_kelas,
+                        "nisn": existing_siswa.nisn
+                    }
+                }), 200
+
+        # ✅ UPDATE DATA
         siswa.nama_siswa = nama
-        siswa.nisn = nisn  # ✅ SEKARANG WAJIB, TIDAK ADA NULL
+        siswa.nisn = nisn
         siswa.jenis_kelamin = jk
         siswa.status = status
         db.session.commit()
 
         return jsonify({
             "success": True,
-            "message": "Siswa berhasil diupdate.",
+            "message": "✅ Data siswa berhasil diperbarui!",
+            "type": "success",
             "siswa": {
                 "id": siswa.id,
                 "nama_siswa": siswa.nama_siswa,
@@ -163,10 +202,26 @@ def update_siswa(id):
                 "status": siswa.status
             }
         })
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "message": f"Terjadi kesalahan: {str(e)}"}), 500
+        
+        # ✅ HANDLE DATABASE DUPLICATE ERROR
+        error_msg = str(e)
+        if "Duplicate entry" in error_msg and "nisn" in error_msg:
+            return jsonify({
+                "success": False, 
+                "message": f"⚠️ NISN <strong>{nisn}</strong> sudah digunakan. Silakan gunakan NISN yang berbeda.",
+                "type": "warning"
+            }), 200
+        else:
+            return jsonify({
+                "success": False, 
+                "message": f"❌ Terjadi kesalahan: {error_msg}",
+                "type": "error"
+            }), 500
 
+# Route lainnya tetap sama...
 @siswa_bp.route("/search", methods=["GET"])
 @login_required
 def search_siswa():

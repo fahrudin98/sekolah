@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Kepala Sekolah</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #f8f9fa; 
+            padding-top: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 15px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            height: 100%;
+        }
+        .habit-chart {
+            height: 180px;
+            margin-bottom: 15px;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .top-section {
+            margin-bottom: 20px;
+        }
+        .trend-chart-container {
+            height: 350px;
+        }
+        .small-chart {
+            height: 180px !important;
+        }
+        .tahun-ajaran-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .table th {
+            position: sticky;
+            top: 0;
+            background-color: #343a40;
+            color: white;
+            z-index: 10;
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .error-message {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #dc3545;
+        }
+        .performance-badge {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        .filter-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .table thead th {
+            vertical-align: middle;
+        }
+        .kelas-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+            <div class="container-fluid">
+                <span class="navbar-brand mb-0 h1">
+                    <i class="fas fa-user-tie me-2"></i>Dashboard Kepala Sekolah
+                    <span class="tahun-ajaran-badge" id="tahunAjaranBadge">{{ tahun_ajaran }}</span>
+                    <span class="performance-badge" id="overallPerformance">Rata-rata: 0.0</span>
+                </span>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <span class="navbar-text me-3">
+                                <i class="fas fa-school me-1"></i>{{ sekolah_aktif.nama_sekolah }}
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <span class="navbar-text me-3">
+                                <i class="fas fa-user me-1"></i>{{ pegawai.nama }}
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-light btn-sm me-2" href="{{ url_for('tahun_ajaran.switch_sekolah') }}">
+                                <i class="fas fa-exchange-alt me-1"></i>Ganti Sekolah
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light btn-sm" href="{{ url_for('tahun_ajaran.switch_to_wali_kelas') }}">
+                                <i class="fas fa-chalkboard-teacher me-1"></i>Mode Wali Kelas
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Info Sekolah -->
+        <div class="alert alert-info">
+            <div class="row">
+                <div class="col-md-4">
+                    <strong><i class="fas fa-user-tie me-2"></i>Status:</strong> {{ status_kepala_sekolah }}
+                </div>
+                <div class="col-md-4">
+                    <strong><i class="fas fa-users me-2"></i>Total Kelas:</strong> <span id="totalKelas">{{ total_kelas }}</span>
+                </div>
+                <div class="col-md-4">
+                    <strong><i class="fas fa-graduation-cap me-2"></i>Total Siswa:</strong> <span id="totalSiswa">{{ total_siswa }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Memuat data...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message alert alert-danger" id="errorMessage">
+            Terjadi kesalahan saat memuat data. Silakan refresh halaman.
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="bulanFilter" class="form-label"><strong>Pilih Bulan:</strong></label>
+                    <select class="form-select" id="bulanFilter">
+                        <option value="">Semua Bulan</option>
+                        <!-- Options akan diisi oleh JavaScript -->
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="kelasFilter" class="form-label"><strong>Filter Kelas:</strong></label>
+                    <select class="form-select" id="kelasFilter">
+                        <option value="all">Semua Kelas</option>
+                        <!-- Options akan diisi oleh JavaScript -->
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" onclick="loadDashboardData()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BAGIAN ATAS: Trend Chart + Statistik -->
+        <div class="row top-section">
+            <!-- 1/5 KIRI: Statistik -->
+            <div class="col-md-2">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalKelasStat">0</div>
+                    <div class="stat-label">KELAS</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalSiswaStat">0</div>
+                    <div class="stat-label">SISWA</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalPegawaiStat">0</div>
+                    <div class="stat-label">GURU</div>
+                </div>
+            </div>
+
+            <!-- 4/5 KANAN: Grafik Perkembangan -->
+            <div class="col-md-10">
+                <div class="chart-container trend-chart-container">
+                    <h5 class="mb-4">Perkembangan Rata-rata Kebiasaan Siswa per Bulan 
+                        <small class="text-muted" id="tahunAjaranText"></small>
+                    </h5>
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 7 GRAFIK KEBIASAAN (10 KELAS TERBAIK) -->
+        <div class="row">
+            <div class="col-12">
+                <div class="chart-container">
+                    <h5 class="mb-4">10 Kelas Terbaik per Kebiasaan 
+                        <small class="text-muted" id="tahunAjaranText2"></small>
+                    </h5>
+                    <div class="row" id="habitsContainer">
+                        <div class="col-12 text-center">
+                            <p class="text-muted">Data grafik kebiasaan sedang dimuat...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. TABEL RINGKASAN PER SISWA -->
+        <div class="row">
+            <div class="col-12">
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Rangkuman Performa per Siswa 
+                            <small class="text-muted" id="tahunAjaranText3"></small>
+                        </h5>
+                        <div>
+                            <select class="form-select me-2 d-inline-block w-auto" id="tableKelasFilter">
+                                <option value="all">Semua Kelas</option>
+                            </select>
+                            <select class="form-select d-inline-block w-auto" id="tableBulanFilter">
+                                <option value="all">Semua Bulan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Nama Siswa</th>
+                                    <th>Kelas</th>
+                                    <th>Bangun Pagi</th>
+                                    <th>Beribadah</th>
+                                    <th>Gemar Berolahraga</th>
+                                    <th>Makan Sehat & Bergizi</th>
+                                    <th>Gemar Belajar</th>
+                                    <th>Bermasyarakat</th>
+                                    <th>Tidur Cepat</th>
+                                    <th>Rata-rata</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <tr>
+                                    <td colspan="10" class="text-center">Data siswa sedang dimuat...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        let trendChart;
+        let allKelasData = [];
+        let allSiswaData = [];
+        let bulanList = [];
+
+        // Load data saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBulanOptions();
+            loadDashboardData();
+        });
+
+        // Fungsi untuk memuat opsi bulan
+        async function loadBulanOptions() {
+            try {
+                const response = await fetch(`/tahun_ajaran/api/kepala_sekolah/bulan?tahun_ajaran_id={{ tahun_ajaran_id }}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    bulanList = data.bulan_list;
+                    const bulanFilter = document.getElementById('bulanFilter');
+                    const tableBulanFilter = document.getElementById('tableBulanFilter');
+                    
+                    // Clear existing options
+                    bulanFilter.innerHTML = '<option value="">Semua Bulan</option>';
+                    tableBulanFilter.innerHTML = '<option value="all">Semua Bulan</option>';
+                    
+                    // Add bulan options
+                    data.bulan_list.forEach(bulan => {
+                        bulanFilter.innerHTML += `<option value="${bulan.value}">${bulan.label}</option>`;
+                        tableBulanFilter.innerHTML += `<option value="${bulan.value}">${bulan.label}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading bulan options:', error);
+            }
+        }
+
+        // Fungsi untuk menampilkan/menyembunyikan loading spinner
+        function showLoading(show) {
+            document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+        }
+
+        // Fungsi untuk menampilkan error message
+        function showError(show, message = '') {
+            const errorElement = document.getElementById('errorMessage');
+            if (message) {
+                errorElement.textContent = message;
+            }
+            errorElement.style.display = show ? 'block' : 'none';
+        }
+
+        // Fungsi untuk mengambil data dashboard
+        async function loadDashboardData() {
+            showLoading(true);
+            showError(false);
+            
+            const selectedBulan = document.getElementById('bulanFilter').value;
+            const selectedKelas = document.getElementById('kelasFilter').value;
+            
+            try {
+                const params = new URLSearchParams({
+                    sekolah_id: '{{ sekolah_aktif.id }}',
+                    tahun_ajaran_id: '{{ tahun_ajaran_id }}',
+                    bulan: selectedBulan,
+                    kelas: selectedKelas
+                });
+
+                const response = await fetch(`/tahun_ajaran/api/kepala_sekolah/statistik?${params}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Gagal memuat data');
+                }
+
+                console.log('Data dari API:', data); // Debug logging
+
+                // Update overall performance
+                document.getElementById('overallPerformance').textContent = `Rata-rata: ${data.data.rata_rata_sekolah || 0}`;
+
+                // **PERBAIKAN: Update card statistik HANYA dari data API**
+                document.getElementById('totalKelasStat').textContent = data.data.total_kelas || 0;
+                document.getElementById('totalSiswaStat').textContent = data.data.total_siswa || 0;
+                document.getElementById('totalPegawaiStat').textContent = data.data.total_pegawai || 0;
+                
+                // **PERBAIKAN: Juga update info sekolah di alert**
+                document.getElementById('totalKelas').textContent = data.data.total_kelas || 0;
+                document.getElementById('totalSiswa').textContent = data.data.total_siswa || 0;
+                
+                // Update kelas filter options
+                updateKelasFilter(data.kelas_list || []);
+                
+                // Render grafik
+                renderHabitsCharts(data.habits_data);
+                renderTrendChart(data.trend_data);
+                renderSiswaTable(data.siswa_data || []);
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError(true, 'Terjadi kesalahan saat memuat data dashboard: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Fungsi untuk update filter kelas
+        function updateKelasFilter(kelasList) {
+            const kelasFilter = document.getElementById('kelasFilter');
+            const tableKelasFilter = document.getElementById('tableKelasFilter');
+            
+            // Clear existing options except "all"
+            kelasFilter.innerHTML = '<option value="all">Semua Kelas</option>';
+            tableKelasFilter.innerHTML = '<option value="all">Semua Kelas</option>';
+            
+            // Add kelas options
+            kelasList.forEach(kelas => {
+                kelasFilter.innerHTML += `<option value="${kelas.id}">${kelas.nama_kelas}</option>`;
+                tableKelasFilter.innerHTML += `<option value="${kelas.id}">${kelas.nama_kelas}</option>`;
+            });
+        }
+
+        // Fungsi untuk render grafik kebiasaan (10 KELAS TERBAIK)
+        function renderHabitsCharts(habitsData) {
+            const container = document.getElementById('habitsContainer');
+            const habitColors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                '#9966FF', '#FF9F40', '#2E8B57'
+            ];
+            
+            let html = '';
+            let habitIndex = 0;
+            
+            if (!habitsData || Object.keys(habitsData).length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center">
+                        <p class="text-muted">Tidak ada data kebiasaan tersedia</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            Object.keys(habitsData).forEach(habitName => {
+                const habit = habitsData[habitName];
+                const canvasId = `habitChart${habitIndex}`;
+                
+                let displayName = getDisplayName(habitName);
+                
+                // Baris pertama: 4 chart, Baris kedua: 3 chart
+                const colClass = habitIndex < 4 ? 'col-md-3' : 'col-md-4';
+                
+                html += `
+                    <div class="${colClass} mb-3">
+                        <div class="habit-chart small-chart">
+                            <h6 class="text-center mb-2" style="font-size: 0.9rem;">${displayName}</h6>
+                            <canvas id="${canvasId}"></canvas>
+                        </div>
+                    </div>
+                `;
+                
+                habitIndex++;
+            });
+            
+            container.innerHTML = html;
+            
+            // Render charts setelah HTML di-update
+            setTimeout(() => {
+                let index = 0;
+                Object.keys(habitsData).forEach(habitName => {
+                    const habit = habitsData[habitName];
+                    const canvasId = `habitChart${index}`;
+                    
+                    let displayName = getDisplayName(habitName);
+                    
+                    renderHabitChart(canvasId, displayName, habit, habitColors[index]);
+                    index++;
+                });
+            }, 100);
+        }
+
+        // Fungsi untuk mendapatkan nama tampilan yang konsisten
+        function getDisplayName(habitName) {
+            const nameMapping = {
+                'bangun_pagi': 'Bangun Pagi',
+                'beribadah': 'Beribadah',
+                'berolahraga': 'Gemar Berolahraga',
+                'sehat_dan_lemar': 'Makan Sehat & Bergizi',
+                'sehat_dan_bergizi': 'Makan Sehat & Bergizi',
+                'belajar': 'Gemar Belajar',
+                'bermasyarakat': 'Bermasyarakat',
+                'tidur_cepat': 'Tidur Cepat'
+            };
+            
+            return nameMapping[habitName] || habitName;
+        }
+
+        // Fungsi untuk render grafik kebiasaan individual
+        function renderHabitChart(canvasId, habitName, habitData, color) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            if (!habitData || !habitData.labels || !habitData.data) {
+                console.warn(`Data tidak valid untuk ${habitName}`);
+                return;
+            }
+            
+            // Ambil hanya 10 kelas terbaik
+            const labels = habitData.labels.slice(0, 10);
+            const data = habitData.data.slice(0, 10);
+            
+            // Reverse data untuk horizontal bar chart
+            const reversedLabels = [...labels].reverse();
+            const reversedData = [...data].reverse();
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: reversedLabels,
+                    datasets: [{
+                        label: habitName,
+                        data: reversedData,
+                        backgroundColor: color,
+                        borderColor: color,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 31,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 9
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 8
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fungsi untuk render grafik trend (SATU SEKOLAH - SEMESTER)
+        function renderTrendChart(trendData) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            if (trendChart) {
+                trendChart.destroy();
+            }
+            
+            if (!trendData || !trendData.labels || !trendData.datasets) {
+                console.warn('Data trend tidak valid');
+                return;
+            }
+            
+            // Update label dataset untuk konsistensi
+            if (trendData.datasets && Array.isArray(trendData.datasets)) {
+                trendData.datasets.forEach(dataset => {
+                    if (dataset.label) {
+                        dataset.label = getDisplayName(dataset.label);
+                    }
+                });
+            }
+            
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: trendData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                    const labels = original.call(this, chart);
+                                    labels.forEach(label => {
+                                        label.text = getDisplayName(label.text);
+                                    });
+                                    return labels;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 31,
+                            title: {
+                                display: true,
+                                text: 'Rata-rata Nilai'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Bulan'
+                            }
+                        }
+                    },
+                    elements: {
+                        point: {
+                            radius: 5,
+                            hoverRadius: 7
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fungsi untuk render tabel siswa
+        function renderSiswaTable(siswaData) {
+            allSiswaData = siswaData;
+            updateSiswaTable();
+            
+            // Add filter events
+            document.getElementById('tableKelasFilter').addEventListener('change', updateSiswaTable);
+            document.getElementById('tableBulanFilter').addEventListener('change', updateSiswaTable);
+        }
+
+        // Fungsi untuk update tabel siswa berdasarkan filter
+        function updateSiswaTable() {
+            const tableBody = document.getElementById('tableBody');
+            const kelasFilter = document.getElementById('tableKelasFilter').value;
+            const bulanFilter = document.getElementById('tableBulanFilter').value;
+            
+            let filteredData = allSiswaData;
+            
+            if (kelasFilter !== 'all') {
+                filteredData = filteredData.filter(siswa => siswa.kelas_id == kelasFilter);
+            }
+            
+            if (bulanFilter !== 'all') {
+                filteredData = filteredData.filter(siswa => siswa.bulan === bulanFilter);
+            }
+            
+            if (filteredData.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="10" class="text-center">Tidak ada data siswa</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = filteredData.map(siswa => `
+                <tr>
+                    <td>${siswa.nama_siswa || 'N/A'}</td>
+                    <td><span class="kelas-badge">${siswa.kelas || 'N/A'}</span></td>
+                    <td>${(siswa.bangun_pagi || 0).toFixed(1)}</td>
+                    <td>${(siswa.beribadah || 0).toFixed(1)}</td>
+                    <td>${(siswa.berolahraga || 0).toFixed(1)}</td>
+                    <td>${(siswa.sehat_dan_bergizi || 0).toFixed(1)}</td>
+                    <td>${(siswa.belajar || 0).toFixed(1)}</td>
+                    <td>${(siswa.bermasyarakat || 0).toFixed(1)}</td>
+                    <td>${(siswa.tidur_cepat || 0).toFixed(1)}</td>
+                    <td><strong>${(siswa.rata_rata || 0).toFixed(1)}</strong></td>
+                </tr>
+            `).join('');
+        }
+
+        // Event listeners untuk filter real-time
+        document.getElementById('bulanFilter').addEventListener('change', loadDashboardData);
+        document.getElementById('kelasFilter').addEventListener('change', loadDashboardData);
+    </script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
