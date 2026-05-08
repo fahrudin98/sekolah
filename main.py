@@ -300,6 +300,12 @@ def create_app(config_name="default"):
         app.logger.error(f"Error registering tahun_ajaran blueprint: {e}")
     
     try:
+        from penilaiansiswa.routes.sekolah_routes import sekolah_bp
+        app.register_blueprint(sekolah_bp)
+    except ImportError as e:
+        app.logger.warning(f"Sekolah blueprint not found: {e}")
+    
+    try:
         from penilaiansiswa.routes.kelas_routes import kelas_bp
         app.register_blueprint(kelas_bp)
     except ImportError as e:
@@ -340,6 +346,7 @@ def create_app(config_name="default"):
         app.register_blueprint(dinas_bp)
     except ImportError as e:
         app.logger.warning(f"Dinas blueprint not found: {e}")
+
     
     # =============================
     # JINJA2 FILTERS

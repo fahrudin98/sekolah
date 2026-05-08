@@ -1,7 +1,7 @@
 from penilaiansiswa import db
 from sqlalchemy import Enum
 from .users import LogMixin  # hanya LogMixin, hindari circular import
-
+from datetime import datetime, timedelta
 # =============================================================
 # Wilayah Administratif
 # =============================================================
@@ -41,6 +41,63 @@ class Sekolah(db.Model, LogMixin):
 
     kecamatan = db.relationship("Kecamatan", backref="sekolah_list")
     
+    status_aktif = db.Column(db.Boolean, nullable=False, default=False)
+    tanggal_aktivasi = db.Column(db.DateTime, nullable=True)
+    tanggal_kadaluarsa = db.Column(db.DateTime, nullable=True)
+    last_warning_sent = db.Column(db.Date, nullable=True)
+    
+    # ========== HELPER ==========
+    
+    def aktivasi(self, masa_berlaku_hari=365):
+        """Aktivasi sekolah (dipanggil dari form aktivasi)"""
+        self.status_aktif = True
+        self.tanggal_aktivasi = datetime.utcnow()
+        self.tanggal_kadaluarsa = self.tanggal_aktivasi + timedelta(days=masa_berlaku_hari)
+        self.last_warning_sent = None
+        
+    def nonaktifkan(self):
+        """Nonaktifkan sekolah"""
+        self.status_aktif = False
+        
+    def perpanjang(self, tambahan_hari=365):
+        """Perpanjang masa aktif (dipanggil dari form perpanjangan)"""
+        if self.tanggal_kadaluarsa and self.tanggal_kadaluarsa > datetime.utcnow():
+            # Jika masih aktif, tambah dari kadaluarsa lama
+            self.tanggal_kadaluarsa = self.tanggal_kadaluarsa + timedelta(days=tambahan_hari)
+        else:
+            # Jika sudah kadaluarsa atau belum pernah aktif, mulai dari sekarang
+            self.tanggal_kadaluarsa = datetime.utcnow() + timedelta(days=tambahan_hari)
+        self.status_aktif = True
+        self.last_warning_sent = None
+    def cek_dan_nonaktifkan_jika_kadaluarsa(self):
+        """Cek apakah sekolah sudah melewati tanggal kadaluarsa.
+        Jika ya, nonaktifkan otomatis.
+        Return True jika masih aktif, False jika tidak aktif.
+        """
+        if not self.status_aktif:
+            return False
+            
+        if self.tanggal_kadaluarsa and self.tanggal_kadaluarsa.date() < datetime.utcnow().date():
+            self.status_aktif = False
+            db.session.commit()
+            return False
+            
+        return True
+    @property
+    def is_active(self):
+        """Cek apakah sekolah aktif dan belum kadaluarsa"""
+        if not self.status_aktif:
+            return False
+        if self.tanggal_kadaluarsa is None:
+            return True
+        return self.tanggal_kadaluarsa.date() >= datetime.utcnow().date()
+    
+    @property
+    def sisa_hari(self):
+        """Sisa hari aktif (None jika tidak terbatas atau belum aktif)"""
+        if not self.status_aktif or self.tanggal_kadaluarsa is None:
+            return None
+        return (self.tanggal_kadaluarsa.date() - datetime.utcnow().date()).days
 
 class TahunAjaran(db.Model, LogMixin):
     __tablename__ = "tahun_ajaran"

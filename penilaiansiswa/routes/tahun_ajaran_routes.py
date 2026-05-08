@@ -514,6 +514,20 @@ def add_tahun_ajaran():
 
     sekolah_id = current_user.pegawai.sekolah_id
 
+    # ========== TAMBAHKAN LAZY CHECK DI SINI ==========
+    sekolah = Sekolah.query.get(sekolah_id)
+    if not sekolah:
+        return jsonify({"success": False, "message": "Sekolah tidak ditemukan."}), 400
+    
+    # Cek status aktivasi sekolah (otomatis nonaktifkan jika kadaluarsa)
+    if not sekolah.cek_dan_nonaktifkan_jika_kadaluarsa():
+        return jsonify({
+            "success": False, 
+            "message": "Sekolah tidak aktif. Tidak dapat membuat tahun ajaran baru. Silakan hubungi admin untuk perpanjangan aktivasi."
+        }), 403
+    # ========== SAMPAI SINI TAMBAHANNYA ==========
+
+
     tahun_ajaran = (request.form.get("tahun_ajaran") or "").strip()
     semester = (request.form.get("semester") or "").strip().lower()
     kepala_sekolah_id = request.form.get("kepala_sekolah_id")
