@@ -2,6 +2,42 @@ from penilaiansiswa import db
 from sqlalchemy import Enum
 from .users import LogMixin  # hanya LogMixin, hindari circular import
 from datetime import datetime, timedelta
+
+# =============================================================
+# ⭐ BARU: MASTER TAHUN AJARAN (dibuat oleh super admin)
+# =============================================================
+class MasterTahunAjaran(db.Model):
+    """Master tahun ajaran yang dikelola oleh super admin"""
+    __tablename__ = "master_tahun_ajaran"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tahun_ajaran = db.Column(db.String(20), nullable=False)  # "2025/2026"
+    semester = db.Column(db.String(10), nullable=False)      # "ganjil" / "genap"
+    
+    # Status
+    is_active = db.Column(db.Boolean, default=True)           # Tampil di pilihan sekolah?
+    is_global_active = db.Column(db.Boolean, default=False)   # Untuk report kabupaten
+    
+    # Metadata
+    created_by = db.Column(db.Integer, db.ForeignKey("users.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    
+    # Relasi
+    creator = db.relationship("User", foreign_keys=[created_by])
+    
+    __table_args__ = (
+        db.UniqueConstraint('tahun_ajaran', 'semester', name='uq_master_tahun_semester'),
+    )
+    
+    @property
+    def display_name(self):
+        return f"{self.tahun_ajaran} - {self.semester.capitalize()}"
+    
+    def __repr__(self):
+        return self.display_name
+
+
 # =============================================================
 # Wilayah Administratif
 # =============================================================
@@ -103,26 +139,59 @@ class TahunAjaran(db.Model, LogMixin):
     __tablename__ = "tahun_ajaran"
     id = db.Column(db.Integer, primary_key=True)
     sekolah_id = db.Column(db.Integer, db.ForeignKey("sekolah.id"))
-    tahun_ajaran = db.Column(db.String(20), nullable=False)  # contoh: 2025/2026
-    semester = db.Column(db.String(20), nullable=False)
+    
+    # ⭐ KOLOM BARU: foreign key ke master
+    master_ta_id = db.Column(db.Integer, db.ForeignKey("master_tahun_ajaran.id"), nullable=True)
+    
+    # ⭐ Kolom ini jadi nullable=True (karena nanti bisa ambil dari master)
+    tahun_ajaran = db.Column(db.String(20), nullable=True)
+    
+    # ⭐ Kolom ini jadi nullable=True (karena nanti bisa ambil dari master)
+    semester = db.Column(db.String(20), nullable=True)
+    
     kepala_sekolah_id = db.Column(db.Integer, db.ForeignKey("pegawai.id"))
-    aktif = db.Column(db.Boolean, default=False) 
+    aktif = db.Column(db.Boolean, default=False)
 
+    # Relasi
     sekolah = db.relationship("Sekolah", back_populates="tahun_ajaran")
     kepala_sekolah = db.relationship("Pegawai", backref="tahun_ajaran_kepala")
     kelas = db.relationship("Kelas", back_populates="tahun_ajaran")
     
-    # ✅ PROPERTY BARU UNTUK AKSES DATA TERUPDATE
+    # ⭐ RELASI KE MASTER
+    master = db.relationship("MasterTahunAjaran", foreign_keys=[master_ta_id], backref="tahun_ajaran_list")
+    
+    # ========== PROPERTY UNTUK AKSES DATA ==========
+    
+    @property
+    def tahun_ajaran_display(self):
+        """Ambil tahun ajaran - prioritas dari master jika ada"""
+        if self.master:
+            return self.master.tahun_ajaran
+        return self.tahun_ajaran or "-"
+    
+    @property
+    def semester_display(self):
+        """Ambil semester - prioritas dari master jika ada"""
+        if self.master:
+            return self.master.semester
+        return self.semester or "-"
+    
+    @property
+    def full_display(self):
+        """Tampilan lengkap: '2025/2026 - Ganjil'"""
+        sem = self.semester_display
+        return f"{self.tahun_ajaran_display} - {sem.capitalize() if sem else '-'}"
+    
     @property
     def nama_kepala_sekolah(self):
-        """Ambil nama terupdate dari user"""
+        """Ambil nama kepala sekolah (dari relasi ke pegawai, lalu ke user)"""
         if self.kepala_sekolah and self.kepala_sekolah.user:
             return self.kepala_sekolah.user.nama_lengkap
         return "-"
     
     @property 
     def nip_kepala_sekolah(self):
-        """Ambil NIP terupdate"""
+        """Ambil NIP kepala sekolah"""
         if self.kepala_sekolah:
             return self.kepala_sekolah.nip or "-"
         return "-"

@@ -4,163 +4,193 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - {{ username }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css?v=2" rel="stylesheet">
     <style>
         body { 
             font-family: Arial, sans-serif; 
             background-color: #f8f9fa; 
         }
+    
         .container { 
-            margin-top: 50px; 
+            margin-top: 30px; 
         }
+    
         .logout-btn { 
-            margin-bottom: 0px; 
+            margin-bottom: 0; 
         }
+    
+        .flash-message { 
+            margin-bottom: 10px; 
+        }
+    
+        /* =========================
+           TAB CONTAINER
+        ========================== */
         .tab-content { 
             background: #fff; 
-            padding: 15px; 
+            padding: 10px 12px;
             border-radius: 0 0 8px 8px; 
             box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
             margin-top: -1px;
             border: 1px solid #dee2e6;
             border-top: none;
         }
-        .flash-message { 
-            margin-bottom: 10px; 
-        }
-        
-        /* Perbaikan utama untuk mengurangi jarak berlebihan */
+    
         .nav-tabs {
-            margin-bottom: 0 !important;
+            margin-bottom: 0;
         }
-        
-        .tab-content {
-            padding-top: 10px !important;
-            padding-bottom: 10px !important;
-        }
-        
-        /* Perbaikan khusus untuk tab siswa */
-        #siswa {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-        }
-        
-        #siswa .alert {
-            margin-bottom: 8px !important;
-            padding: 8px 12px !important;
-        }
-        
-        #siswa h4 {
-            margin-bottom: 12px !important;
-        }
-        
-        #siswa .form-label {
-            margin-bottom: 4px !important;
-            font-size: 0.9rem !important;
-        }
-        
-        #siswa .mb-3 {
-            margin-bottom: 12px !important;
-        }
-        
-        #siswa .card {
-            margin-bottom: 10px !important;
-        }
-        
-        #siswa .card-header {
-            padding: 6px 10px !important;
-        }
-        
-        #siswa .card-body {
-            padding: 10px !important;
-        }
-        
-        /* Kurangi padding pada form controls */
-        #siswa .form-control,
-        #siswa .form-select {
-            padding: 0.3rem 0.5rem !important;
-            font-size: 0.875rem !important;
-        }
-        
-        /* Perbaikan tabel */
-        #siswaTable {
-            margin-top: 8px !important;
-        }
-        
-        #siswaTable th,
-        #siswaTable td {
-            padding: 0.4rem !important;
-            font-size: 0.875rem !important;
-        }
-        
-        /* Tombol lebih kecil */
-        #siswa .btn-sm {
-            padding: 0.2rem 0.4rem !important;
-            font-size: 0.8rem !important;
-        }
-
-        /* Perbaikan untuk semua tab content */
+    
         .tab-pane {
+            padding: 0;
+            margin: 0;
+            font-size: 1rem;
+        }
+    
+        .tab-pane > :first-child {
+            margin-top: 0 !important;
             padding-top: 0 !important;
         }
-        
-        .tab-pane h4 {
-            margin-bottom: 15px !important;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e9ecef;
+    
+        .tab-pane > *:not(:last-child) {
+            margin-bottom: 6px;
         }
-        
-        /* Perbaikan form spacing secara umum */
+    
+        /* =========================
+           GLOBAL COMPONENT
+        ========================== */
+    
         .tab-pane .alert {
-            margin-bottom: 10px !important;
-            padding: 10px 15px !important;
+            margin-bottom: 6px;
+            padding: 8px 12px;
         }
-        
-        .tab-pane .mb-2 {
-            margin-bottom: 8px !important;
+    
+        .tab-pane .card {
+            margin-bottom: 6px;
         }
-        
-        .tab-pane .mb-3 {
-            margin-bottom: 12px !important;
+    
+        .tab-pane .card-body {
+            padding: 8px 12px;
         }
-        
+    
         .tab-pane .form-label {
-            margin-bottom: 4px !important;
+            margin-bottom: 4px;
+            font-weight: 500;
         }
-        
-        /* Hilangkan panah spinner pada input number */
+    
+        .tab-pane .form-control,
+        .tab-pane .form-select {
+            padding: 4px 8px;
+            height: auto;
+        }
+    
+        .tab-pane table {
+            margin: 0;
+        }
+    
+        .tab-pane th,
+        .tab-pane td {
+            padding: 6px 8px;
+            vertical-align: middle;
+        }
+    
+        /* =========================
+           TAB SISWA
+        ========================== */
+    
+        #siswa .row {
+            margin-bottom: 0;
+        }
+    
+        #siswa .col-md-6 {
+            margin-bottom: 0;
+        }
+    
+        #siswa .card-header {
+            padding: 6px 10px;
+        }
+    
+        #siswa .card-header h6 {
+            margin: 0;
+            font-size: 1rem;
+        }
+    
+        #siswa .btn-sm {
+            padding: 4px 8px;
+        }
+    
+        #siswaTable {
+            margin-top: 6px;
+        }
+    
+        #siswaTable .btn-sm {
+            padding: 3px 6px;
+        }
+    
+        /* =========================
+           TAB PENILAIAN
+        ========================== */
+    
+        #Penilaian .row.g-1 {
+            margin-bottom: 0;
+        }
+    
+        #Penilaian .alert .row {
+            margin-bottom: 0;
+        }
+    
+        #Penilaian .btn-success {
+            margin-top: 0;
+            padding: 4px 8px;
+        }
+    
+        #Penilaian table th,
+        #Penilaian table td {
+            padding: 6px 8px;
+        }
+    
+        #Penilaian .btn-sm {
+            padding: 3px 6px;
+        }
+    
+        /* =========================
+           TAB KELAS
+        ========================== */
+    
+        #kelas .alert {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+        }
+    
+        #kelas .btn-primary {
+            padding: 4px 10px;
+        }
+    
+        #kelasTable th,
+        #kelasTable td {
+            padding: 6px 8px;
+        }
+    
+        /* =========================
+           BUTTON EXTRA SMALL
+        ========================== */
+    
+        .btn-xs {
+            padding: 0.15rem 0.45rem;
+            font-size: 0.8rem;
+        }
+    
+        /* =========================
+           REMOVE NUMBER SPINNER
+        ========================== */
+    
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
+    
         input[type=number] {
             -moz-appearance: textfield;
-        }
-        
-        /* Perbaikan khusus untuk spacing yang terlalu longgar */
-        .row.mb-1 .col-md-6 {
-            margin-bottom: 5px !important;
-        }
-        
-        .d-flex.gap-2.mb-2 {
-            margin-bottom: 8px !important;
-        }
-        
-        .mt-1 {
-            margin-top: 4px !important;
-        }
-        
-        .mt-2 {
-            margin-top: 8px !important;
-        }
-        
-        .mt-3 {
-            margin-top: 12px !important;
-        }
-        
-        .mt-4 {
-            margin-top: 16px !important;
         }
     </style>
 </head>
@@ -188,7 +218,11 @@
             <div class="collapse navbar-collapse" id="navbarNav">
               <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                  <a class="nav-link" href="{{ url_for('pegawai_bp.update_pegawai', pegawai_id=current_user.pegawai.id) }}">Update Profile</a>
+                        {% if current_user.pegawai %}
+                            <a class="nav-link" href="{{ url_for('pegawai_bp.update_pegawai', pegawai_id=current_user.pegawai.id) }}">Update Profile</a>
+                        {% else %}
+                            <a class="nav-link" href="{{ url_for('pegawai_bp.create_pegawai') }}">Lengkapi Profile</a>
+                        {% endif %}
                 </li>
                 <!-- Dropdown Laporan -->
                 <li class="nav-item dropdown">
@@ -250,113 +284,242 @@
     
         <!-- Tab Content -->
         <div class="tab-content" id="dashboardTabsContent">
+
             <!-- TAB TAHUN AJARAN -->
             <div class="tab-pane fade" id="tahun" role="tabpanel">
                 <h4 class="mb-2">Tahun Ajaran</h4>
-        
-                <!-- Info Sekolah & Tahun Ajaran -->
+
+                <!-- Info Sekolah & Tahun Ajaran Aktif -->
                 <div class="alert alert-info mb-2">
                     <div class="row mb-1">
                         <div class="col-md-6">
-                            <strong>Tahun Ajaran:</strong> {{ active_tahun_ajaran.tahun_ajaran if active_tahun_ajaran else '-' }} <br>
-                            <strong>Semester:</strong> {{ active_tahun_ajaran.semester|capitalize if active_tahun_ajaran else '-' }} <br>
+                            <strong>Tahun Ajaran Aktif:</strong> 
+                            {% if active_tahun_ajaran %}
+                                {{ active_tahun_ajaran.tahun_ajaran_display }}
+                            {% else %}
+                                <span class="text-warning">Belum ada tahun ajaran aktif</span>
+                            {% endif %}
+                            <br>
                             
                             <strong>Kepala Sekolah:</strong> 
-                            {{ active_tahun_ajaran.nama_kepala_sekolah if active_tahun_ajaran else '-' }} 
                             {% if active_tahun_ajaran %}
-                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#editKepalaModal">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
+                                {{ active_tahun_ajaran.nama_kepala_sekolah }}
+                                <button type="button" class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#editKepalaModal">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            {% else %}
+                                -
                             {% endif %}
                             <br>
                             
                             <strong>NIP:</strong> 
                             {{ active_tahun_ajaran.nip_kepala_sekolah if active_tahun_ajaran else '-' }}
                         </div>
+                        <div class="col-md-6 text-end">
+                            {% if active_tahun_ajaran and active_tahun_ajaran.aktif %}
+                            <form method="POST" action="{{ url_for('tahun_ajaran.toggle_tahun_ajaran') }}" class="d-inline">
+                                <input type="hidden" name="id" value="{{ active_tahun_ajaran.id }}">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Nonaktifkan tahun ajaran {{ active_tahun_ajaran.tahun_ajaran_display }}?')">
+                                    <i class="fas fa-power-off"></i> Nonaktifkan
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-        
-                <!-- Form Tahun Ajaran -->
-                {% if not active_tahun_ajaran or not active_tahun_ajaran.aktif %}
-                <form id="formTahunAjaran" class="mb-3" method="POST" action="{{ url_for('tahun_ajaran.add_tahun_ajaran') }}">
-                    <div class="mb-2">
-                        <label class="form-label">Tahun Ajaran</label>
-                        <input type="text" class="form-control" name="tahun_ajaran" placeholder="2025/2026" required>
-                    </div>
-        
-                    <div class="mb-2">
-                        <label class="form-label">Semester</label>
-                        <select class="form-control" name="semester" required>
-                            <option value="">-- Pilih Semester --</option>
-                            <option value="ganjil">Ganjil</option>
-                            <option value="genap">Genap</option>
-                        </select>
-                    </div>
-        
-                    <div class="mb-2">
-                        <label class="form-label">Kepala Sekolah</label>
-                        {% if pegawai_dengan_profil and pegawai_dengan_profil|length > 0 %}
-                            <select class="form-select" id="kepalaSelect" name="kepala_sekolah_id" required>
 
-                                <option value="">-- Pilih Kepala Sekolah --</option>
-                                {% for p in pegawai_dengan_profil %}
-                                <!-- MODIFIKASI: Tampilkan sekolah asal dan tandai PLT jika beda kecamatan -->
-                                <option value="{{ p.id }}" data-nip="{{ p.nip }}" data-sekolah-id="{{ p.sekolah_id }}" 
-                                    data-sekolah-nama="{{ p.sekolah.nama_sekolah }}" data-kecamatan-id="{{ p.sekolah.kecamatan_id }}"
-                                    {% if current_user.pegawai and p.id == current_user.pegawai.id %}selected{% endif %}>
-                                    {{ p.nama }} (NIP: {{ p.nip }}) - {{ p.sekolah.nama_sekolah }}
-                                    {% if p.sekolah_id != sekolah.id %}[PLT]{% endif %}
-                                </option>
-                                {% endfor %}
-                            </select>
-                            <small class="text-muted">
-                                *Pegawai dari kecamatan {{ sekolah.kecamatan.nama_kecamatan if sekolah.kecamatan else 'yang sama' }}
-                            </small>
-                        {% else %}
 
-                            <div class="alert alert-warning">
-                                Belum ada pegawai yang mengisi profil. Silakan minta pegawai mengisi profil terlebih dahulu.
+                <!-- ========== FORM PILIH TAHUN AJARAN DARI MASTER ========== -->
+                {% if not active_tahun_ajaran %}
+                <div class="card mb-3 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar-plus"></i> Pilih Tahun Ajaran dari Master</h5>
+                        <small>Pilih tahun ajaran yang telah disediakan oleh Super Admin</small>
+                    </div>
+                    <div class="card-body">
+                        <form id="formPilihTahunAjaran">
+                            <div class="row">
+                                <!-- TAMPILKAN HANYA MASTER YANG AKTIF (BUKAN DROPDOWN) -->
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold">Tahun Ajaran & Semester</label>
+                                    {% if available_masters and available_masters|length > 0 %}
+                                        {% for master in available_masters %}
+                                            {% if master.is_global_active %}
+                                            <div class="alert alert-success">
+                                                <i class="fas fa-check-circle"></i>
+                                                <strong>Tahun Ajaran Aktif:</strong> {{ master.tahun_ajaran }} - 
+                                                {% if master.semester == 'ganjil' %}Ganjil{% else %}Genap{% endif %}
+                                                <input type="hidden" name="master_id" value="{{ master.id }}">
+                                            </div>
+                                            {% else %}
+                                            <div class="alert alert-info">
+                                                <strong>Tersedia:</strong> {{ master.tahun_ajaran }} - 
+                                                {% if master.semester == 'ganjil' %}Ganjil{% else %}Genap{% endif %}
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input master-radio" type="radio" name="master_id" value="{{ master.id }}" id="master_{{ master.id }}">
+                                                    <label class="form-check-label" for="master_{{ master.id }}">
+                                                        Pilih tahun ajaran ini
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="alert alert-warning">Belum ada master tahun ajaran. Hubungi Super Admin.</div>
+                                    {% endif %}
+                                </div>
                             </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-2">
-                        <label class="form-label">NIP</label>
-                        <input type="text" class="form-control" id="kepalaNip" readonly>
-                    </div>
 
-                    <!-- MODIFIKASI: Tambahkan info sekolah asal -->
-                    <div class="mb-2">
-                        <label class="form-label">Asal Sekolah</label>
-                        <input type="text" class="form-control" id="kepalaSekolahAsal" readonly>
+                            <div class="row">
+                                <!-- KEPALA SEKOLAH - TAMPILKAN DARI SATU SEKOLAH DULU -->
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold">Kepala Sekolah</label>
+                                    
+                                    <!-- Daftar pegawai dari sekolah ini -->
+                                    <div id="sekolahPegawaiList">
+                                        {% if pegawai_satu_sekolah and pegawai_satu_sekolah|length > 0 %}
+                                            <div class="list-group mb-2">
+                                                {% for p in pegawai_satu_sekolah %}
+                                                <div class="list-group-item">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input kepala-radio" type="radio" 
+                                                            name="kepala_sekolah_id" value="{{ p.id }}"
+                                                            data-nip="{{ p.nip }}"
+                                                            data-nama="{{ p.nama }}"
+                                                            data-sekolah="{{ p.sekolah.nama_sekolah }}"
+                                                            id="kepsek_{{ p.id }}">
+                                                        <label class="form-check-label" for="kepsek_{{ p.id }}">
+                                                            <strong>{{ p.nama }}</strong> (NIP: {{ p.nip or '-' }})
+                                                            <br><small class="text-muted">{{ p.sekolah.nama_sekolah }}</small>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-warning">Belum ada pegawai di sekolah ini.</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Tombol Lihat Lebih Banyak -->
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="lihatLebihBanyakBtn">
+                                        <i class="fas fa-search"></i> Lihat lebih banyak (dari satu kecamatan)
+                                    </button>
+                                    
+                                    <!-- Modal untuk pilih dari kecamatan -->
+                                    <div class="mt-3" id="kecamatanPegawaiContainer" style="display: none;">
+                                        <label class="form-label">Pilih dari kecamatan {{ sekolah.kecamatan.nama_kecamatan if sekolah.kecamatan else 'ini' }}</label>
+                                        <select class="form-select" id="kecamatanPegawaiSelect">
+                                            <option value="">-- Pilih Kepala Sekolah --</option>
+                                            {% for p in pegawai_sekecamatan %}
+                                            <option value="{{ p.id }}" data-nip="{{ p.nip }}" data-nama="{{ p.nama }}" data-sekolah="{{ p.sekolah.nama_sekolah }}">
+                                                {{ p.nama }} (NIP: {{ p.nip or '-' }}) - {{ p.sekolah.nama_sekolah }}
+                                                {% if p.sekolah_id != sekolah.id %}[PLT]{% endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="button" class="btn btn-sm btn-link mt-1" id="tutupKecamatanBtn">Tutup</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Informasi yang akan terisi otomatis -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <label class="form-label">NIP</label>
+                                        <input type="text" class="form-control" id="kepalaNip" readonly placeholder="Akan terisi otomatis">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <label class="form-label">Asal Sekolah</label>
+                                        <input type="text" class="form-control" id="kepalaSekolahAsal" readonly placeholder="Akan terisi otomatis">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary mt-2" id="submitPilihBtn" disabled>
+                                <i class="fas fa-check-circle"></i> Pilih & Simpan
+                            </button>
+                        </form>
                     </div>
-        
-                    <button type="submit" class="btn btn-primary"
-                        {% if not pegawai_dengan_profil or pegawai_dengan_profil|length==0 %} disabled {% endif %}>
-                        Tambah Tahun Ajaran
-                    </button>
-                </form>
-                {% endif %}
-        
-                <!-- Status Tahun Ajaran -->
-                {% if active_tahun_ajaran %}
-                <div class="mt-3">
-                    <p>
-                        {% if active_tahun_ajaran.aktif %}
-                            <span class="badge bg-success fs-5 px-3 py-2">Status Aktif</span>
-                        {% else %}
-                            <span class="badge bg-secondary fs-6 px-2 py-1 opacity-70">Nonaktif</span>
-                        {% endif %}
-                    </p>
-        
-                    <form id="formToggleAktif" method="POST" action="{{ url_for('tahun_ajaran.toggle_tahun_ajaran') }}">
-                        <input type="hidden" name="id" value="{{ active_tahun_ajaran.id }}">
-                        <button type="submit" class="btn btn-warning">
-                            {% if active_tahun_ajaran.aktif %} Nonaktifkan {% else %} Aktifkan {% endif %}
-                        </button>
-                    </form>
                 </div>
                 {% endif %}
+
+                <!-- ========== DAFTAR TAHUN AJARAN SEKOLAH ========== -->
+                {% if sekolah_tahun_ajaran_list and sekolah_tahun_ajaran_list|length > 0 %}
+                <div class="card mt-3">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-history"></i> Riwayat Tahun Ajaran {{ sekolah.nama_sekolah }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tahun Ajaran</th>
+                                        <th>Semester</th>
+                                        <th>Kepala Sekolah</th>
+                                        <th>NIP</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ta in sekolah_tahun_ajaran_list %}
+                                    <tr>
+                                        <td><strong>{{ ta.tahun_ajaran_display }}</strong></td>
+                                        <td>
+                                            {% if ta.semester_display == 'ganjil' %}
+                                                <span class="badge bg-info">Ganjil</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Genap</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ ta.nama_kepala_sekolah }}</td>
+                                        <td>{{ ta.nip_kepala_sekolah }}</td>
+                                        <td>
+                                            {% if ta.aktif %}
+                                                <span class="badge bg-success">✅ Aktif</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">⏸ Nonaktif</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if not ta.aktif %}
+                                            <form method="POST" action="{{ url_for('tahun_ajaran.aktifkan_tahun_ajaran') }}" 
+                                                class="d-inline" style="display: inline-block;">
+                                                <input type="hidden" name="tahun_ajaran_id" value="{{ ta.id }}">
+                                                <button type="submit" class="btn btn-sm btn-success" 
+                                                        onclick="return confirm('Aktifkan tahun ajaran {{ ta.tahun_ajaran_display }}?')">
+                                                    <i class="fas fa-play"></i> Aktifkan
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            
+                                            <button type="button" class="btn btn-sm btn-warning" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editKepalaModal"
+                                                    data-ta-id="{{ ta.id }}"
+                                                    data-ta-name="{{ ta.tahun_ajaran_display }}"
+                                                    data-kepala-id="{{ ta.kepala_sekolah_id }}">
+                                                <i class="fas fa-user-edit"></i> Edit Kepsek
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-secondary mt-3">
+                    <i class="fas fa-inbox"></i> Belum ada tahun ajaran yang dipilih. Silakan pilih dari daftar master di atas.
+                </div>
+                {% endif %}
+            
         
                 <!-- Modal Edit Kepala Sekolah -->
                 {% if active_tahun_ajaran %}
@@ -426,45 +589,10 @@
                 </div>
                 {% endif %}
         
-                <!-- Tabel Tahun Ajaran Nonaktif -->
-                {% if nonaktif_tahun_ajaran and nonaktif_tahun_ajaran|length > 0 %}
-                    <h5 class="mt-4">Tahun Ajaran Nonaktif</h5>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Tahun Ajaran</th>
-                                <th>Semester</th>
-                                <th>Kepala Sekolah</th>
-                                <th>NIP</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for t in nonaktif_tahun_ajaran %}
-                            <tr>
-                                <td>{{ t.tahun_ajaran }}</td>
-                                <td>{{ t.semester|capitalize }}</td>
-                                <td>{{ t.nama_kepala_sekolah }}</td>
-                                <td>{{ t.nip_kepala_sekolah }}</td>
-                                <td>
-                                    <form class="formToggleAktif d-inline" method="post" action="/tahun_ajaran/toggle_tahun_ajaran">
-                                        <input type="hidden" name="id" value="{{ t.id }}">
-                                        <button type="submit" class="btn btn-sm btn-success">
-                                            Aktifkan
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <p class="text-muted">Belum ada tahun ajaran nonaktif</p>
-                {% endif %}
             </div>
     
             <!-- TAB KELAS -->
-            <div class="tab-pane fade" id="kelas" role="tabpanel">
+            <div class="tab-pane fade p-0" id="kelas" role="tabpanel">
                 <h4>Kelas Tahun Ajaran</h4>
     
                 {% if active_tahun_ajaran %}
@@ -536,120 +664,114 @@
                 </table>
             </div>
     
-            <!-- TAB SISWA -->
-            <div class="tab-pane fade" id="siswa" role="tabpanel">
-                <h4 class="mb-2">Data Siswa</h4>
-    
-                <div class="mb-2">
-                    <div class="row mb-1">
-                        <div class="col-md-6">
-                            <div class="alert alert-info mb-2 p-2">
-                                <strong>Sekolah:</strong> {{ sekolah.nama_sekolah }} <br>
-                                <strong>Kecamatan:</strong> {{ sekolah.kecamatan.nama if sekolah.kecamatan else '-' }} <br>
-                                <strong>Kabupaten:</strong> {{ sekolah.kecamatan.kabupaten.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten else '-' }} <br>
-                                <strong>Provinsi:</strong> {{ sekolah.kecamatan.kabupaten.provinsi.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten and sekolah.kecamatan.kabupaten.provinsi else '-' }}
+            <!-- TAB SISWA - DIPERBAIKI: Menambahkan kolom NISN di form -->
+            <div class="tab-pane fade p-0" id="siswa" role="tabpanel">
+                <h4 class="mt-0 mb-1">Data Siswa</h4>
+            
+                <div class="row g-2 mt-0 mb-1">
+                    <div class="col-md-6">
+                        <div class="alert alert-info py-1 px-2 mt-0 mb-0" style="font-size: 0.9rem;">
+                            <strong>Sekolah:</strong> {{ sekolah.nama_sekolah }}<br>
+                            <strong>Kecamatan:</strong> {{ sekolah.kecamatan.nama if sekolah.kecamatan else '-' }}<br>
+                            <strong>Kab/Prov:</strong> {{ sekolah.kecamatan.kabupaten.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten else '-' }}, {{ sekolah.kecamatan.kabupaten.provinsi.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten and sekolah.kecamatan.kabupaten.provinsi else '-' }}
+                        </div>
+                    </div>
+            
+                    <div class="col-md-6">
+                        <div class="alert alert-secondary py-1 px-2 mt-0 mb-1" style="font-size: 0.9rem;">
+                            <strong>Wali Kelas:</strong> {{ current_user.pegawai.nama if current_user.pegawai else '-' }}
+                            <span class="ms-2">| <strong>NIP:</strong> {{ current_user.pegawai.nip if current_user.pegawai else '-' }}</span>
+                        </div>
+            
+                        <div class="d-flex align-items-center">
+                            <label class="form-label mb-0 me-2" style="white-space: nowrap;">Pilih Kelas:</label>
+                            <select id="kelasDropdown" class="form-select form-select-sm">
+                                <option value="">-- Pilih Kelas --</option>
+                                {% for k in kelas_list if k.wali_kelas_id == current_user.pegawai.id %}
+                                    <option value="{{ k.id }}">{{ k.nama_kelas }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            
+                <form id="formSiswa" class="mt-1 d-none">
+                    <input type="hidden" name="kelas_id" id="kelasIdInput">
+                    
+                    <div class="row g-1">
+                        <div class="col-md-5">
+                            <div class="card mb-1">
+                                <div class="card-header bg-primary text-white py-1">
+                                    <h6 class="mb-0" style="font-size: 0.85rem;">🔍 Cari Siswa Eksis</h6>
+                                </div>
+                                <div class="card-body py-1">
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control" id="searchSiswa" placeholder="Nama/NISN...">
+                                        <button class="btn btn-primary" type="button" onclick="searchExistingSiswa()">Cari</button>
+                                    </div>
+                                    <div id="searchResults" class="mt-1" style="max-height: 100px; overflow-y: auto;"></div>
+                                </div>
                             </div>
                         </div>
-    
-                        <div class="col-md-6">
-                            <div class="alert alert-secondary mb-1 p-2">
-                                <strong>Wali Kelas:</strong> {{ current_user.pegawai.nama if current_user.pegawai else '-' }} <br>
-                                <strong>NIP:</strong> {{ current_user.pegawai.nip if current_user.pegawai else '-' }}
-                            </div>
-    
-                            <div class="mb-1">
-                                <label class="form-label">Pilih Kelas</label>
-                                <select id="kelasDropdown" class="form-select">
-                                    <option value="">-- Pilih Kelas --</option>
-                                    {% for k in kelas_list if k.wali_kelas_id == current_user.pegawai.id %}
-                                        <option value="{{ k.id }}">{{ k.nama_kelas }}</option>
-                                    {% endfor %}
-                                </select>
+            
+                        <div class="col-md-7">
+                            <div class="card mb-1">
+                                <div class="card-header bg-success text-white py-1">
+                                    <h6 class="mb-0" style="font-size: 0.85rem;">➕ Tambah Baru</h6>
+                                </div>
+                                <div class="card-body py-1">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm mb-1" id="tambahSiswaTable" style="font-size: 0.85rem;">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nama</th>
+                                                    <th>NISN</th>
+                                                    <th>L/P</th>
+                                                    <th>Status</th>
+                                                    <th>Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="siswaFormBody">
+                                                <tr>
+                                                    <td><input type="text" name="nama_siswa[]" class="form-control form-control-sm" required></td>
+                                                    <td><input type="text" name="nisn[]" class="form-control form-control-sm" placeholder="Opsional"></td>
+                                                    <td>
+                                                        <select name="jenis_kelamin[]" class="form-select form-select-sm" required>
+                                                            <option value="">-- Pilih --</option>
+                                                            <option value="L">Laki-laki</option>
+                                                            <option value="P">Perempuan</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select name="status[]" class="form-select form-select-sm">
+                                                            <option value="Aktif">Aktif</option>
+                                                            <option value="Tidak Aktif">Tidak Aktif</option>
+                                                            <option value="Pindah">Pindah</option>
+                                                        </select>
+                                                    </td>
+                                                    <td><button type="button" class="btn btn-danger btn-sm remove-row">×</button></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" id="addRow" class="btn btn-success btn-xs">+ Baris</button>
+                                        <button type="submit" class="btn btn-primary btn-xs">Simpan</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-    
-                    <!-- Form Tambah Siswa -->
-                    <form id="formSiswa" class="mt-1 d-none">
-                        <input type="hidden" name="kelas_id" id="kelasIdInput">
-                        <h5 class="mb-1">Tambah Siswa</h5>
-                        
-                        <!-- Pencarian Siswa yang Sudah Ada -->
-                        <div class="card mb-2">
-                            <div class="card-header bg-primary text-white py-1">
-                                <h6 class="mb-0">🔍 Cari Siswa yang Sudah Ada</h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <input type="text" class="form-control" id="searchSiswa" 
-                                            placeholder="Cari berdasarkan nama atau NISN...">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <button type="button" class="btn btn-outline-primary w-100" onclick="searchExistingSiswa()">
-                                            Cari Siswa
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="searchResults" class="mt-2" style="max-height: 200px; overflow-y: auto;"></div>
-                            </div>
-                        </div>
-    
-                        <!-- Tambah Siswa Baru Manual -->
-                        <div class="card">
-                            <div class="card-header bg-success text-white">
-                                <h6 class="mb-0">➕ Tambah Siswa Baru</h6>
-                            </div>
-                            <div class="card-body py-2">
-                                <table class="table table-bordered align-middle" id="tambahSiswaTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Nama Siswa</th>
-                                            <th>NISN</th>
-                                            <th>Jenis Kelamin</th>
-                                            <th>Status</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="siswaFormBody">
-                                        <tr>
-                                            <td><input type="text" name="nama_siswa[]" class="form-control" required></td>
-                                            <td><input type="text" name="nisn[]" class="form-control" placeholder="Opsional"></td>
-                                            <td>
-                                                <select name="jenis_kelamin[]" class="form-select" required>
-                                                    <option value="">-- Pilih --</option>
-                                                    <option value="L">Laki-laki</option>
-                                                    <option value="P">Perempuan</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <select name="status[]" class="form-select">
-                                                    <option value="Aktif">Aktif</option>
-                                                    <option value="Tidak Aktif">Tidak Aktif</option>
-                                                    <option value="Pindah">Pindah</option>
-                                                </select>
-                                            </td>
-                                            <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-    
-                                <div class="d-flex gap-2 mb-2">
-                                    <button type="button" id="addRow" class="btn btn-success btn-sm">+ Tambah Baris</button>
-                                    <button type="submit" class="btn btn-primary">Simpan Semua Siswa Baru</button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-    
-                    <!-- Tabel Daftar Siswa -->
-                    <h5 class="mt-2">Daftar Siswa</h5>
-                    <table class="table table-striped" id="siswaTable">
-                        <thead>
+                </form>
+            
+                <h5 class="mb-1 mt-1">Daftar Siswa</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm" id="siswaTable" style="font-size: 0.9rem;">
+                        <thead class="table-dark">
                             <tr>
                                 <th>Nama</th>
                                 <th>NISN</th>
-                                <th>Jenis Kelamin</th>
+                                <th>L/P</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
@@ -662,79 +784,85 @@
             </div>
     
             <!-- TAB PENILAIAN -->
-            <div class="tab-pane fade" id="Penilaian" role="tabpanel">
-                <h4>Penilaian Kebiasaan Siswa</h4>
-    
+            <div class="tab-pane fade p-0" id="Penilaian" role="tabpanel">
+                <h4 class="mt-0 mb-1">Penilaian Kebiasaan Siswa</h4>
+
                 {% if active_tahun_ajaran %}
-                <div class="alert alert-info">
+                <div class="alert alert-info py-1 px-2 mb-1">
                     <div class="row">
                         <div class="col-md-6">
-                            <strong>Sekolah:</strong> {{ sekolah.nama_sekolah }} <br>
-                            <strong>Kecamatan:</strong> {{ sekolah.kecamatan.nama if sekolah.kecamatan else '-' }} <br>
-                            <strong>Kabupaten:</strong> {{ sekolah.kecamatan.kabupaten.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten else '-' }} <br>
+                            <strong>Sekolah:</strong> {{ sekolah.nama_sekolah }}<br>
+                            <strong>Kecamatan:</strong> {{ sekolah.kecamatan.nama if sekolah.kecamatan else '-' }}<br>
+                            <strong>Kabupaten:</strong> {{ sekolah.kecamatan.kabupaten.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten else '-' }}<br>
                             <strong>Provinsi:</strong> {{ sekolah.kecamatan.kabupaten.provinsi.nama if sekolah.kecamatan and sekolah.kecamatan.kabupaten and sekolah.kecamatan.kabupaten.provinsi else '-' }}
                         </div>
                         <div class="col-md-6">
-                            <strong>Tahun Ajaran:</strong> {{ active_tahun_ajaran.tahun_ajaran }} <br>
-                            <strong>Semester:</strong> {{ active_tahun_ajaran.semester|capitalize }} <br>
-                            <strong>Wali Kelas:</strong> {{ current_user.pegawai.nama }} <br>
-                            <strong>NIP:</strong> {{ current_user.pegawai.nip }} <br>
-    
-                            <label for="kelasSelectPenilaian" class="form-label">Kelas</label>
-                            <select class="form-select" id="kelasSelectPenilaian" data-tahun="{{ active_tahun_ajaran.id if active_tahun_ajaran else '' }}">
-                                <option value="">-- Pilih Kelas --</option>
-                                {% for k in kelas_list if k.wali_kelas_id == current_user.pegawai.id %}
-                                    <option value="{{ k.id }}">{{ k.nama_kelas }}</option>
-                                {% endfor %}
-                            </select>
-                            
-                            <label for="bulanSelectPenilaian" class="form-label mt-2">Pilih Bulan</label>
-                            <select class="form-select" id="bulanSelectPenilaian" name="bulan">
-                                <option value="">-- Pilih Bulan --</option>
-                                {% for b in bulan_list %}
-                                    <option value="{{ b.value }}">{{ b.label }}</option>
-                                {% endfor %}
-                            </select>
-                            <button type="button" class="btn btn-success mt-2" id="btnGenerateReport" onclick="generateReport()">
-                                📄 Generate Report
-                            </button>
+                            <strong>Tahun Ajaran:</strong> {{ active_tahun_ajaran.tahun_ajaran }}<br>
+                            <strong>Semester:</strong> {{ active_tahun_ajaran.semester|capitalize }}<br>
+                            <strong>Wali Kelas:</strong> {{ current_user.pegawai.nama }}<br>
+                            <strong>NIP:</strong> {{ current_user.pegawai.nip }}
                         </div>
                     </div>
                 </div>
-    
-                <table class="table table-bordered table-striped">
+
+                <div class="row g-1 mb-1">
+                    <div class="col-md-5">
+                        <label class="form-label mb-0">Kelas</label>
+                        <select class="form-select form-select-sm" id="kelasSelectPenilaian" data-tahun="{{ active_tahun_ajaran.id if active_tahun_ajaran else '' }}">
+                            <option value="">-- Pilih Kelas --</option>
+                            {% for k in kelas_list if k.wali_kelas_id == current_user.pegawai.id %}
+                                <option value="{{ k.id }}">{{ k.nama_kelas }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label mb-0">Pilih Bulan</label>
+                        <select class="form-select form-select-sm" id="bulanSelectPenilaian" name="bulan">
+                            <option value="">-- Pilih Bulan --</option>
+                            {% for b in bulan_list %}
+                                <option value="{{ b.value }}">{{ b.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label mb-0">&nbsp;</label>
+                        <button type="button" class="btn btn-success btn-sm w-100" id="btnGenerateReport" onclick="generateReport()">
+                            📄 Generate Report
+                        </button>
+                    </div>
+                </div>
+
+                <table class="table table-bordered table-sm">
                     <thead>
                         <tr>
-                            <th rowspan="2" class="align-middle text-center">No</th>
-                            <th rowspan="2" class="align-middle text-center">Nama Siswa</th>
+                            <th rowspan="2" class="text-center">No</th>
+                            <th rowspan="2" class="text-center">Nama Siswa</th>
                             <th colspan="7" class="text-center">Nilai Kebiasaan</th>
-                            <th rowspan="2" class="align-middle text-center">Catatan</th>
-                            <th rowspan="2" class="align-middle text-center">Aksi</th>
+                            <th rowspan="2" class="text-center">Catatan</th>
+                            <th rowspan="2" class="text-center">Aksi</th>
                         </tr>
                         <tr>
-                            <th>Bangun Pagi</th>
-                            <th>Beribadah</th>
-                            <th>Berolahraga</th>
-                            <th>Makan Sehat &amp; Bergizi</th>
-                            <th>Belajar</th>
-                            <th>Bermasyarakat</th>
-                            <th>Tidur Cepat</th>
+                            <th class="text-center">Bangun Pagi</th>
+                            <th class="text-center">Beribadah</th>
+                            <th class="text-center">Berolahraga</th>
+                            <th class="text-center">Makan Sehat &amp; Bergizi</th>
+                            <th class="text-center">Belajar</th>
+                            <th class="text-center">Bermasyarakat</th>
+                            <th class="text-center">Tidur Cepat</th>
                         </tr>
                     </thead>
                     <tbody id="siswaTableBody">
-                        <tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td></tr>
+                        <tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td</tr>
                     </tbody>
                 </table>
-    
+
                 {% else %}
-                <div class="alert alert-warning">
+                <div class="alert alert-warning py-1">
                     Tidak ada tahun ajaran aktif. Silakan buat / aktifkan tahun ajaran dulu.
                 </div>
                 {% endif %}
             </div>
-        </div>
     </div>
-
     <!-- Modal lainnya -->
     <!-- MODAL EDIT SISWA -->
     <div class="modal fade" id="editSiswaModal" tabindex="-1" aria-hidden="true">
@@ -764,7 +892,11 @@
                     </div>
                     <div class="mb-2">
                         <label class="form-label">Status</label>
-                        <input type="text" class="form-control" name="status" id="editStatus">
+                        <select class="form-select" name="status" id="editStatus">
+                            <option value="Aktif">Aktif</option>
+                            <option value="Tidak Aktif">Tidak Aktif</option>
+                            <option value="Pindah">Pindah</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -948,20 +1080,126 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log("Dashboard loaded successfully");
     
     // ========== TAHUN AJARAN ==========
-    
-    // Form Tambah Tahun Ajaran
-    document.getElementById("formTahunAjaran")?.addEventListener("submit", handleTahunAjaranSubmit);
-    
-    // Form Toggle Aktif Tahun Ajaran
-    document.getElementById("formToggleAktif")?.addEventListener("submit", handleToggleTahunAjaran);
-    
-    // Delegasi event untuk semua form toggle aktif
-    document.addEventListener("submit", function(e) {
-        if (e.target.classList.contains("formToggleAktif")) {
-            e.preventDefault();
-            handleToggleTahunAjaran(e);
-        }
+    // ========== ⭐ BARU: FORM PILIH TAHUN AJARAN DARI MASTER ==========
+    const formPilihTahunAjaran = document.getElementById("formPilihTahunAjaran");
+    if (formPilihTahunAjaran) {
+        formPilihTahunAjaran.addEventListener("submit", handlePilihTahunAjaranSubmit);
+    }
+
+    // ========== ⭐ PERBAIKAN: HANDLER UNTUK MASTER RADIO ==========
+    const masterRadios = document.querySelectorAll('.master-radio');
+    masterRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            checkFormReady();
+        });
     });
+
+    // ========== ⭐ PERBAIKAN: HANDLER UNTUK KEPALA SEKOLAH (dari list sekolah) ==========
+    const kepalaRadio = document.querySelectorAll('.kepala-radio');
+    kepalaRadio.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const nip = this.dataset.nip;
+            const sekolahAsal = this.dataset.sekolah;
+            document.getElementById('kepalaNip').value = nip || '';
+            document.getElementById('kepalaSekolahAsal').value = sekolahAsal || '';
+            checkFormReady();
+        });
+    });
+
+    // ========== ⭐ PERBAIKAN: HANDLER UNTUK TOMBOL LIHAT LEBIH BANYAK ==========
+    const lihatLebihBanyakBtn = document.getElementById("lihatLebihBanyakBtn");
+    if (lihatLebihBanyakBtn) {
+        lihatLebihBanyakBtn.addEventListener("click", function() {
+            const container = document.getElementById("kecamatanPegawaiContainer");
+            if (container) container.style.display = 'block';
+        });
+    }
+
+    const tutupKecamatanBtn = document.getElementById("tutupKecamatanBtn");
+    if (tutupKecamatanBtn) {
+        tutupKecamatanBtn.addEventListener("click", function() {
+            const container = document.getElementById("kecamatanPegawaiContainer");
+            if (container) container.style.display = 'none';
+        });
+    }
+
+    // ========== ⭐ PERBAIKAN: HANDLER PILIH DARI KECAMATAN ==========
+    const kecamatanPegawaiSelect = document.getElementById("kecamatanPegawaiSelect");
+    if (kecamatanPegawaiSelect) {
+        kecamatanPegawaiSelect.addEventListener("change", function() {
+            const selected = this.options[this.selectedIndex];
+            const id = selected.value;
+            const nip = selected.dataset.nip;
+            const sekolahAsal = selected.dataset.sekolah;
+            
+            if (id) {
+                document.getElementById('kepalaNip').value = nip || '';
+                document.getElementById('kepalaSekolahAsal').value = sekolahAsal || '';
+                
+                // Tandai radio button yang sesuai
+                const radio = document.querySelector(`.kepala-radio[value="${id}"]`);
+                if (radio) radio.checked = true;
+                
+                checkFormReady();
+                document.getElementById("kecamatanPegawaiContainer").style.display = 'none';
+            }
+        });
+    }
+
+    // ========== ⭐ PERBAIKAN: CEK FORM SIAP DI-SUBMIT ==========
+    function checkFormReady() {
+        const masterSelected = document.querySelector('input[name="master_id"]:checked');
+        const kepalaSelected = document.querySelector('input[name="kepala_sekolah_id"]:checked');
+        const submitBtn = document.getElementById('submitPilihBtn');
+        
+        console.log('checkFormReady - master:', masterSelected ? 'yes' : 'no', 'kepala:', kepalaSelected ? 'yes' : 'no');
+        
+        if (submitBtn) {
+            submitBtn.disabled = !(masterSelected && kepalaSelected);
+        }
+    }
+
+    // ========== ⭐ PERBAIKAN: HANDLER SUBMIT PILIH TAHUN AJARAN ==========
+    function handlePilihTahunAjaranSubmit(e) {
+        e.preventDefault();
+        
+        const masterSelected = document.querySelector('input[name="master_id"]:checked');
+        const kepalaSelected = document.querySelector('input[name="kepala_sekolah_id"]:checked');
+        
+        if (!masterSelected) {
+            alert('Pilih tahun ajaran dulu ya!');
+            return;
+        }
+        if (!kepalaSelected) {
+            alert('Pilih kepala sekolah dulu ya!');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('master_id', masterSelected.value);
+        formData.append('kepala_sekolah_id', kepalaSelected.value);
+        
+        // Kirim data
+        fetch("/tahun_ajaran/pilih_tahun_ajaran", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert("Berhasil! " + data.message);
+                location.reload();
+            } else {
+                alert("Gagal: " + data.message);
+            }
+        })
+        .catch(err => {
+            alert("Error: " + err);
+        });
+    }
+
+    // Panggil checkFormReady di awal untuk memastikan status tombol
+    checkFormReady();
 
     // Kepala Sekolah Select
     const kepalaSelect = document.getElementById("kepalaSelect");
@@ -1058,57 +1296,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // ========== LAPORAN ==========
     
     initializeLaporanModals();
-
-    // ========== FUNGSI HANDLER ==========
-
-    // Handler Tahun Ajaran - PERBAIKAN: tanpa async/await
-    function handleTahunAjaranSubmit(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        
-        fetch("{{ url_for('tahun_ajaran.add_tahun_ajaran') }}", {
-            method: "POST",
-            body: formData
-        })
-        .then(response => response.json())
-        .then(result => {
-            if(result.success){
-                alert("Tahun ajaran berhasil ditambahkan");
-                location.reload();
-            } else {
-                alert(result.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("Terjadi kesalahan saat menambah tahun ajaran");
-        });
-    }
-
-    // PERBAIKAN BESAR: handleToggleTahunAjaran tanpa async/await
-    function handleToggleTahunAjaran(e) {
-        e.preventDefault();
-        const form = e.target;
-        const action = form.action || "{{ url_for('tahun_ajaran.toggle_tahun_ajaran') }}";
-        
-        fetch(action, {
-            method: "POST",
-            body: new FormData(form)
-        })
-        .then(response => response.json())
-        .then(result => {
-            if(result.success){
-                alert("Status tahun ajaran diperbarui");
-                location.reload();
-            } else {
-                alert(result.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert("Terjadi kesalahan saat mengubah status tahun ajaran");
-        });
-    }
 
     // Handler Edit Kepala Sekolah - PERBAIKAN: tanpa async/await
     function handleEditKepalaSekolah(e) {
@@ -1316,6 +1503,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    // PERBAIKAN: handleSiswaSubmit dengan NISN
     function handleSiswaSubmit(e) {
         e.preventDefault();
         const rows = document.querySelectorAll("#siswaFormBody tr");
@@ -1373,21 +1561,22 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    // PERBAIKAN: addSiswaInputRow dengan NISN
     function addSiswaInputRow() {
         let tbody = document.getElementById("siswaFormBody");
         let row = document.createElement("tr");
         row.innerHTML = `
-            <td><input type="text" name="nama_siswa[]" class="form-control" required></td>
-            <td><input type="text" name="nisn[]" class="form-control" placeholder="Opsional"></td>
+            <td><input type="text" name="nama_siswa[]" class="form-control form-control-sm" required></td>
+            <td><input type="text" name="nisn[]" class="form-control form-control-sm" placeholder="Opsional"></td>
             <td>
-                <select name="jenis_kelamin[]" class="form-select" required>
+                <select name="jenis_kelamin[]" class="form-select form-select-sm" required>
                     <option value="">-- Pilih --</option>
                     <option value="L">Laki-laki</option>
                     <option value="P">Perempuan</option>
                 </select>
             </td>
             <td>
-                <select name="status[]" class="form-select">
+                <select name="status[]" class="form-select form-select-sm">
                     <option value="Aktif">Aktif</option>
                     <option value="Tidak Aktif">Tidak Aktif</option>
                     <option value="Pindah">Pindah</option>
@@ -1398,20 +1587,21 @@ document.addEventListener("DOMContentLoaded", function() {
         tbody.appendChild(row);
     }
 
+    // PERBAIKAN: resetSiswaForm dengan NISN
     function resetSiswaForm() {
         document.getElementById("siswaFormBody").innerHTML = `
             <tr>
-                <td><input type="text" name="nama_siswa[]" class="form-control" required></td>
-                <td><input type="text" name="nisn[]" class="form-control" placeholder="Opsional"></td>
+                <td><input type="text" name="nama_siswa[]" class="form-control form-control-sm" required></td>
+                <td><input type="text" name="nisn[]" class="form-control form-control-sm" placeholder="Opsional"></td>
                 <td>
-                    <select name="jenis_kelamin[]" class="form-select" required>
+                    <select name="jenis_kelamin[]" class="form-select form-select-sm" required>
                         <option value="">-- Pilih --</option>
                         <option value="L">Laki-laki</option>
                         <option value="P">Perempuan</option>
                     </select>
                 </td>
                 <td>
-                    <select name="status[]" class="form-select">
+                    <select name="status[]" class="form-select form-select-sm">
                         <option value="Aktif">Aktif</option>
                         <option value="Tidak Aktif">Tidak Aktif</option>
                         <option value="Pindah">Pindah</option>
@@ -1427,7 +1617,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("editNama").value = siswa.nama_siswa;
         document.getElementById("editNisn").value = siswa.nisn || '';
         document.getElementById("editJK").value = siswa.jenis_kelamin;
-        document.getElementById("editStatus").value = siswa.status;
+        document.getElementById("editStatus").value = siswa.status || 'Aktif';
 
         const modal = new bootstrap.Modal(document.getElementById("editSiswaModal"));
         modal.show();
@@ -1495,7 +1685,7 @@ document.addEventListener("DOMContentLoaded", function() {
         
         siswaTableBodyPenilaian.innerHTML = "";
         if (!kelasId) {
-            siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td></tr>';
+            siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td</tr>';
             return;
         }
         
@@ -1503,7 +1693,7 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(res => res.json())
         .then(siswaList => {
             if (!siswaList || !siswaList.length) {
-                siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Belum ada siswa di kelas ini</td></tr>';
+                siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Belum ada siswa di kelas ini</td</tr>';
                 return;
             }
 
@@ -1544,7 +1734,7 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .catch(err => {
             console.error(err);
-            siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Gagal memuat data siswa</td></tr>';
+            siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Gagal memuat data siswa</td</tr>';
         });
     }
 
@@ -1620,172 +1810,141 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function handlePenilaianActions(e) {
-    const row = e.target.closest("tr");
-    if (!row) return;
-    
-    const siswaId = row.dataset.siswaId;
-    const kelasId = row.dataset.kelasId;
-    const bulan = bulanSelectPenilaian?.value;
-    
-    if (!bulan) { 
-        alert("Pilih bulan terlebih dahulu"); 
-        return; 
-    }
-
-    // Validasi nilai sebelum simpan
-    const maxHari = getDaysInMonth(bulan);
-    const inputs = row.querySelectorAll('.nilai-input[type="number"]');
-    let valid = true;
-    
-    inputs.forEach(input => {
-        const value = parseInt(input.value) || 0;
-        if (value > maxHari) {
-            alert(`Nilai ${input.name} tidak boleh lebih dari ${maxHari} (jumlah hari dalam bulan)`);
-            input.focus();
-            valid = false;
+        const row = e.target.closest("tr");
+        if (!row) return;
+        
+        const siswaId = row.dataset.siswaId;
+        const kelasId = row.dataset.kelasId;
+        const bulan = bulanSelectPenilaian?.value;
+        
+        if (!bulan) { 
+            alert("Pilih bulan terlebih dahulu"); 
+            return; 
         }
-    });
-    
-    if (!valid) return;
 
-    // ========== PERBAIKAN 1: PISAHKAN LOGIKA SAVE DAN UPDATE ==========
-    // KLIK TOMBOL SAVE (untuk menyimpan data baru atau update)
-    if (e.target.classList.contains("btn-save")) {
-        const formData = new FormData();
-        formData.append("siswa_id", siswaId);
-        formData.append("kelas_id", kelasId);
-        formData.append("bulan", bulan);
-        row.querySelectorAll("input").forEach(i => {
-            if (!["siswa_id","kelas_id"].includes(i.name)) {
-                formData.append(i.name, i.value || "");
+        // Validasi nilai sebelum simpan
+        const maxHari = getDaysInMonth(bulan);
+        const inputs = row.querySelectorAll('.nilai-input[type="number"]');
+        let valid = true;
+        
+        inputs.forEach(input => {
+            const value = parseInt(input.value) || 0;
+            if (value > maxHari) {
+                alert(`Nilai ${input.name} tidak boleh lebih dari ${maxHari} (jumlah hari dalam bulan)`);
+                input.focus();
+                valid = false;
             }
         });
+        
+        if (!valid) return;
 
-        // ========== PERBAIKAN 2: TAMBAH LOADING STATE ==========
-        const originalText = e.target.textContent;
-        e.target.textContent = "Menyimpan...";
-        e.target.disabled = true;
+        // KLIK TOMBOL SAVE
+        if (e.target.classList.contains("btn-save")) {
+            const formData = new FormData();
+            formData.append("siswa_id", siswaId);
+            formData.append("kelas_id", kelasId);
+            formData.append("bulan", bulan);
+            row.querySelectorAll("input").forEach(i => {
+                if (!["siswa_id","kelas_id"].includes(i.name)) {
+                    formData.append(i.name, i.value || "");
+                }
+            });
 
-        fetch("/penilaian/kebiasaan/save_row", {
-            method: "POST", 
-            body: formData
-        })
-        .then(res => res.json())
-        .then(result => {
-            alert(result.message);
-            if (result.success) {
-                // ========== PERBAIKAN 3: UBAH STATUS SETELAH SIMPAN ==========
-                // 1. Input menjadi readonly
-                row.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
-                
-                // 2. Tombol SIMPAN hilang, tombol UPDATE muncul
-                const saveBtn = row.querySelector(".btn-save");
-                const updateBtn = row.querySelector(".btn-update");
-                if (saveBtn) {
-                    saveBtn.style.display = "none";
-                    saveBtn.textContent = "Simpan"; // Reset teks
-                    saveBtn.disabled = false;
+            const originalText = e.target.textContent;
+            e.target.textContent = "Menyimpan...";
+            e.target.disabled = true;
+
+            fetch("/penilaian/kebiasaan/save_row", {
+                method: "POST", 
+                body: formData
+            })
+            .then(res => res.json())
+            .then(result => {
+                alert(result.message);
+                if (result.success) {
+                    row.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
+                    const saveBtn = row.querySelector(".btn-save");
+                    const updateBtn = row.querySelector(".btn-update");
+                    if (saveBtn) {
+                        saveBtn.style.display = "none";
+                        saveBtn.textContent = "Simpan";
+                        saveBtn.disabled = false;
+                    }
+                    if (updateBtn) {
+                        updateBtn.style.display = "inline-block";
+                        updateBtn.disabled = false;
+                    }
                 }
-                if (updateBtn) {
-                    updateBtn.style.display = "inline-block";
-                    updateBtn.disabled = false;
-                }
+            })
+            .catch(err => { 
+                console.error(err); 
+                alert("Terjadi kesalahan saat menyimpan"); 
+            })
+            .finally(() => {
+                e.target.textContent = originalText;
+                e.target.disabled = false;
+            });
+        }
+
+        // KLIK TOMBOL UPDATE
+        if (e.target.classList.contains("btn-update")) {
+            row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
+            const saveBtn = row.querySelector(".btn-save");
+            const updateBtn = row.querySelector(".btn-update");
+            if (saveBtn) {
+                saveBtn.style.display = "inline-block";
+                saveBtn.disabled = false;
             }
-        })
-        .catch(err => { 
-            console.error(err); 
-            alert("Terjadi kesalahan saat menyimpan"); 
-        })
-        .finally(() => {
-            // ========== PERBAIKAN 4: RESET BUTTON STATE ==========
-            e.target.textContent = originalText;
-            e.target.disabled = false;
-        });
-    }
-
-    // ========== PERBAIKAN 5: LOGIKA TOMBOL UPDATE TERPISAH ==========
-    // KLIK TOMBOL UPDATE (untuk mengaktifkan mode edit)
-    if (e.target.classList.contains("btn-update")) {
-        // 1. Hapus readonly dari semua input (bisa diedit)
-        row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
-        
-        // 2. Tombol UPDATE hilang, tombol SIMPAN muncul
-        const saveBtn = row.querySelector(".btn-save");
-        const updateBtn = row.querySelector(".btn-update");
-        if (saveBtn) {
-            saveBtn.style.display = "inline-block";
-            saveBtn.disabled = false;
-        }
-        if (updateBtn) {
-            updateBtn.style.display = "none";
-        }
-        
-        // ========== PERBAIKAN 6: FOKUS KE INPUT PERTAMA ==========
-        const firstInput = row.querySelector('.nilai-input');
-        if (firstInput) {
-            setTimeout(() => firstInput.focus(), 100);
-        }
-    }
-
-    // DELETE (dengan perbaikan kecil)
-    if (e.target.classList.contains("btn-delete")) {
-        if (!confirm("Hapus semua nilai kebiasaan siswa ini?")) return;
-        
-        // ========== PERBAIKAN 7: TAMBAH LOADING STATE UNTUK DELETE ==========
-        const originalText = e.target.textContent;
-        e.target.textContent = "Menghapus...";
-        e.target.disabled = true;
-        
-        fetch(`/penilaian/kebiasaan/delete_row/${siswaId}/${bulan}`, {
-            method: "POST"
-        })
-        .then(res => res.json())
-        .then(result => {
-            alert(result.message);
-            if (result.success) {
-                // ========== PERBAIKAN 8: RESET SETELAH DELETE ==========
-                // 1. Kosongkan semua input
-                row.querySelectorAll("input").forEach(i => { 
-                    if(!["siswa_id","kelas_id"].includes(i.name)) i.value=""; 
-                });
-                
-                // 2. Hapus readonly (bisa diisi lagi)
-                row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
-                
-                // 3. Tampilkan tombol SIMPAN, sembunyikan UPDATE
-                const saveBtn = row.querySelector(".btn-save");
-                const updateBtn = row.querySelector(".btn-update");
-                if (saveBtn) {
-                    saveBtn.style.display = "inline-block";
-                    saveBtn.disabled = false;
-                }
-                if (updateBtn) {
-                    updateBtn.style.display = "none";
-                }
+            if (updateBtn) {
+                updateBtn.style.display = "none";
             }
-        })
-        .catch(err => { 
-            console.error(err); 
-            alert("Terjadi kesalahan saat hapus data"); 
-        })
-        .finally(() => {
-            // ========== PERBAIKAN 9: RESET BUTTON STATE DELETE ==========
-            e.target.textContent = originalText;
-            e.target.disabled = false;
-        });
-    }
+            
+            const firstInput = row.querySelector('.nilai-input');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 100);
+            }
+        }
 
-    // ========== PERBAIKAN 10: HAPUS BAGIAN "UNLOCK untuk UPDATE" YANG LAMA ==========
-    // (karena sudah diganti dengan logika di atas)
-    // Bagian ini dihapus karena menyebabkan konflik:
-    // if (e.target.classList.contains("btn-update")) {
-    //     row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
-    //     const saveBtn = row.querySelector(".btn-save");
-    //     const updateBtn = row.querySelector(".btn-update");
-    //     if (saveBtn) saveBtn.style.display = "inline-block";
-    //     if (updateBtn) updateBtn.style.display = "none";
-    // }
-}
+        // DELETE
+        if (e.target.classList.contains("btn-delete")) {
+            if (!confirm("Hapus semua nilai kebiasaan siswa ini?")) return;
+            
+            const originalText = e.target.textContent;
+            e.target.textContent = "Menghapus...";
+            e.target.disabled = true;
+            
+            fetch(`/penilaian/kebiasaan/delete_row/${siswaId}/${bulan}`, {
+                method: "POST"
+            })
+            .then(res => res.json())
+            .then(result => {
+                alert(result.message);
+                if (result.success) {
+                    row.querySelectorAll("input").forEach(i => { 
+                        if(!["siswa_id","kelas_id"].includes(i.name)) i.value=""; 
+                    });
+                    row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
+                    const saveBtn = row.querySelector(".btn-save");
+                    const updateBtn = row.querySelector(".btn-update");
+                    if (saveBtn) {
+                        saveBtn.style.display = "inline-block";
+                        saveBtn.disabled = false;
+                    }
+                    if (updateBtn) {
+                        updateBtn.style.display = "none";
+                    }
+                }
+            })
+            .catch(err => { 
+                console.error(err); 
+                alert("Terjadi kesalahan saat hapus data"); 
+            })
+            .finally(() => {
+                e.target.textContent = originalText;
+                e.target.disabled = false;
+            });
+        }
+    }
 
     function validateNilaiInput(input) {
         const bulanTahun = bulanSelectPenilaian?.value;

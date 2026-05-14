@@ -2,6 +2,7 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for, abort, flash, session
 from flask_login import login_required, current_user
 from penilaiansiswa.models import TahunAjaran, Pegawai, Sekolah, User, Kelas, Siswa, Kebiasaan, Kecamatan
+from penilaiansiswa.models.sekolah import MasterTahunAjaran
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func, case
 from penilaiansiswa import db
@@ -475,7 +476,7 @@ def dashboard():
             .join(User, User.id == Pegawai.user_id)
             .join(Sekolah, Sekolah.id == Pegawai.sekolah_id)
             .filter(Sekolah.kecamatan_id == sekolah.kecamatan_id)
-            .order_by(User.nama_lengkap)
+            .order_by(Pegawai.id)
             .all()
         )
 
@@ -489,6 +490,40 @@ def dashboard():
     # Cek apakah user adalah kepala sekolah
     is_kepala_sekolah_flag = is_kepala_sekolah(current_user)
 
+    # ⭐ TAMBAH: Ambil master TA yang tersedia untuk dipilih sekolah
+    available_masters = MasterTahunAjaran.query.filter_by(
+        is_active=True
+    ).order_by(
+        MasterTahunAjaran.tahun_ajaran.desc(),
+        MasterTahunAjaran.semester.desc()
+    ).all()
+    
+    # ⭐ TAMBAH: Ambil semua TA yang sudah dipilih sekolah ini (history)
+    sekolah_tahun_ajaran_list = []
+    if sekolah:
+        sekolah_tahun_ajaran_list = TahunAjaran.query.filter_by(
+            sekolah_id=sekolah.id
+        ).order_by(TahunAjaran.id.desc()).all()
+    # ⭐ TAMBAHKAN INI DI BAWAHNYA
+    # Pegawai SATU SEKOLAH (bukan sekecamatan)
+    pegawai_satu_sekolah = []
+    if sekolah:
+        pegawai_satu_sekolah = Pegawai.query.filter_by(
+            sekolah_id=sekolah.id
+        ).order_by(Pegawai.id).all()
+    
+    # Pegawai SEKECAMATAN (untuk tombol "lihat lebih banyak")
+    pegawai_sekecamatan = []
+    if sekolah and sekolah.kecamatan_id:
+        pegawai_sekecamatan = (
+            Pegawai.query
+            .join(User, User.id == Pegawai.user_id)
+            .join(Sekolah, Sekolah.id == Pegawai.sekolah_id)
+            .filter(Sekolah.kecamatan_id == sekolah.kecamatan_id)
+            .order_by(Pegawai.id)
+            .all()
+        )
+
     return render_template(
         "dashboard.html",
         username=current_user.username,
@@ -496,106 +531,146 @@ def dashboard():
         active_tahun_ajaran=existing_tahun,
         nonaktif_tahun_ajaran=nonaktif_tahun,
         pegawai_dengan_profil=pegawai_q,
+        pegawai_satu_sekolah=pegawai_satu_sekolah,
+        pegawai_sekecamatan=pegawai_sekecamatan,
         kelas_list=kelas_list,
         bulan_list=bulan_list,
         current_user=current_user,
-        is_kepala_sekolah=is_kepala_sekolah_flag
+        is_kepala_sekolah=is_kepala_sekolah_flag,
+        available_masters=available_masters,
+        sekolah_tahun_ajaran_list=sekolah_tahun_ajaran_list
     )
 
+# =============================================================
+# ⭐ BARU: SEKOLAH PILIH TAHUN AJARAN DARI MASTER
+# =============================================================
 
-# ----------------------
-# Add / toggle Tahun Ajaran (tetap seperti Anda punya)
-# ----------------------
-@tahun_ajaran_bp.route("/add_tahun_ajaran", methods=["POST"])
+@tahun_ajaran_bp.route("/pilih_tahun_ajaran", methods=["POST"])
 @login_required
-def add_tahun_ajaran():
+def pilih_tahun_ajaran():
+    """Sekolah memilih tahun ajaran dari master - LANGSUNG AKTIF"""
     if not current_user.pegawai or not current_user.pegawai.sekolah_id:
-        return jsonify({"success": False, "message": "User tidak terkait sekolah."}), 400
-
-    sekolah_id = current_user.pegawai.sekolah_id
-
-    # ========== TAMBAHKAN LAZY CHECK DI SINI ==========
-    sekolah = Sekolah.query.get(sekolah_id)
-    if not sekolah:
-        return jsonify({"success": False, "message": "Sekolah tidak ditemukan."}), 400
+        return jsonify({'success': False, 'message': 'User tidak terkait sekolah'}), 400
     
-    # Cek status aktivasi sekolah (otomatis nonaktifkan jika kadaluarsa)
-    if not sekolah.cek_dan_nonaktifkan_jika_kadaluarsa():
-        return jsonify({
-            "success": False, 
-            "message": "Sekolah tidak aktif. Tidak dapat membuat tahun ajaran baru. Silakan hubungi admin untuk perpanjangan aktivasi."
-        }), 403
-    # ========== SAMPAI SINI TAMBAHANNYA ==========
-
-
-    tahun_ajaran = (request.form.get("tahun_ajaran") or "").strip()
-    semester = (request.form.get("semester") or "").strip().lower()
-    kepala_sekolah_id = request.form.get("kepala_sekolah_id")
-
-    if not tahun_ajaran or not semester or not kepala_sekolah_id:
-        return jsonify({"success": False, "message": "Data tidak lengkap."}), 400
-
-    if semester not in ["ganjil", "genap"]:
-        return jsonify({"success": False, "message": "Semester tidak valid."}), 400
-
+    sekolah_id = current_user.pegawai.sekolah_id
+    master_id = request.form.get('master_id', type=int)
+    kepala_sekolah_id = request.form.get('kepala_sekolah_id', type=int)
+    
+    if not master_id:
+        return jsonify({'success': False, 'message': 'Pilih tahun ajaran terlebih dahulu'}), 400
+    
+    if not kepala_sekolah_id:
+        return jsonify({'success': False, 'message': 'Pilih kepala sekolah terlebih dahulu'}), 400
+    
+    master = MasterTahunAjaran.query.get(master_id)
+    if not master:
+        return jsonify({'success': False, 'message': 'Master tahun ajaran tidak ditemukan'}), 404
+    
     kepala = Pegawai.query.filter_by(id=kepala_sekolah_id, sekolah_id=sekolah_id).first()
     if not kepala:
-        return jsonify({"success": False, "message": "Kepala sekolah tidak valid atau belum mengisi profil."}), 400
-
-    # Validasi duplikat (case-insensitive)
-    existing = TahunAjaran.query.filter(
-        TahunAjaran.sekolah_id == sekolah_id,
-        func.lower(TahunAjaran.tahun_ajaran) == tahun_ajaran.lower(),
-        func.lower(TahunAjaran.semester) == semester
+        return jsonify({'success': False, 'message': 'Kepala sekolah tidak valid'}), 400
+    
+    existing = TahunAjaran.query.filter_by(
+        sekolah_id=sekolah_id,
+        master_ta_id=master_id
     ).first()
-
+    
     if existing:
         return jsonify({
-            "success": False,
-            "message": f"Tahun ajaran {tahun_ajaran} semester {semester} sudah ada."
-        }), 409
-
-    # Pastikan tidak ada tahun ajaran aktif lain
-    existing_active = TahunAjaran.query.filter_by(sekolah_id=sekolah_id, aktif=True).first()
-    if existing_active:
-        return jsonify({"success": False, "message": "Masih ada tahun ajaran aktif. Nonaktifkan dulu."}), 400
-
-    # Buat baru
-    t = TahunAjaran(
+            'success': False,
+            'message': f'Tahun ajaran "{master.display_name}" sudah pernah dipilih sebelumnya'
+        }), 400
+    
+    # ⭐ NONAKTIFKAN SEMUA TAHUN AJARAN SEKOLAH INI DAHULU
+    TahunAjaran.query.filter_by(sekolah_id=sekolah_id, aktif=True).update({'aktif': False})
+    
+    # ⭐ BUAT DAN LANGSUNG AKTIFKAN
+    ta_baru = TahunAjaran(
         sekolah_id=sekolah_id,
-        tahun_ajaran=tahun_ajaran,
-        semester=semester,
+        master_ta_id=master.id,
+        tahun_ajaran=master.tahun_ajaran,
+        semester=master.semester,
         kepala_sekolah_id=kepala.id,
-        aktif=True
+        aktif=True  # ⭐ LANGSUNG AKTIF
     )
-    db.session.add(t)
+    
+    db.session.add(ta_baru)
     db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': f'Berhasil memilih dan mengaktifkan tahun ajaran "{master.display_name}"',
+        'data': {
+            'id': ta_baru.id,
+            'tahun_ajaran': master.tahun_ajaran,
+            'semester': master.semester,
+            'nama_kepala_sekolah': kepala.nama,
+            'aktif': ta_baru.aktif
+        }
+    })
 
-    return jsonify({"success": True, "message": "Tahun ajaran baru berhasil dibuat & diaktifkan."}), 200
+
+@tahun_ajaran_bp.route("/aktifkan_tahun_ajaran", methods=["POST"])
+@login_required
+def aktifkan_tahun_ajaran():
+    """Sekolah mengaktifkan tahun ajaran yang sudah dipilih"""
+    if not current_user.pegawai or not current_user.pegawai.sekolah_id:
+        flash("User tidak terkait sekolah", "danger")
+        return redirect(url_for("tahun_ajaran.dashboard"))
+    
+    sekolah_id = current_user.pegawai.sekolah_id
+    tahun_ajaran_id = request.form.get('tahun_ajaran_id', type=int)
+    
+    if not tahun_ajaran_id:
+        flash("ID tahun ajaran tidak ditemukan", "danger")
+        return redirect(url_for("tahun_ajaran.dashboard"))
+    
+    # Nonaktifkan semua tahun ajaran sekolah ini
+    TahunAjaran.query.filter_by(sekolah_id=sekolah_id, aktif=True).update({'aktif': False})
+    
+    # Aktifkan yang dipilih
+    ta = TahunAjaran.query.filter_by(id=tahun_ajaran_id, sekolah_id=sekolah_id).first()
+    if not ta:
+        flash("Tahun ajaran tidak ditemukan", "danger")
+        return redirect(url_for("tahun_ajaran.dashboard"))
+    
+    ta.aktif = True
+    db.session.commit()
+    
+    flash(f'Tahun ajaran "{ta.tahun_ajaran_display}" berhasil diaktifkan', "success")
+    
+    # Redirect ke dashboard
+    return redirect(url_for("tahun_ajaran.dashboard"))
 
 
 @tahun_ajaran_bp.route("/toggle_tahun_ajaran", methods=["POST"])
 @login_required
 def toggle_tahun_ajaran():
     if not current_user.pegawai or not current_user.pegawai.sekolah_id:
-        return jsonify({"success": False, "message": "User tidak terkait sekolah."}), 400
+        flash("User tidak terkait sekolah.", "danger")
+        return redirect(url_for("tahun_ajaran.dashboard"))
 
     sekolah_id = current_user.pegawai.sekolah_id
     tahun_id = request.form.get("id")
     tahun = TahunAjaran.query.filter_by(id=tahun_id, sekolah_id=sekolah_id).first()
     if not tahun:
-        return jsonify({"success": False, "message": "Tahun ajaran tidak ditemukan."}), 404
+        flash("Tahun ajaran tidak ditemukan.", "danger")
+        return redirect(url_for("tahun_ajaran.dashboard"))
 
-    if not tahun.aktif:
-        # aktifkan -> pastikan hanya 1 aktif
-        TahunAjaran.query.filter_by(sekolah_id=sekolah_id, aktif=True).update({TahunAjaran.aktif: False})
-        tahun.aktif = True
-    else:
-        tahun.aktif = False
+    # Toggle status
+    tahun.aktif = not tahun.aktif
+    
+    # Jika mengaktifkan, pastikan hanya 1 yang aktif
+    if tahun.aktif:
+        TahunAjaran.query.filter_by(sekolah_id=sekolah_id, aktif=True).filter(TahunAjaran.id != tahun_id).update({TahunAjaran.aktif: False})
 
     db.session.commit()
-    return jsonify({"success": True, "aktif": tahun.aktif, "message": "Status diperbarui."})
-
+    
+    status = "diaktifkan" if tahun.aktif else "dinonaktifkan"
+    flash(f"Tahun ajaran berhasil {status}.", "success")
+    
+    # Redirect kembali ke dashboard
+    return redirect(url_for("tahun_ajaran.dashboard"))
 
 @tahun_ajaran_bp.route('/update_kepala_sekolah', methods=['POST'])
 @login_required

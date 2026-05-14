@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, jsonify, request, flash, redirect,
 from flask_login import login_required, current_user
 from penilaiansiswa import db
 from penilaiansiswa.models.users import User, Pegawai
-from penilaiansiswa.models.sekolah import Sekolah, Kabupaten, Kecamatan
+from penilaiansiswa.models.sekolah import Sekolah, Kabupaten, Kecamatan, MasterTahunAjaran
 from penilaiansiswa.models import Kebiasaan, Kelas, Siswa, TahunAjaran
 from sqlalchemy import func, extract, distinct
 from datetime import datetime
@@ -36,6 +36,276 @@ def dashboard():
         total_sekolah=total_sekolah,
         user=current_user
     )
+
+# ========== ⭐ BARU: MASTER TAHUN AJARAN (SUPER ADMIN) ==========
+
+@superadmin_bp.route("/master_tahun_ajaran")
+@login_required
+def master_tahun_ajaran():
+    """Halaman manage master tahun ajaran"""
+    if not current_user.is_superadmin:
+        flash("Akses ditolak!", "danger")
+        return redirect(url_for("tahun_ajaran.dashboard"))
+    
+    # Ambil semua master TA
+    master_list = MasterTahunAjaran.query.order_by(
+        MasterTahunAjaran.tahun_ajaran.desc(),
+        MasterTahunAjaran.semester.desc()
+    ).all()
+    
+    # Hitung penggunaan per master
+    for master in master_list:
+        master.usage_count = TahunAjaran.query.filter_by(master_ta_id=master.id).count()
+    
+    return render_template(
+        "superadmin/master_tahun_ajaran.html",
+        master_list=master_list
+    )
+
+
+@superadmin_bp.route("/api/master_tahun_ajaran/list")
+@login_required
+def api_master_tahun_ajaran_list():
+    """API untuk mendapatkan daftar master tahun ajaran"""
+    if not current_user.is_superadmin:
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+    
+    masters = MasterTahunAjaran.query.order_by(
+        MasterTahunAjaran.tahun_ajaran.desc(),
+        MasterTahunAjaran.semester.desc()
+    ).all()
+    
+    data = []
+    for m in masters:
+        data.append({
+            'id': m.id,
+            'tahun_ajaran': m.tahun_ajaran,
+            'semester': m.semester,
+            'display_name': m.display_name,
+            'is_active': m.is_active,
+            'is_global_active': m.is_global_active,
+            'usage_count': TahunAjaran.query.filter_by(master_ta_id=m.id).count(),
+            'created_at': m.created_at.strftime('%Y-%m-%d %H:%M') if m.created_at else None
+        })
+    
+    return jsonify({"success": True, "data": data})
+
+
+@superadmin_bp.route("/api/master_tahun_ajaran/add", methods=["POST"])
+@login_required
+def api_master_tahun_ajaran_add():
+    """API untuk menambah master tahun ajaran"""
+    if not current_user.is_superadmin:
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+    
+    try:
+        data = request.get_json()
+        tahun_ajaran = data.get('tahun_ajaran', '').strip()
+        semester = data.get('semester', '').strip().lower()
+        
+        if not tahun_ajaran:
+            return jsonify({"success": False, "message": "Tahun ajaran tidak boleh kosong"}), 400
+        
+        if semester not in ['ganjil', 'genap']:
+            return jsonify({"success": False, "message": "Semester harus ganjil atau genap"}), 400
+        
+        # Cek duplikat
+        existing = MasterTahunAjaran.query.filter_by(
+            tahun_ajaran=tahun_ajaran,
+            semester=semester
+        ).first()
+        
+        if existing:
+            return jsonify({"success": False, "message": f"Master '{tahun_ajaran} - {semester}' sudah ada"}), 400
+        
+        master = MasterTahunAjaran(
+            tahun_ajaran=tahun_ajaran,
+            semester=semester,
+            created_by=current_user.id
+        )
+        
+        db.session.add(master)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Master '{tahun_ajaran} - {semester}' berhasil ditambahkan",
+            "data": {
+                'id': master.id,
+                'tahun_ajaran': master.tahun_ajaran,
+                'semester': master.semester,
+                'display_name': master.display_name
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@superadmin_bp.route("/api/master_tahun_ajaran/edit/<int:id>", methods=["PUT"])
+@login_required
+def api_master_tahun_ajaran_edit(id):
+    """API untuk mengedit master tahun ajaran"""
+    if not current_user.is_superadmin:
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+    
+    try:
+        master = MasterTahunAjaran.query.get(id)
+        if not master:
+            return jsonify({"success": False, "message": "Master tidak ditemukan"}), 404
+        
+        data = request.get_json()
+        
+        if 'is_active' in data:
+            # Cek apakah master adalah default global
+            if master.is_global_active and not data['is_active']:
+                return jsonify({
+                    "success": False, 
+                    "message": "Tidak dapat menonaktifkan master yang sedang menjadi default report!"
+                }), 400
+            
+            master.is_active = data['is_active']
+            master.updated_at = datetime.utcnow()
+            db.session.commit()
+            
+            status_text = "diaktifkan" if data['is_active'] else "dinonaktifkan"
+            return jsonify({
+                "success": True,
+                "message": f"Master '{master.display_name}' berhasil {status_text}"
+            })
+        
+        tahun_ajaran = data.get('tahun_ajaran', '').strip()
+        semester = data.get('semester', '').strip().lower()
+        
+        if not tahun_ajaran:
+            return jsonify({"success": False, "message": "Tahun ajaran tidak boleh kosong"}), 400
+        
+        if semester not in ['ganjil', 'genap']:
+            return jsonify({"success": False, "message": "Semester harus ganjil atau genap"}), 400
+        
+        # Cek duplikat dengan master lain
+        existing = MasterTahunAjaran.query.filter(
+            MasterTahunAjaran.tahun_ajaran == tahun_ajaran,
+            MasterTahunAjaran.semester == semester,
+            MasterTahunAjaran.id != id
+        ).first()
+        
+        if existing:
+            return jsonify({"success": False, "message": f"Master '{tahun_ajaran} - {semester}' sudah ada"}), 400
+        
+        master.tahun_ajaran = tahun_ajaran
+        master.semester = semester
+        master.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Master berhasil diupdate menjadi '{tahun_ajaran} - {semester}'",
+            "data": {
+                'id': master.id,
+                'tahun_ajaran': master.tahun_ajaran,
+                'semester': master.semester,
+                'display_name': master.display_name
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@superadmin_bp.route("/api/master_tahun_ajaran/delete/<int:id>", methods=["DELETE"])
+@login_required
+def api_master_tahun_ajaran_delete(id):
+    """API untuk menghapus master tahun ajaran"""
+    if not current_user.is_superadmin:
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+    
+    try:
+        master = MasterTahunAjaran.query.get(id)
+        if not master:
+            return jsonify({"success": False, "message": "Master tidak ditemukan"}), 404
+        
+        # Cek apakah sedang digunakan
+        usage_count = TahunAjaran.query.filter_by(master_ta_id=id).count()
+        if usage_count > 0:
+            return jsonify({
+                "success": False, 
+                "message": f"Master sedang digunakan oleh {usage_count} sekolah. Tidak bisa dihapus."
+            }), 400
+        
+        db.session.delete(master)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Master '{master.display_name}' berhasil dihapus"
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@superadmin_bp.route("/api/master_tahun_ajaran/set_global_active", methods=["POST"])
+@login_required
+def api_master_tahun_ajaran_set_global_active():
+    """API untuk menetapkan master yang aktif secara global (untuk report)"""
+    if not current_user.is_superadmin:
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+    
+    try:
+        data = request.get_json()
+        master_id = data.get('master_id')
+        
+        if not master_id:
+            return jsonify({"success": False, "message": "Master ID diperlukan"}), 400
+        
+        master = MasterTahunAjaran.query.get(master_id)
+        if not master:
+            return jsonify({"success": False, "message": "Master tidak ditemukan"}), 404
+        
+        # Nonaktifkan semua global active
+        MasterTahunAjaran.query.update({'is_global_active': False})
+        
+        # Aktifkan yang dipilih
+        master.is_global_active = True
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Master '{master.display_name}' ditetapkan sebagai default report"
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+# ========== API UNTUK SEKOLAH (MENDAPATKAN MASTER YANG TERSEDIA) ==========
+
+@superadmin_bp.route("/api/available_masters")
+@login_required
+def api_available_masters():
+    """API untuk mendapatkan daftar master TA yang tersedia untuk dipilih sekolah"""
+    # Bisa diakses oleh semua user yang login (superadmin, kepala sekolah, wali kelas)
+    masters = MasterTahunAjaran.query.filter_by(
+        is_active=True
+    ).order_by(
+        MasterTahunAjaran.tahun_ajaran.desc(),
+        MasterTahunAjaran.semester.desc()
+    ).all()
+    
+    data = [{
+        'id': m.id,
+        'tahun_ajaran': m.tahun_ajaran,
+        'semester': m.semester,
+        'display_name': m.display_name
+    } for m in masters]
+    
+    return jsonify({"success": True, "data": data})
+
 @superadmin_bp.route("/api/statistik")
 @login_required
 def api_statistik():
