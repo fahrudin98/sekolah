@@ -201,6 +201,7 @@ class Kelas(db.Model, LogMixin):
     id = db.Column(db.Integer, primary_key=True)
     tahun_ajaran_id = db.Column(db.Integer, db.ForeignKey("tahun_ajaran.id"), nullable=False)
     nama_kelas = db.Column(db.String(50))
+    tingkat = db.Column(db.Integer, default=1)
     wali_kelas_id = db.Column(db.Integer, db.ForeignKey("pegawai.id"))
 
     sekolah_id = db.Column(db.Integer, db.ForeignKey("sekolah.id"), nullable=False)

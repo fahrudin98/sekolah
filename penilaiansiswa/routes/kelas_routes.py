@@ -119,3 +119,61 @@ def edit_kelas(id):
             }
         }
     })
+
+
+@kelas_bp.route("/list_by_tingkat", methods=["GET"])
+@login_required
+def list_kelas_by_tingkat():
+    """API untuk mendapatkan kelas berdasarkan tingkat (untuk naik kelas)"""
+    tingkat = request.args.get("tingkat", type=int)
+    
+    if not tingkat:
+        return jsonify({"success": False, "message": "Parameter tingkat diperlukan"}), 400
+    
+    if not current_user.pegawai or not current_user.pegawai.sekolah_id:
+        return jsonify({"success": False, "message": "User tidak terkait sekolah"}), 403
+    
+    # Ambil tahun ajaran aktif
+    aktif_ta = TahunAjaran.query.filter_by(
+        sekolah_id=current_user.pegawai.sekolah_id,
+        aktif=True
+    ).first()
+    
+    if not aktif_ta:
+        return jsonify({"success": False, "kelas": []}), 200
+    
+    kelas_list = Kelas.query.filter_by(
+        sekolah_id=current_user.pegawai.sekolah_id,
+        tahun_ajaran_id=aktif_ta.id,
+        tingkat=tingkat
+    ).all()
+    
+    return jsonify({
+        "success": True,
+        "kelas": [{"id": k.id, "nama_kelas": k.nama_kelas, "tingkat": k.tingkat} for k in kelas_list]
+    })
+
+
+@kelas_bp.route("/update_tingkat", methods=["POST"])
+@login_required
+def update_tingkat():
+    """Update tingkat kelas"""
+    data = request.get_json()
+    kelas_id = data.get("kelas_id")
+    tingkat = data.get("tingkat")
+    
+    if not kelas_id or tingkat is None:
+        return jsonify({"success": False, "message": "Data tidak lengkap"}), 400
+    
+    kelas = Kelas.query.get(kelas_id)
+    if not kelas:
+        return jsonify({"success": False, "message": "Kelas tidak ditemukan"}), 404
+    
+    # Validasi wali kelas
+    if not current_user.pegawai or kelas.wali_kelas_id != current_user.pegawai.id:
+        return jsonify({"success": False, "message": "Anda bukan wali kelas kelas ini"}), 403
+    
+    kelas.tingkat = tingkat
+    db.session.commit()
+    
+    return jsonify({"success": True, "message": "Tingkat kelas berhasil diupdate"})

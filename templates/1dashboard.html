@@ -194,29 +194,37 @@
         }
     
         /* =========================
-           TAMBAHAN STYLE (UPDATE)
+           RESPONSIVE
         ========================== */
-        #duplicateWarning {
+    
+        @media (max-width: 767px) {
+        
+            #searchResults {
             font-size: 0.85rem;
-            padding: 6px 10px;
         }
-        #searchResults {
-            font-size: 0.85rem;
-        }
+
         #searchResults .list-group-item {
             padding: 6px 10px;
             font-size: 0.85rem;
         }
+
         #searchResults .list-group-item:hover {
             background-color: #f0f0f0;
         }
+
         #searchResults .btn-sm {
             padding: 2px 8px;
             font-size: 0.75rem;
         }
+
         .alert-sm {
             padding: 6px 10px;
             font-size: 0.85rem;
+        }
+
+        .btn-sm {
+            
+        }
         }
     </style>
 </head>
@@ -311,9 +319,7 @@
         <!-- Tab Content -->
         <div class="tab-content" id="dashboardTabsContent">
 
-            <!-- ========================================================= -->
-            <!-- TAB TAHUN AJARAN (DIKEMBALIKAN UTUH) -->
-            <!-- ========================================================= -->
+            <!-- TAB TAHUN AJARAN -->
             <div class="tab-pane fade" id="tahun" role="tabpanel">
                 <h4 class="mb-2">Tahun Ajaran</h4>
 
@@ -356,6 +362,7 @@
                     </div>
                 </div>
 
+
                 <!-- ========== FORM PILIH TAHUN AJARAN DARI MASTER ========== -->
                 {% if not active_tahun_ajaran %}
                 <div class="card mb-3 border-primary">
@@ -366,6 +373,7 @@
                     <div class="card-body">
                         <form id="formPilihTahunAjaran">
                             <div class="row">
+                                <!-- TAMPILKAN HANYA MASTER YANG AKTIF (BUKAN DROPDOWN) -->
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label fw-bold">Tahun Ajaran & Semester</label>
                                     {% if available_masters and available_masters|length > 0 %}
@@ -397,9 +405,11 @@
                             </div>
 
                             <div class="row">
+                                <!-- KEPALA SEKOLAH - TAMPILKAN DARI SATU SEKOLAH DULU -->
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label fw-bold">Kepala Sekolah</label>
                                     
+                                    <!-- Daftar pegawai dari sekolah ini -->
                                     <div id="sekolahPegawaiList">
                                         {% if pegawai_satu_sekolah and pegawai_satu_sekolah|length > 0 %}
                                             <div class="list-group mb-2">
@@ -425,10 +435,12 @@
                                         {% endif %}
                                     </div>
                                     
+                                    <!-- Tombol Lihat Lebih Banyak -->
                                     <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="lihatLebihBanyakBtn">
                                         <i class="fas fa-search"></i> Lihat lebih banyak (dari satu kecamatan)
                                     </button>
                                     
+                                    <!-- Modal untuk pilih dari kecamatan -->
                                     <div class="mt-3" id="kecamatanPegawaiContainer" style="display: none;">
                                         <label class="form-label">Pilih dari kecamatan {{ sekolah.kecamatan.nama_kecamatan if sekolah.kecamatan else 'ini' }}</label>
                                         <select class="form-select" id="kecamatanPegawaiSelect">
@@ -445,6 +457,7 @@
                                 </div>
                             </div>
 
+                            <!-- Informasi yang akan terisi otomatis -->
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-2">
@@ -497,7 +510,7 @@
                                             {% else %}
                                                 <span class="badge bg-success">Genap</span>
                                             {% endif %}
-                                         </td>
+                                        </td>
                                         <td>{{ ta.nama_kepala_sekolah }}</td>
                                         <td>{{ ta.nip_kepala_sekolah }}</td>
                                         <td>
@@ -506,7 +519,7 @@
                                             {% else %}
                                                 <span class="badge bg-secondary">⏸ Nonaktif</span>
                                             {% endif %}
-                                         </td>
+                                        </td>
                                         <td>
                                             {% if not ta.aktif %}
                                             <form method="POST" action="{{ url_for('tahun_ajaran.aktifkan_tahun_ajaran') }}" 
@@ -527,8 +540,8 @@
                                                     data-kepala-id="{{ ta.kepala_sekolah_id }}">
                                                 <i class="fas fa-user-edit"></i> Edit Kepsek
                                             </button>
-                                         </td>
-                                     </tr>
+                                        </td>
+                                    </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -541,6 +554,7 @@
                 </div>
                 {% endif %}
             
+        
                 <!-- Modal Edit Kepala Sekolah -->
                 {% if active_tahun_ajaran %}
                 <div class="modal fade" id="editKepalaModal" tabindex="-1" aria-labelledby="editKepalaModalLabel" aria-hidden="true">
@@ -560,6 +574,7 @@
                                             <select class="form-select" id="editKepalaSelect" name="kepala_sekolah_id" required>
                                                 <option value="">-- Pilih Kepala Sekolah --</option>
                                                 {% for p in pegawai_dengan_profil %}
+                                                <!-- MODIFIKASI: Tampilkan sekolah asal dan tandai PLT -->
                                                 <option value="{{ p.id }}" data-nip="{{ p.nip }}" data-sekolah-id="{{ p.sekolah_id }}" 
                                                     data-sekolah-nama="{{ p.sekolah.nama_sekolah }}" data-kecamatan-id="{{ p.sekolah.kecamatan_id }}"
                                                     {% if active_tahun_ajaran.kepala_sekolah_id == p.id %}selected{% endif %}>
@@ -583,11 +598,13 @@
                                         <input type="text" class="form-control" id="editKepalaNip" readonly>
                                     </div>
 
+                                    <!-- MODIFIKASI: Tambahkan info sekolah asal -->
                                     <div class="mb-3">
                                         <label class="form-label">Asal Sekolah</label>
                                         <input type="text" class="form-control" id="editKepalaSekolahAsal" readonly>
                                     </div>
 
+                                    <!-- MODIFIKASI: Tambahkan info status PLT -->
                                     <div class="alert alert-info" id="pltInfo" style="display: none;">
                                         <i class="fas fa-info-circle"></i> 
                                         Pegawai ini berasal dari sekolah berbeda dan akan ditetapkan sebagai <strong>PLT (Pelaksana Tugas) Kepala Sekolah</strong>
@@ -605,11 +622,10 @@
                     </div>
                 </div>
                 {% endif %}
+        
             </div>
     
-            <!-- ========================================================= -->
-            <!-- TAB KELAS (DENGAN UPDATE TINGKAT DAN DROPDOWN) -->
-            <!-- ========================================================= -->
+            <!-- TAB KELAS -->
             <div class="tab-pane fade p-0" id="kelas" role="tabpanel">
                 <h4>Kelas Tahun Ajaran</h4>
 
@@ -632,7 +648,7 @@
                         </div>
                     </div>
 
-                    <!-- Form Tambah Kelas dengan dropdown dan tingkat -->
+                    <!-- ➕ PERBAIKAN: Form Tambah Kelas dengan dropdown dan tingkat -->
                     <form id="formKelas" class="mb-3">
                         <div class="row g-2">
                             <div class="col-md-6">
@@ -727,7 +743,7 @@
                     <thead>
                         <tr>
                             <th>Nama Kelas</th>
-                            <th>Tingkat</th>
+                            <th>Tingkat</th>  <!-- ➕ TAMBAHKAN -->
                             <th>Wali Kelas</th>
                             <th>NIP</th>
                             <th>Aksi</th>
@@ -765,9 +781,7 @@
                 </table>
             </div>
     
-            <!-- ========================================================= -->
-            <!-- TAB SISWA (DENGAN UPDATE SEARCH & ADD TO CLASS) -->
-            <!-- ========================================================= -->
+            <!-- TAB SISWA - DIPERBAIKI: Menambahkan kolom NISN di form -->
             <div class="tab-pane fade p-0" id="siswa" role="tabpanel">
                 <h4 class="mt-0 mb-1">Data Siswa</h4>
             
@@ -880,15 +894,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="5" class="text-center">Pilih kelas terlebih dahulu</td</tr>
+                            <tr><td colspan="5" class="text-center">Pilih kelas terlebih dahulu</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
     
-            <!-- ========================================================= -->
             <!-- TAB PENILAIAN -->
-            <!-- ========================================================= -->
             <div class="tab-pane fade p-0" id="Penilaian" role="tabpanel">
                 <h4 class="mt-0 mb-1">Penilaian Kebiasaan Siswa</h4>
 
@@ -967,13 +979,8 @@
                 </div>
                 {% endif %}
             </div>
-        </div>
     </div>
-
-    <!-- ========================================================= -->
-    <!-- MODALS -->
-    <!-- ========================================================= -->
-    
+    <!-- Modal lainnya -->
     <!-- MODAL EDIT SISWA -->
     <div class="modal fade" id="editSiswaModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -1096,6 +1103,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <!-- Filter Tahun Ajaran -->
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="tahunAjaranPenilaianSelect" class="form-label">Tahun Ajaran</label>
@@ -1113,6 +1121,7 @@
                             </div>
                         </div>
 
+                        <!-- Filter Kelas dan Siswa -->
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="kelasPenilaianSelect" class="form-label">Kelas</label>
@@ -1128,6 +1137,7 @@
                             </div>
                         </div>
 
+                        <!-- Info -->
                         <div class="alert alert-info mb-0">
                             <small>
                                 <strong>Catatan:</strong> Laporan ini akan menampilkan data per bulan untuk satu semester 
@@ -1212,29 +1222,15 @@
         </div>
     </div>
 
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-// ============================================================
-// UTILITY FUNCTIONS
-// ============================================================
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-function getDaysInMonth(bulanTahun) {
-    const [tahun, bulan] = bulanTahun.split('-').map(Number);
-    return new Date(tahun, bulan, 0).getDate();
-}
-
+// ✅ FUNCTION GLOBAL UNTUK GENERATE REPORT - DIPANGGIL DARI ONCLICK
 function generateReport() {
+    console.log('=== GENERATE REPORT FUNCTION CALLED ===');
+    
     const kelasSelect = document.getElementById('kelasSelectPenilaian');
     const bulanSelect = document.getElementById('bulanSelectPenilaian');
     
@@ -1256,46 +1252,45 @@ function generateReport() {
     }
     
     const url = `/laporan/penilaian/${kelasId}/${bulan}`;
+    console.log('Opening URL:', url);
     window.open(url, '_blank');
 }
+
+// Pastikan fungsi ini global
 window.generateReport = generateReport;
 
-// ============================================================
-// MAIN DOMCONTENTLOADED
-// ============================================================
+// ========== DOMCONTENTLOADED - SEMUA EVENT LISTENER ==========
 document.addEventListener("DOMContentLoaded", function() {
     console.log("Dashboard loaded successfully");
     
-    // ========== ELEMENT REFERENCES ==========
-    const formPilihTahunAjaran = document.getElementById("formPilihTahunAjaran");
-    const formKelas = document.getElementById("formKelas");
-    const kelasTableBody = document.querySelector("#kelasTable tbody");
-    const kelasDropdown = document.getElementById("kelasDropdown");
-    const formSiswa = document.getElementById("formSiswa");
-    const siswaTableBody = document.querySelector("#siswaTable tbody");
-    const kelasSelectPenilaian = document.getElementById("kelasSelectPenilaian");
-    const bulanSelectPenilaian = document.getElementById("bulanSelectPenilaian");
-    const siswaTableBodyPenilaian = document.getElementById("siswaTableBody");
-    
     // ========== TAHUN AJARAN ==========
+    // ========== ⭐ BARU: FORM PILIH TAHUN AJARAN DARI MASTER ==========
+    const formPilihTahunAjaran = document.getElementById("formPilihTahunAjaran");
     if (formPilihTahunAjaran) {
         formPilihTahunAjaran.addEventListener("submit", handlePilihTahunAjaranSubmit);
     }
-    
+
+    // ========== ⭐ PERBAIKAN: HANDLER UNTUK MASTER RADIO ==========
     const masterRadios = document.querySelectorAll('.master-radio');
     masterRadios.forEach(radio => {
-        radio.addEventListener('change', function() { checkFormReady(); });
-    });
-    
-    const kepalaRadio = document.querySelectorAll('.kepala-radio');
-    kepalaRadio.forEach(radio => {
         radio.addEventListener('change', function() {
-            document.getElementById('kepalaNip').value = this.dataset.nip || '';
-            document.getElementById('kepalaSekolahAsal').value = this.dataset.sekolah || '';
             checkFormReady();
         });
     });
-    
+
+    // ========== ⭐ PERBAIKAN: HANDLER UNTUK KEPALA SEKOLAH (dari list sekolah) ==========
+    const kepalaRadio = document.querySelectorAll('.kepala-radio');
+    kepalaRadio.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const nip = this.dataset.nip;
+            const sekolahAsal = this.dataset.sekolah;
+            document.getElementById('kepalaNip').value = nip || '';
+            document.getElementById('kepalaSekolahAsal').value = sekolahAsal || '';
+            checkFormReady();
+        });
+    });
+
+    // ========== ⭐ PERBAIKAN: HANDLER UNTUK TOMBOL LIHAT LEBIH BANYAK ==========
     const lihatLebihBanyakBtn = document.getElementById("lihatLebihBanyakBtn");
     if (lihatLebihBanyakBtn) {
         lihatLebihBanyakBtn.addEventListener("click", function() {
@@ -1303,7 +1298,7 @@ document.addEventListener("DOMContentLoaded", function() {
             if (container) container.style.display = 'block';
         });
     }
-    
+
     const tutupKecamatanBtn = document.getElementById("tutupKecamatanBtn");
     if (tutupKecamatanBtn) {
         tutupKecamatanBtn.addEventListener("click", function() {
@@ -1311,40 +1306,64 @@ document.addEventListener("DOMContentLoaded", function() {
             if (container) container.style.display = 'none';
         });
     }
-    
+
+    // ========== ⭐ PERBAIKAN: HANDLER PILIH DARI KECAMATAN ==========
     const kecamatanPegawaiSelect = document.getElementById("kecamatanPegawaiSelect");
     if (kecamatanPegawaiSelect) {
         kecamatanPegawaiSelect.addEventListener("change", function() {
             const selected = this.options[this.selectedIndex];
             const id = selected.value;
+            const nip = selected.dataset.nip;
+            const sekolahAsal = selected.dataset.sekolah;
+            
             if (id) {
-                document.getElementById('kepalaNip').value = selected.dataset.nip || '';
-                document.getElementById('kepalaSekolahAsal').value = selected.dataset.sekolah || '';
+                document.getElementById('kepalaNip').value = nip || '';
+                document.getElementById('kepalaSekolahAsal').value = sekolahAsal || '';
+                
+                // Tandai radio button yang sesuai
                 const radio = document.querySelector(`.kepala-radio[value="${id}"]`);
                 if (radio) radio.checked = true;
+                
                 checkFormReady();
                 document.getElementById("kecamatanPegawaiContainer").style.display = 'none';
             }
         });
     }
-    
+
+    // ========== ⭐ PERBAIKAN: CEK FORM SIAP DI-SUBMIT ==========
     function checkFormReady() {
         const masterSelected = document.querySelector('input[name="master_id"]:checked');
         const kepalaSelected = document.querySelector('input[name="kepala_sekolah_id"]:checked');
         const submitBtn = document.getElementById('submitPilihBtn');
-        if (submitBtn) submitBtn.disabled = !(masterSelected && kepalaSelected);
+        
+        console.log('checkFormReady - master:', masterSelected ? 'yes' : 'no', 'kepala:', kepalaSelected ? 'yes' : 'no');
+        
+        if (submitBtn) {
+            submitBtn.disabled = !(masterSelected && kepalaSelected);
+        }
     }
-    checkFormReady();
-    
+
+    // ========== ⭐ PERBAIKAN: HANDLER SUBMIT PILIH TAHUN AJARAN ==========
     function handlePilihTahunAjaranSubmit(e) {
         e.preventDefault();
+        
         const masterSelected = document.querySelector('input[name="master_id"]:checked');
         const kepalaSelected = document.querySelector('input[name="kepala_sekolah_id"]:checked');
-        if (!masterSelected) { alert('Pilih tahun ajaran dulu ya!'); return; }
-        if (!kepalaSelected) { alert('Pilih kepala sekolah dulu ya!'); return; }
+        
+        if (!masterSelected) {
+            alert('Pilih tahun ajaran dulu ya!');
+            return;
+        }
+        if (!kepalaSelected) {
+            alert('Pilih kepala sekolah dulu ya!');
+            return;
+        }
+        
         const formData = new FormData();
         formData.append('master_id', masterSelected.value);
         formData.append('kepala_sekolah_id', kepalaSelected.value);
+        
+        // Kirim data
         fetch("/tahun_ajaran/pilih_tahun_ajaran", {
             method: "POST",
             body: formData
@@ -1358,18 +1377,40 @@ document.addEventListener("DOMContentLoaded", function() {
                 alert("Gagal: " + data.message);
             }
         })
-        .catch(err => { alert("Error: " + err); });
+        .catch(err => {
+            alert("Error: " + err);
+        });
     }
-    
+
+    // Panggil checkFormReady di awal untuk memastikan status tombol
+    checkFormReady();
+
+    // Kepala Sekolah Select
+    const kepalaSelect = document.getElementById("kepalaSelect");
+    if (kepalaSelect) {
+        kepalaSelect.addEventListener("change", function() {
+            const selected = this.options[this.selectedIndex];
+            document.getElementById("kepalaNip").value = selected.getAttribute("data-nip") || "";
+            document.getElementById("kepalaSekolahAsal").value = selected.getAttribute("data-sekolah-nama") || "";
+        });
+        kepalaSelect.dispatchEvent(new Event("change"));
+    }
+
+    // Kepala Sekolah Select untuk modal edit - MODIFIKASI: tambahkan handler PLT
     const editKepalaSelect = document.getElementById("editKepalaSelect");
     if (editKepalaSelect) {
         editKepalaSelect.addEventListener("change", function() {
             const selected = this.options[this.selectedIndex];
-            document.getElementById("editKepalaNip").value = selected.dataset.nip || "";
-            document.getElementById("editKepalaSekolahAsal").value = selected.dataset.sekolahNama || "";
+            const sekolahAsalInput = document.getElementById("editKepalaSekolahAsal");
             const pltInfo = document.getElementById("pltInfo");
-            const sekolahIdSelected = selected.dataset.sekolahId;
-            const currentSekolahId = "{{ sekolah.id }}";
+            
+            document.getElementById("editKepalaNip").value = selected.getAttribute("data-nip") || "";
+            sekolahAsalInput.value = selected.getAttribute("data-sekolah-nama") || "";
+            
+            // MODIFIKASI: Tampilkan info PLT jika sekolah asal berbeda
+            const sekolahIdSelected = selected.getAttribute("data-sekolah-id");
+            const currentSekolahId = "{{ sekolah.id }}"; // ID sekolah saat ini dari template
+            
             if (sekolahIdSelected && currentSekolahId && sekolahIdSelected !== currentSekolahId) {
                 pltInfo.style.display = 'block';
             } else {
@@ -1378,10 +1419,73 @@ document.addEventListener("DOMContentLoaded", function() {
         });
         editKepalaSelect.dispatchEvent(new Event("change"));
     }
+
+    // Form Edit Kepala Sekolah
+    document.getElementById("formEditKepalaSekolah")?.addEventListener("submit", handleEditKepalaSekolah);
+
+    // ========== KELAS ==========
     
-    document.getElementById("formEditKepalaSekolah")?.addEventListener("submit", function(e) {
+    const formKelas = document.getElementById("formKelas");
+    const kelasTableBody = document.querySelector("#kelasTable tbody");
+    
+    if (formKelas) {
+        formKelas.addEventListener("submit", handleKelasSubmit);
+    }
+    
+    if (kelasTableBody) {
+        kelasTableBody.addEventListener("click", handleKelasActions);
+    }
+
+    // ========== SISWA ==========
+    
+    const kelasDropdown = document.getElementById("kelasDropdown");
+    const formSiswa = document.getElementById("formSiswa");
+    const siswaTableBody = document.querySelector("#siswaTable tbody");
+    
+    if (kelasDropdown) {
+        kelasDropdown.addEventListener("change", handleKelasChange);
+    }
+    
+    if (formSiswa) {
+        formSiswa.addEventListener("submit", handleSiswaSubmit);
+    }
+    
+    // Tambah baris input siswa
+    document.getElementById("addRow")?.addEventListener("click", addSiswaInputRow);
+    
+    // Hapus baris input siswa
+    document.addEventListener("click", function(e) {
+        if (e.target.classList.contains("remove-row")) {
+            e.target.closest("tr").remove();
+        }
+    });
+    
+    // Form edit siswa
+    document.getElementById("editSiswaForm")?.addEventListener("submit", handleEditSiswa);
+
+    // ========== PENILAIAN KEBIASAAN ==========
+    
+    const kelasSelectPenilaian = document.getElementById("kelasSelectPenilaian");
+    const bulanSelectPenilaian = document.getElementById("bulanSelectPenilaian");
+    const siswaTableBodyPenilaian = document.getElementById("siswaTableBody");
+    
+    if (kelasSelectPenilaian && bulanSelectPenilaian) {
+        initializePenilaianKebiasaan();
+    }
+
+    // ========== CHANGE PASSWORD ==========
+    
+    document.getElementById("changePasswordForm")?.addEventListener("submit", handleChangePassword);
+
+    // ========== LAPORAN ==========
+    
+    initializeLaporanModals();
+
+    // Handler Edit Kepala Sekolah - PERBAIKAN: tanpa async/await
+    function handleEditKepalaSekolah(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
+        
         fetch("{{ url_for('tahun_ajaran.update_kepala_sekolah') }}", {
             method: "POST",
             body: formData
@@ -1389,65 +1493,30 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(response => response.json())
         .then(result => {
             if(result.success){
-                alert("Kepala sekolah berhasil diperbarui");
+                let message = "Kepala sekolah berhasil diperbarui";
+                if (result.data && result.data.is_plt) {
+                    message += " sebagai PLT (Pelaksana Tugas)";
+                }
+                alert(message);
                 const modalEl = document.getElementById('editKepalaModal');
                 const modal = bootstrap.Modal.getInstance(modalEl);
                 if (modal) modal.hide();
                 location.reload();
             } else {
-                alert(result.message || "Terjadi kesalahan");
+                alert(result.message || "Terjadi kesalahan saat memperbarui kepala sekolah");
             }
         })
         .catch(error => {
             console.error('Error:', error);
             alert("Terjadi kesalahan saat memperbarui kepala sekolah");
         });
-    });
-    
-    // ========== KELAS ==========
-    if (formKelas) formKelas.addEventListener("submit", handleKelasSubmit);
-    if (kelasTableBody) kelasTableBody.addEventListener("click", handleKelasActions);
-    
-    // ========== SISWA ==========
-    if (kelasDropdown) kelasDropdown.addEventListener("change", handleKelasChange);
-    if (formSiswa) formSiswa.addEventListener("submit", handleSiswaSubmit);
-    document.getElementById("addRow")?.addEventListener("click", addSiswaInputRow);
-    document.getElementById("editSiswaForm")?.addEventListener("submit", handleEditSiswa);
-    document.addEventListener("click", function(e) {
-        if (e.target.classList.contains("remove-row")) e.target.closest("tr").remove();
-    });
-    
-    // ========== PENILAIAN ==========
-    if (kelasSelectPenilaian && bulanSelectPenilaian) initializePenilaianKebiasaan();
-    
-    // ========== CHANGE PASSWORD ==========
-    document.getElementById("changePasswordForm")?.addEventListener("submit", handleChangePassword);
-    
-    // ========== LAPORAN ==========
-    initializeLaporanModals();
-    
-    // ========== FORM KELAS (Dropdown Existing) ==========
-    initializeFormKelas();
-    
-    // ========== NAIK KELAS ==========
-    initializeNaikKelasModal();
-    
-    // ========== FUNGSI KELAS ==========
+    }
+
+    // Handler Kelas - PERBAIKAN: tanpa async/await
     function handleKelasSubmit(e) {
         e.preventDefault();
-        let namaKelas = document.getElementById('namaKelasBaru')?.value.trim();
-        if (!namaKelas) { alert('Masukkan nama kelas!'); return; }
-        if (window.existingKelasNames && window.existingKelasNames.has(namaKelas)) {
-            alert(`Kelas "${namaKelas}" sudah ada! Silakan gunakan nama lain.`);
-            return;
-        }
-        const tingkat = document.getElementById('tingkatKelas')?.value;
-        if (!tingkat) { alert('Pilih tingkat kelas!'); return; }
-        const formData = new FormData();
-        formData.append("nama_kelas", namaKelas);
-        formData.append("tingkat", tingkat);
-        formData.append("wali_kelas_id", "{{ current_user.pegawai.id }}");
-        formData.append("tahun_ajaran_id", "{{ active_tahun_ajaran.id if active_tahun_ajaran else '' }}");
+        const formData = new FormData(e.target);
+
         fetch("{{ url_for('kelas.create_kelas') }}", {
             method: "POST",
             body: formData
@@ -1456,53 +1525,56 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(result => {
             if(result.success){
                 alert(result.message);
-                if (window.existingKelasNames) window.existingKelasNames.add(namaKelas);
                 updateKelasTable(result.kelas);
-                const btnReset = document.getElementById('btnResetForm');
-                if (btnReset) btnReset.click();
+                e.target.reset();
             } else {
                 alert(result.message);
             }
         })
-        .catch(err => { console.error(err); alert("Terjadi kesalahan saat menyimpan kelas."); });
+        .catch(err => {
+            console.error(err);
+            alert("Terjadi kesalahan saat menyimpan kelas.");
+        });
     }
-    
+
     function handleKelasActions(e) {
         const target = e.target;
         const row = target.closest("tr");
         const id = row?.dataset.id;
+
         if (!id) return;
+
         if(target.classList.contains("delete-btn")){
             if (!confirm("Hapus kelas ini?")) return;
             deleteKelas(id, row);
         }
+
         if(target.classList.contains("edit-btn")){
             editKelas(id, row);
         }
-        if(target.classList.contains("edit-tingkat-btn")){
-            const tingkat = target.dataset.tingkat;
-            const nama = target.dataset.nama;
-            editTingkat(id, tingkat, nama);
-        }
     }
-    
+
     function deleteKelas(id, row) {
         fetch(`/kelas/delete/${id}`, { method: "POST" })
         .then(resp => resp.json())
         .then(result => {
             if(result.success){
-                const namaKelas = row.querySelector(".nama-kelas")?.innerText;
-                if (namaKelas && window.existingKelasNames) window.existingKelasNames.delete(namaKelas);
                 row.remove();
-            } else { alert(result.message); }
+            } else {
+                alert(result.message);
+            }
         })
-        .catch(err => { console.error(err); alert("Gagal menghapus kelas."); });
+        .catch(err => {
+            console.error(err);
+            alert("Gagal menghapus kelas.");
+        });
     }
-    
+
     function editKelas(id, row) {
         const currentNama = row.querySelector(".nama-kelas").innerText;
         const newNama = prompt("Ubah Nama Kelas:", currentNama);
         if(!newNama || newNama === currentNama) return;
+
         fetch(`/kelas/edit/${id}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1511,87 +1583,72 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(resp => resp.json())
         .then(result => {
             if(result.success){
-                if (window.existingKelasNames) {
-                    window.existingKelasNames.delete(currentNama);
-                    window.existingKelasNames.add(newNama);
-                }
                 row.querySelector(".nama-kelas").innerText = newNama;
-            } else { alert(result.message); }
+            } else {
+                alert(result.message);
+            }
         })
-        .catch(err => { console.error(err); alert("Gagal mengedit kelas."); });
+        .catch(err => {
+            console.error(err);
+            alert("Gagal mengedit kelas.");
+        });
     }
-    
-    function editTingkat(kelasId, currentTingkat, namaKelas) {
-        const newTingkat = prompt(`Ubah tingkat kelas "${namaKelas}":\n0=PAUD/TK, 1=Kelas1, 2=Kelas2, dst`, currentTingkat);
-        if (newTingkat !== null && !isNaN(newTingkat) && newTingkat !== currentTingkat) {
-            fetch('/kelas/update_tingkat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ kelas_id: kelasId, tingkat: parseInt(newTingkat) })
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) { alert('Tingkat kelas berhasil diupdate'); location.reload(); }
-                else { alert(result.message); }
-            })
-            .catch(error => { console.error('Error:', error); alert('Terjadi kesalahan saat mengupdate tingkat'); });
-        }
-    }
-    
+
     function updateKelasTable(kelas) {
-        if (!kelasTableBody) return;
         const kosongRow = kelasTableBody.querySelector("tr td[colspan]");
         if (kosongRow) kosongRow.parentElement.remove();
+
         const row = document.createElement("tr");
         row.setAttribute("data-id", kelas.id);
-        let tingkatText = '';
-        if (kelas.tingkat === 0) tingkatText = 'PAUD/TK';
-        else if (kelas.tingkat) tingkatText = `Kelas ${kelas.tingkat}`;
-        else tingkatText = '-';
         row.innerHTML = `
-            <td class="nama-kelas">${escapeHtml(kelas.nama_kelas)}</td>
-            <td class="tingkat-kelas">${tingkatText}</td>
-            <td>${escapeHtml(kelas.wali_kelas?.nama || '-')}</td>
-            <td>${escapeHtml(kelas.wali_kelas?.nip || '-')}</td>
+            <td class="nama-kelas">${kelas.nama_kelas}</td>
+            <td>${kelas.wali_kelas.nama}</td>
+            <td>${kelas.wali_kelas.nip}</td>
             <td>
                 <button class="btn btn-sm btn-warning edit-btn" data-id="${kelas.id}">Edit</button>
                 <button class="btn btn-sm btn-danger delete-btn" data-id="${kelas.id}">Hapus</button>
-                <button class="btn btn-sm btn-info edit-tingkat-btn" data-id="${kelas.id}" 
-                        data-tingkat="${kelas.tingkat || 1}" data-nama="${escapeHtml(kelas.nama_kelas)}">
-                    Edit Tingkat
-                </button>
             </td>
         `;
         kelasTableBody.appendChild(row);
-        if (window.existingKelasNames) window.existingKelasNames.add(kelas.nama_kelas);
     }
-    
-    // ========== FUNGSI SISWA ==========
+
+    // Handler Siswa - PERBAIKAN: tanpa async/await
     function handleKelasChange() {
         const kelasId = this.value;
         const kelasIdInput = document.getElementById("kelasIdInput");
+        
         if (!kelasId) {
             formSiswa?.classList.add("d-none");
-            if (siswaTableBody) siswaTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Pilih kelas terlebih dahulu</td></tr>';
+            if (siswaTableBody) {
+                siswaTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Pilih kelas terlebih dahulu</td></tr>';
+            }
             return;
         }
+
         formSiswa?.classList.remove("d-none");
         if (kelasIdInput) kelasIdInput.value = kelasId;
         loadSiswa(kelasId);
     }
-    
+
     function loadSiswa(kelasId) {
         fetch(`/siswa/list/${kelasId}`)
         .then(resp => resp.json())
         .then(data => {
-            if (data.success) renderSiswaTable(data.siswa);
-            else alert(data.message);
+            if (data.success) {
+                renderSiswaTable(data.siswa);
+            } else {
+                alert(data.message);
+            }
         })
-        .catch(error => { console.error('Error loading siswa:', error); alert('Gagal memuat data siswa'); });
+        .catch(error => {
+            console.error('Error loading siswa:', error);
+            alert('Gagal memuat data siswa');
+        });
     }
-    
+
     function renderSiswaTable(siswaList) {
         if (!siswaTableBody) return;
+        
         siswaTableBody.innerHTML = "";
         if (siswaList.length === 0) {
             siswaTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Belum ada siswa</td></tr>';
@@ -1599,49 +1656,200 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         siswaList.forEach(s => addSiswaRow(s));
     }
-    
+
     function addSiswaRow(s) {
         const row = document.createElement("tr");
         row.setAttribute("data-id", s.id);
         row.innerHTML = `
-            <td>${escapeHtml(s.nama_siswa)}</td>
-            <td>${escapeHtml(s.nisn || '-')}</td>
+            <td>${s.nama_siswa}</td>
+            <td>${s.nisn || '-'}</td>
             <td>${s.jenis_kelamin === "L" ? "Laki-laki" : "Perempuan"}</td>
-            <td>${escapeHtml(s.status)}</td>
+            <td>${s.status}</td>
             <td>
                 <button class="btn btn-sm btn-warning edit-btn" data-id="${s.id}">Edit</button>
                 <button class="btn btn-sm btn-danger delete-btn" data-id="${s.id}">Hapus</button>
             </td>
         `;
         siswaTableBody.appendChild(row);
-        row.querySelector(".edit-btn").addEventListener("click", () => openEditModal(s));
-        row.querySelector(".delete-btn").addEventListener("click", () => {
+
+        row.querySelector(".edit-btn").addEventListener("click", function() {
+            openEditModal(s);
+        });
+
+        row.querySelector(".delete-btn").addEventListener("click", function() {
             if (!confirm("Hapus siswa ini?")) return;
             fetch(`/siswa/delete/${s.id}`, { method: "POST" })
             .then(resp => resp.json())
-            .then(del => { if (del.success) row.remove(); else alert(del.message); });
+            .then(del => {
+                if (del.success) row.remove();
+                else alert(del.message);
+            });
         });
     }
-    
+
+   // 🔧 PERBAIKAN: handleSiswaSubmit dengan NISN dan handling naik kelas
+    function handleSiswaSubmit(e) {
+        e.preventDefault();
+        const rows = document.querySelectorAll("#siswaFormBody tr");
+        const kelasId = kelasDropdown.value;
+        let successCount = 0;
+        let processed = 0;
+        let errorMessages = [];
+
+        if (rows.length === 0) {
+            alert("Tidak ada data siswa yang ditambahkan");
+            return;
+        }
+
+        rows.forEach(row => {
+            const nama = row.querySelector('input[name="nama_siswa[]"]')?.value.trim();
+            const nisn = row.querySelector('input[name="nisn[]"]')?.value.trim() || '';
+            const jk = row.querySelector('select[name="jenis_kelamin[]"]')?.value;
+            const status = row.querySelector('select[name="status[]"]')?.value || 'Aktif';
+
+            if (!nama || !jk) {
+                processed++;
+                errorMessages.push(`Data tidak lengkap: Nama dan Jenis Kelamin wajib diisi`);
+                if (processed === rows.length) {
+                    showAlertMessage(errorMessages, successCount, kelasId);
+                    resetSiswaForm();
+                }
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("kelas_id", kelasId);
+            formData.append("nama_siswa", nama);
+            formData.append("nisn", nisn);
+            formData.append("jenis_kelamin", jk);
+            formData.append("status", status);
+
+            fetch('/siswa/create', {
+                method: "POST",
+                body: formData
+            })
+            .then(resp => resp.json())
+            .then(result => {
+                if (result.success) {
+                    successCount++;
+                    // Tampilkan pesan sukses dengan detail
+                    if (result.message.includes('dipindahkan')) {
+                        console.log(`✅ ${result.message}`);
+                    }
+                } else {
+                    let errorMsg = result.message;
+                    if (result.existing_data) {
+                        errorMsg = `${result.message}\n\n📋 Detail siswa yang sudah ada:\n• Nama: ${result.existing_data.nama_siswa}\n• Kelas: ${result.existing_data.kelas}\n• NISN: ${result.existing_data.nisn}`;
+                    }
+                    errorMessages.push(errorMsg);
+                }
+            })
+            .catch(error => {
+                console.error('Error adding siswa:', error);
+                errorMessages.push(`Terjadi kesalahan saat menambah siswa: ${nama}`);
+            })
+            .finally(() => {
+                processed++;
+                if (processed === rows.length) {
+                    showAlertMessage(errorMessages, successCount, kelasId);
+                    if (successCount > 0) {
+                        loadSiswa(kelasId);
+                        resetSiswaForm();
+                    }
+                }
+            });
+        });
+    }
+
+    // Helper function untuk menampilkan alert
+    function showAlertMessage(errorMessages, successCount, kelasId) {
+        if (successCount > 0 && errorMessages.length === 0) {
+            alert(`✅ ${successCount} siswa berhasil ditambahkan/dipindahkan ke kelas.`);
+        } else if (successCount > 0 && errorMessages.length > 0) {
+            alert(`⚠️ ${successCount} siswa berhasil, ${errorMessages.length} gagal.\n\nDetail error:\n${errorMessages.join('\n')}`);
+        } else if (errorMessages.length > 0) {
+            alert(`❌ Gagal menambahkan siswa:\n${errorMessages.join('\n')}`);
+        }
+    }
+
+    // PERBAIKAN: addSiswaInputRow dengan NISN
+    function addSiswaInputRow() {
+        let tbody = document.getElementById("siswaFormBody");
+        let row = document.createElement("tr");
+        row.innerHTML = `
+            <td><input type="text" name="nama_siswa[]" class="form-control form-control-sm" required></td>
+            <td><input type="text" name="nisn[]" class="form-control form-control-sm" placeholder="Opsional"></td>
+            <td>
+                <select name="jenis_kelamin[]" class="form-select form-select-sm" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="L">Laki-laki</option>
+                    <option value="P">Perempuan</option>
+                </select>
+            </td>
+            <td>
+                <select name="status[]" class="form-select form-select-sm">
+                    <option value="Aktif">Aktif</option>
+                    <option value="Tidak Aktif">Tidak Aktif</option>
+                    <option value="Pindah">Pindah</option>
+                </select>
+            </td>
+            <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    // PERBAIKAN: resetSiswaForm dengan NISN
+    function resetSiswaForm() {
+        document.getElementById("siswaFormBody").innerHTML = `
+            <tr>
+                <td><input type="text" name="nama_siswa[]" class="form-control form-control-sm" required></td>
+                <td><input type="text" name="nisn[]" class="form-control form-control-sm" placeholder="Opsional"></td>
+                <td>
+                    <select name="jenis_kelamin[]" class="form-select form-select-sm" required>
+                        <option value="">-- Pilih --</option>
+                        <option value="L">Laki-laki</option>
+                        <option value="P">Perempuan</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="status[]" class="form-select form-select-sm">
+                        <option value="Aktif">Aktif</option>
+                        <option value="Tidak Aktif">Tidak Aktif</option>
+                        <option value="Pindah">Pindah</option>
+                    </select>
+                </td>
+                <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
+            </tr>
+        `;
+    }
+
     function openEditModal(siswa) {
         document.getElementById("editId").value = siswa.id;
         document.getElementById("editNama").value = siswa.nama_siswa;
         document.getElementById("editNisn").value = siswa.nisn || '';
         document.getElementById("editJK").value = siswa.jenis_kelamin;
         document.getElementById("editStatus").value = siswa.status || 'Aktif';
-        new bootstrap.Modal(document.getElementById("editSiswaModal")).show();
+
+        const modal = new bootstrap.Modal(document.getElementById("editSiswaModal"));
+        modal.show();
     }
-    
+
     function handleEditSiswa(e) {
         e.preventDefault();
         const formData = new FormData(e.target);
         const id = formData.get("id");
-        fetch(`/siswa/update/${id}`, { method: "POST", body: formData })
+
+        fetch(`/siswa/update/${id}`, {
+            method: "POST",
+            body: formData
+        })
         .then(resp => resp.json())
         .then(result => {
             if (result.success) {
                 alert("Data siswa berhasil diupdate");
-                bootstrap.Modal.getInstance(document.getElementById("editSiswaModal")).hide();
+                const modalEl = document.getElementById("editSiswaModal");
+                bootstrap.Modal.getInstance(modalEl).hide();
+
                 const row = document.querySelector(`#siswaTable tr[data-id="${id}"]`);
                 if (row) {
                     row.children[0].textContent = result.siswa.nama_siswa;
@@ -1649,112 +1857,67 @@ document.addEventListener("DOMContentLoaded", function() {
                     row.children[2].textContent = result.siswa.jenis_kelamin === "L" ? "Laki-laki" : "Perempuan";
                     row.children[3].textContent = result.siswa.status;
                 }
-            } else alert(result.message);
-        })
-        .catch(error => { console.error('Error updating siswa:', error); alert("Terjadi kesalahan saat mengupdate siswa"); });
-    }
-    
-    function handleSiswaSubmit(e) {
-        e.preventDefault();
-        const rows = document.querySelectorAll("#siswaFormBody tr");
-        const kelasId = kelasDropdown.value;
-        let successCount = 0, processed = 0, errorMessages = [];
-        if (rows.length === 0) { alert("Tidak ada data siswa yang ditambahkan"); return; }
-        rows.forEach(row => {
-            const nama = row.querySelector('input[name="nama_siswa[]"]')?.value.trim();
-            const nisn = row.querySelector('input[name="nisn[]"]')?.value.trim() || '';
-            const jk = row.querySelector('select[name="jenis_kelamin[]"]')?.value;
-            const status = row.querySelector('select[name="status[]"]')?.value || 'Aktif';
-            if (!nama || !jk) {
-                processed++;
-                errorMessages.push(`Data tidak lengkap: Nama dan Jenis Kelamin wajib diisi`);
-                if (processed === rows.length) { showAlertMessage(errorMessages, successCount, kelasId); resetSiswaForm(); }
-                return;
+            } else {
+                alert(result.message);
             }
-            const formData = new FormData();
-            formData.append("kelas_id", kelasId);
-            formData.append("nama_siswa", nama);
-            formData.append("nisn", nisn);
-            formData.append("jenis_kelamin", jk);
-            formData.append("status", status);
-            fetch('/siswa/create', { method: "POST", body: formData })
-            .then(resp => resp.json())
-            .then(result => {
-                if (result.success) { successCount++; }
-                else {
-                    let errorMsg = result.message;
-                    if (result.existing_data) errorMsg = `${result.message}\n\n📋 Detail siswa yang sudah ada:\n• Nama: ${result.existing_data.nama_siswa}\n• Kelas: ${result.existing_data.kelas}\n• NISN: ${result.existing_data.nisn}`;
-                    errorMessages.push(errorMsg);
-                }
-            })
-            .catch(error => { console.error('Error adding siswa:', error); errorMessages.push(`Terjadi kesalahan saat menambah siswa: ${nama}`); })
-            .finally(() => {
-                processed++;
-                if (processed === rows.length) {
-                    showAlertMessage(errorMessages, successCount, kelasId);
-                    if (successCount > 0) { loadSiswa(kelasId); resetSiswaForm(); }
-                }
-            });
+        })
+        .catch(error => {
+            console.error('Error updating siswa:', error);
+            alert("Terjadi kesalahan saat mengupdate siswa");
         });
     }
-    
-    function showAlertMessage(errorMessages, successCount, kelasId) {
-        if (successCount > 0 && errorMessages.length === 0) alert(`✅ ${successCount} siswa berhasil ditambahkan/dipindahkan ke kelas.`);
-        else if (successCount > 0 && errorMessages.length > 0) alert(`⚠️ ${successCount} siswa berhasil, ${errorMessages.length} gagal.\n\nDetail error:\n${errorMessages.join('\n')}`);
-        else if (errorMessages.length > 0) alert(`❌ Gagal menambahkan siswa:\n${errorMessages.join('\n')}`);
-    }
-    
-    function addSiswaInputRow() {
-        let tbody = document.getElementById("siswaFormBody");
-        let row = document.createElement("tr");
-        row.innerHTML = `
-            <td><input type="text" name="nama_siswa[]" class="form-control form-control-sm" required></td>
-            <td><input type="text" name="nisn[]" class="form-control form-control-sm" placeholder="Opsional"></td>
-            <td><select name="jenis_kelamin[]" class="form-select form-select-sm" required><option value="">-- Pilih --</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></td>
-            <td><select name="status[]" class="form-select form-select-sm"><option value="Aktif">Aktif</option><option value="Tidak Aktif">Tidak Aktif</option><option value="Pindah">Pindah</option></select></td>
-            <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
-        `;
-        tbody.appendChild(row);
-    }
-    
-    function resetSiswaForm() {
-        document.getElementById("siswaFormBody").innerHTML = `
-            <tr>
-                <td><input type="text" name="nama_siswa[]" class="form-control form-control-sm" required></td>
-                <td><input type="text" name="nisn[]" class="form-control form-control-sm" placeholder="Opsional"></td>
-                <td><select name="jenis_kelamin[]" class="form-select form-select-sm" required><option value="">-- Pilih --</option><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></td>
-                <td><select name="status[]" class="form-select form-select-sm"><option value="Aktif">Aktif</option><option value="Tidak Aktif">Tidak Aktif</option><option value="Pindah">Pindah</option></select></td>
-                <td><button type="button" class="btn btn-danger btn-sm remove-row">Hapus</button></td>
-            </tr>
-        `;
-    }
-    
-    // ========== FUNGSI PENILAIAN ==========
+
+    // Handler Penilaian Kebiasaan - PERBAIKAN: tanpa async/await
     function initializePenilaianKebiasaan() {
-        kelasSelectPenilaian.addEventListener("change", () => loadSiswaPenilaian(this.value));
-        bulanSelectPenilaian.addEventListener("change", () => {
-            updateMaxValuesPenilaian();
-            if (kelasSelectPenilaian.value && this.value) loadNilaiPenilaian(kelasSelectPenilaian.value, this.value);
+        kelasSelectPenilaian.addEventListener("change", function() {
+            loadSiswaPenilaian(this.value);
         });
-        if (siswaTableBodyPenilaian) siswaTableBodyPenilaian.addEventListener("click", handlePenilaianActions);
-        document.addEventListener("input", e => { if (e.target.classList.contains("nilai-input") && e.target.type === "number") validateNilaiInput(e.target); });
+        
+        bulanSelectPenilaian.addEventListener("change", function() {
+            updateMaxValuesPenilaian();
+            if (kelasSelectPenilaian.value && this.value) {
+                loadNilaiPenilaian(kelasSelectPenilaian.value, this.value);
+            }
+        });
+
+        if (siswaTableBodyPenilaian) {
+            siswaTableBodyPenilaian.addEventListener("click", handlePenilaianActions);
+        }
+        
+        document.addEventListener("input", function(e) {
+            if (e.target.classList.contains("nilai-input") && e.target.type === "number") {
+                validateNilaiInput(e.target);
+            }
+        });
     }
-    
+
     function loadSiswaPenilaian(kelasId) {
         if (!siswaTableBodyPenilaian) return;
+        
         siswaTableBodyPenilaian.innerHTML = "";
-        if (!kelasId) { siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td></tr>'; return; }
+        if (!kelasId) {
+            siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td</tr>';
+            return;
+        }
+        
         fetch(`/penilaian/siswa/list/${kelasId}`)
         .then(res => res.json())
         .then(siswaList => {
-            if (!siswaList || !siswaList.length) { siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Belum ada siswa di kelas ini</td></tr>'; return; }
+            if (!siswaList || !siswaList.length) {
+                siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Belum ada siswa di kelas ini</td</tr>';
+                return;
+            }
+
             siswaList.forEach((siswa, idx) => {
                 const row = document.createElement("tr");
                 row.dataset.siswaId = siswa.id;
                 row.dataset.kelasId = kelasId;
                 row.innerHTML = `
                     <td class="text-center">${idx+1}</td>
-                    <td>${escapeHtml(siswa.nama_siswa)}<input type="hidden" name="siswa_id" value="${siswa.id}"><input type="hidden" name="kelas_id" value="${kelasId}"></td>
+                    <td>${siswa.nama_siswa}
+                        <input type="hidden" name="siswa_id" value="${siswa.id}">
+                        <input type="hidden" name="kelas_id" value="${kelasId}">
+                    </td>
                     <td><input type="number" class="form-control nilai-input" min="0" name="bangun_pagi" placeholder="0-31"></td>
                     <td><input type="number" class="form-control nilai-input" min="0" name="beribadah" placeholder="0-31"></td>
                     <td><input type="number" class="form-control nilai-input" min="0" name="berolahraga" placeholder="0-31"></td>
@@ -1763,37 +1926,67 @@ document.addEventListener("DOMContentLoaded", function() {
                     <td><input type="number" class="form-control nilai-input" min="0" name="bermasyarakat" placeholder="0-31"></td>
                     <td><input type="number" class="form-control nilai-input" min="0" name="tidur_cepat" placeholder="0-31"></td>
                     <td><input type="text" class="form-control" name="catatan" placeholder="Catatan..."></td>
-                    <td><div class="d-flex gap-1"><button type="button" class="btn btn-primary btn-sm btn-save">Simpan</button><button type="button" class="btn btn-warning btn-sm btn-update" style="display:none;">Update</button><button type="button" class="btn btn-danger btn-sm btn-delete">Hapus Isi</button></div></td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <button type="button" class="btn btn-primary btn-sm btn-save">Simpan</button>
+                            <button type="button" class="btn btn-warning btn-sm btn-update" style="display:none;">Update</button>
+                            <button type="button" class="btn btn-danger btn-sm btn-delete">Hapus Isi</button>
+                        </div>
+                    </td>
                 `;
                 siswaTableBodyPenilaian.appendChild(row);
             });
+
             updateMaxValuesPenilaian();
-            if (bulanSelectPenilaian.value) loadNilaiPenilaian(kelasId, bulanSelectPenilaian.value);
+
+            if (bulanSelectPenilaian.value) {
+                loadNilaiPenilaian(kelasId, bulanSelectPenilaian.value);
+            }
         })
-        .catch(err => { console.error(err); siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Gagal memuat data siswa</td></tr>'; });
+        .catch(err => {
+            console.error(err);
+            siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Gagal memuat data siswa</td</tr>';
+        });
     }
-    
+
     function updateMaxValuesPenilaian() {
         const bulanTahun = bulanSelectPenilaian?.value;
         if (!bulanTahun) return;
+        
         const maxHari = getDaysInMonth(bulanTahun);
-        document.querySelectorAll('.nilai-input[type="number"]').forEach(input => { input.max = maxHari; input.title = `Nilai maksimal: ${maxHari}`; });
+        const inputs = document.querySelectorAll('.nilai-input[type="number"]');
+        
+        inputs.forEach(input => {
+            input.max = maxHari;
+            input.title = `Nilai maksimal: ${maxHari} (sesuai jumlah hari dalam bulan)`;
+        });
     }
-    
+
+    function getDaysInMonth(bulanTahun) {
+        const [tahun, bulan] = bulanTahun.split('-').map(Number);
+        return new Date(tahun, bulan, 0).getDate();
+    }
+
     function loadNilaiPenilaian(kelasId, bulan) {
         fetch(`/penilaian/kebiasaan/get/${kelasId}/${bulan}`)
         .then(res => res.json())
         .then(data => {
             if (siswaTableBodyPenilaian) {
                 siswaTableBodyPenilaian.querySelectorAll("tr").forEach(tr => {
-                    tr.querySelectorAll("input").forEach(i => { if (!["siswa_id","kelas_id"].includes(i.name)) i.value = ""; i.removeAttribute("readonly"); });
-                    const saveBtn = tr.querySelector(".btn-save"), updateBtn = tr.querySelector(".btn-update");
+                    tr.querySelectorAll("input").forEach(i => {
+                        if (!["siswa_id","kelas_id"].includes(i.name)) i.value = "";
+                        i.removeAttribute("readonly");
+                    });
+                    const saveBtn = tr.querySelector(".btn-save");
+                    const updateBtn = tr.querySelector(".btn-update");
                     if (saveBtn) saveBtn.style.display = "inline-block";
                     if (updateBtn) updateBtn.style.display = "none";
                 });
+
                 data.forEach(row => {
                     const tr = siswaTableBodyPenilaian.querySelector(`tr[data-siswa-id="${row.siswa_id}"]`);
                     if (!tr) return;
+
                     tr.querySelector('[name="bangun_pagi"]').value = row.bangun_pagi || "";
                     tr.querySelector('[name="beribadah"]').value = row.beribadah || "";
                     tr.querySelector('[name="berolahraga"]').value = row.berolahraga || "";
@@ -1802,103 +1995,210 @@ document.addEventListener("DOMContentLoaded", function() {
                     tr.querySelector('[name="bermasyarakat"]').value = row.bermasyarakat || "";
                     tr.querySelector('[name="tidur_cepat"]').value = row.tidur_cepat || "";
                     tr.querySelector('[name="catatan"]').value = row.catatan || "";
-                    const hasData = row.bangun_pagi || row.beribadah || row.berolahraga || row.sehat_dan_lemar || row.belajar || row.bermasyarakat || row.tidur_cepat || row.catatan;
+
+                    const hasData = row.bangun_pagi || row.beribadah || row.berolahraga ||
+                                    row.sehat_dan_lemar || row.belajar || 
+                                    row.bermasyarakat || row.tidur_cepat || row.catatan;
+
                     if (hasData) {
                         tr.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
-                        const saveBtn = tr.querySelector(".btn-save"), updateBtn = tr.querySelector(".btn-update");
+                        const saveBtn = tr.querySelector(".btn-save");
+                        const updateBtn = tr.querySelector(".btn-update");
                         if (saveBtn) saveBtn.style.display = "none";
                         if (updateBtn) updateBtn.style.display = "inline-block";
                     } else {
-                        const saveBtn = tr.querySelector(".btn-save"), updateBtn = tr.querySelector(".btn-update");
+                        const saveBtn = tr.querySelector(".btn-save");
+                        const updateBtn = tr.querySelector(".btn-update");
                         if (saveBtn) saveBtn.style.display = "inline-block";
                         if (updateBtn) updateBtn.style.display = "none";
                     }
                 });
             }
         })
-        .catch(err => console.error("Gagal load nilai:", err));
+        .catch(err => {
+            console.error("Gagal load nilai:", err);
+        });
     }
-    
+
     function handlePenilaianActions(e) {
         const row = e.target.closest("tr");
         if (!row) return;
-        const siswaId = row.dataset.siswaId, kelasId = row.dataset.kelasId, bulan = bulanSelectPenilaian?.value;
-        if (!bulan) { alert("Pilih bulan terlebih dahulu"); return; }
+        
+        const siswaId = row.dataset.siswaId;
+        const kelasId = row.dataset.kelasId;
+        const bulan = bulanSelectPenilaian?.value;
+        
+        if (!bulan) { 
+            alert("Pilih bulan terlebih dahulu"); 
+            return; 
+        }
+
+        // Validasi nilai sebelum simpan
         const maxHari = getDaysInMonth(bulan);
+        const inputs = row.querySelectorAll('.nilai-input[type="number"]');
         let valid = true;
-        row.querySelectorAll('.nilai-input[type="number"]').forEach(input => {
+        
+        inputs.forEach(input => {
             const value = parseInt(input.value) || 0;
-            if (value > maxHari) { alert(`Nilai ${input.name} tidak boleh lebih dari ${maxHari}`); input.focus(); valid = false; }
+            if (value > maxHari) {
+                alert(`Nilai ${input.name} tidak boleh lebih dari ${maxHari} (jumlah hari dalam bulan)`);
+                input.focus();
+                valid = false;
+            }
         });
+        
         if (!valid) return;
+
+        // KLIK TOMBOL SAVE
         if (e.target.classList.contains("btn-save")) {
             const formData = new FormData();
             formData.append("siswa_id", siswaId);
             formData.append("kelas_id", kelasId);
             formData.append("bulan", bulan);
-            row.querySelectorAll("input").forEach(i => { if (!["siswa_id","kelas_id"].includes(i.name)) formData.append(i.name, i.value || ""); });
+            row.querySelectorAll("input").forEach(i => {
+                if (!["siswa_id","kelas_id"].includes(i.name)) {
+                    formData.append(i.name, i.value || "");
+                }
+            });
+
             const originalText = e.target.textContent;
             e.target.textContent = "Menyimpan...";
             e.target.disabled = true;
-            fetch("/penilaian/kebiasaan/save_row", { method: "POST", body: formData })
+
+            fetch("/penilaian/kebiasaan/save_row", {
+                method: "POST", 
+                body: formData
+            })
             .then(res => res.json())
             .then(result => {
                 alert(result.message);
                 if (result.success) {
                     row.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
-                    const saveBtn = row.querySelector(".btn-save"), updateBtn = row.querySelector(".btn-update");
-                    if (saveBtn) { saveBtn.style.display = "none"; saveBtn.textContent = "Simpan"; saveBtn.disabled = false; }
-                    if (updateBtn) { updateBtn.style.display = "inline-block"; updateBtn.disabled = false; }
+                    const saveBtn = row.querySelector(".btn-save");
+                    const updateBtn = row.querySelector(".btn-update");
+                    if (saveBtn) {
+                        saveBtn.style.display = "none";
+                        saveBtn.textContent = "Simpan";
+                        saveBtn.disabled = false;
+                    }
+                    if (updateBtn) {
+                        updateBtn.style.display = "inline-block";
+                        updateBtn.disabled = false;
+                    }
                 }
             })
-            .catch(err => { console.error(err); alert("Terjadi kesalahan saat menyimpan"); })
-            .finally(() => { e.target.textContent = originalText; e.target.disabled = false; });
+            .catch(err => { 
+                console.error(err); 
+                alert("Terjadi kesalahan saat menyimpan"); 
+            })
+            .finally(() => {
+                e.target.textContent = originalText;
+                e.target.disabled = false;
+            });
         }
+
+        // KLIK TOMBOL UPDATE
         if (e.target.classList.contains("btn-update")) {
             row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
-            const saveBtn = row.querySelector(".btn-save"), updateBtn = row.querySelector(".btn-update");
-            if (saveBtn) { saveBtn.style.display = "inline-block"; saveBtn.disabled = false; }
-            if (updateBtn) updateBtn.style.display = "none";
-            row.querySelector('.nilai-input')?.focus();
+            const saveBtn = row.querySelector(".btn-save");
+            const updateBtn = row.querySelector(".btn-update");
+            if (saveBtn) {
+                saveBtn.style.display = "inline-block";
+                saveBtn.disabled = false;
+            }
+            if (updateBtn) {
+                updateBtn.style.display = "none";
+            }
+            
+            const firstInput = row.querySelector('.nilai-input');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 100);
+            }
         }
+
+        // DELETE
         if (e.target.classList.contains("btn-delete")) {
             if (!confirm("Hapus semua nilai kebiasaan siswa ini?")) return;
+            
             const originalText = e.target.textContent;
             e.target.textContent = "Menghapus...";
             e.target.disabled = true;
-            fetch(`/penilaian/kebiasaan/delete_row/${siswaId}/${bulan}`, { method: "POST" })
+            
+            fetch(`/penilaian/kebiasaan/delete_row/${siswaId}/${bulan}`, {
+                method: "POST"
+            })
             .then(res => res.json())
             .then(result => {
                 alert(result.message);
                 if (result.success) {
-                    row.querySelectorAll("input").forEach(i => { if(!["siswa_id","kelas_id"].includes(i.name)) i.value=""; i.removeAttribute("readonly"); });
-                    const saveBtn = row.querySelector(".btn-save"), updateBtn = row.querySelector(".btn-update");
-                    if (saveBtn) { saveBtn.style.display = "inline-block"; saveBtn.disabled = false; }
-                    if (updateBtn) updateBtn.style.display = "none";
+                    row.querySelectorAll("input").forEach(i => { 
+                        if(!["siswa_id","kelas_id"].includes(i.name)) i.value=""; 
+                    });
+                    row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
+                    const saveBtn = row.querySelector(".btn-save");
+                    const updateBtn = row.querySelector(".btn-update");
+                    if (saveBtn) {
+                        saveBtn.style.display = "inline-block";
+                        saveBtn.disabled = false;
+                    }
+                    if (updateBtn) {
+                        updateBtn.style.display = "none";
+                    }
                 }
             })
-            .catch(err => { console.error(err); alert("Terjadi kesalahan saat hapus data"); })
-            .finally(() => { e.target.textContent = originalText; e.target.disabled = false; });
+            .catch(err => { 
+                console.error(err); 
+                alert("Terjadi kesalahan saat hapus data"); 
+            })
+            .finally(() => {
+                e.target.textContent = originalText;
+                e.target.disabled = false;
+            });
         }
     }
-    
+
     function validateNilaiInput(input) {
         const bulanTahun = bulanSelectPenilaian?.value;
-        if (!bulanTahun) { alert("Pilih bulan terlebih dahulu"); input.value = ""; return; }
+        if (!bulanTahun) {
+            alert("Pilih bulan terlebih dahulu");
+            input.value = "";
+            return;
+        }
+        
         const maxHari = getDaysInMonth(bulanTahun);
         let val = parseInt(input.value);
-        if (isNaN(val)) { input.value = ""; return; }
-        if (val > maxHari) { input.value = maxHari; alert(`Nilai maksimal untuk bulan ini adalah ${maxHari} hari`); }
-        if (val < 0) input.value = 0;
+        
+        if (isNaN(val)) {
+            input.value = "";
+            return;
+        }
+        
+        if (val > maxHari) {
+            input.value = maxHari;
+            alert(`Nilai maksimal untuk bulan ini adalah ${maxHari} hari`);
+        }
+        
+        if (val < 0) {
+            input.value = 0;
+        }
     }
-    
-    // ========== FUNGSI CHANGE PASSWORD ==========
+
+    // Handler Change Password - PERBAIKAN: tanpa async/await
     function handleChangePassword(e) {
         e.preventDefault();
+        const form = e.target;
+        const msgDiv = document.getElementById("changePasswordMessage");
+        msgDiv.textContent = "";
+
         const current_password = document.getElementById("currentPassword").value;
         const new_password = document.getElementById("newPassword").value;
         const confirm_password = document.getElementById("confirmPassword").value;
-        if (new_password !== confirm_password) { document.getElementById("changePasswordMessage").textContent = "Password baru dan konfirmasi tidak cocok!"; return; }
+
+        if (new_password !== confirm_password) {
+            msgDiv.textContent = "Password baru dan konfirmasi tidak cocok!";
+            return;
+        }
+
         fetch("{{ url_for('change_password') }}", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1908,321 +2208,883 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(result => {
             if (result.success) {
                 alert(result.message || "Password berhasil diubah!");
-                bootstrap.Modal.getInstance(document.getElementById("changePasswordModal")).hide();
-                e.target.reset();
-            } else { document.getElementById("changePasswordMessage").textContent = result.message || "Terjadi kesalahan!"; }
-        })
-        .catch(err => { console.error(err); document.getElementById("changePasswordMessage").textContent = "Terjadi kesalahan saat mengubah password!"; });
-    }
-    
-    // ========== FUNGSI LAPORAN ==========
-    function initializeLaporanModals() {
-        document.getElementById("laporanForm")?.addEventListener("submit", function(e) {
-            const kelasId = document.getElementById("kelasSelect").value, bulan = document.getElementById("bulanSelect").value;
-            if (!kelasId || !bulan) { alert("Tolong pilih kelas dan bulan terlebih dahulu."); e.preventDefault(); return; }
-            this.action = `/laporan/rchk/${kelasId}/${bulan}`;
-        });
-        document.getElementById("laporanPenilaianSiswaForm")?.addEventListener("submit", function(e) {
-            const kelasId = document.getElementById("kelasPenilaianSelect").value, siswaId = document.getElementById("siswaPenilaianSelect").value;
-            if (!kelasId || !siswaId) { alert("Harap pilih kelas dan siswa terlebih dahulu!"); e.preventDefault(); return; }
-            this.action = `/laporan/penilaian-siswa/${siswaId}`;
-        });
-        const modalElement = document.getElementById('laporanPenilaianSiswaModal');
-        if (modalElement) modalElement.addEventListener('show.bs.modal', () => loadTahunAjaranForLaporan());
-        document.getElementById("tahunAjaranPenilaianSelect")?.addEventListener("change", function() {
-            if (this.value) loadKelasByTahunAjaran(this.value);
-            else resetKelasAndSiswa();
-        });
-        document.getElementById("kelasPenilaianSelect")?.addEventListener("change", function() {
-            if (this.value) loadSiswaByKelas(this.value);
-            else resetSiswa();
-        });
-    }
-    
-    function loadTahunAjaranForLaporan() {
-        fetch('/laporan/api/tahun-ajaran')
-        .then(response => response.json())
-        .then(data => {
-            const select = document.getElementById('tahunAjaranPenilaianSelect');
-            if (!select) return;
-            select.innerHTML = '<option value="">-- Pilih Tahun Ajaran --</option>';
-            data.tahun_ajaran.forEach(ta => { const opt = document.createElement('option'); opt.value = ta.id; opt.textContent = `${ta.tahun_ajaran} (${ta.semester}) - ${ta.status}`; select.appendChild(opt); });
-        })
-        .catch(error => console.error('Error loading tahun ajaran:', error));
-    }
-    
-    function loadKelasByTahunAjaran(tahunAjaranId) {
-        fetch(`/laporan/api/kelas-by-tahun-ajaran/${tahunAjaranId}`)
-        .then(response => response.json())
-        .then(data => {
-            const select = document.getElementById('kelasPenilaianSelect');
-            if (!select) return;
-            select.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-            data.kelas.forEach(kelas => { const opt = document.createElement('option'); opt.value = kelas.id; opt.textContent = kelas.nama_kelas; select.appendChild(opt); });
-            resetSiswa();
-        })
-        .catch(error => console.error('Error loading kelas:', error));
-    }
-    
-    function loadSiswaByKelas(kelasId) {
-        fetch(`/laporan/api/siswa-by-kelas/${kelasId}`)
-        .then(response => response.json())
-        .then(data => {
-            const select = document.getElementById('siswaPenilaianSelect');
-            if (!select) return;
-            select.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-            if (data.success && data.siswa) data.siswa.forEach(siswa => { const opt = document.createElement('option'); opt.value = siswa.id; opt.textContent = siswa.nama_siswa; select.appendChild(opt); });
-        })
-        .catch(error => console.error('Error loading siswa:', error));
-    }
-    
-    function resetKelasAndSiswa() {
-        const kelasSelect = document.getElementById('kelasPenilaianSelect');
-        const siswaSelect = document.getElementById('siswaPenilaianSelect');
-        if (kelasSelect) kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
-        if (siswaSelect) siswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-    }
-    
-    function resetSiswa() {
-        const siswaSelect = document.getElementById('siswaPenilaianSelect');
-        if (siswaSelect) siswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-    }
-    
-    // ========== FUNGSI FORM KELAS ==========
-    function initializeFormKelas() {
-        const pilihKelasExisting = document.getElementById('pilihKelasExisting');
-        const namaKelasBaru = document.getElementById('namaKelasBaru');
-        const tingkatKelas = document.getElementById('tingkatKelas');
-        const btnResetForm = document.getElementById('btnResetForm');
-        const duplicateWarning = document.getElementById('duplicateWarning');
-        const duplicateMessage = document.getElementById('duplicateMessage');
-        const btnTambahKelas = document.getElementById('btnTambahKelas');
-        
-        window.existingKelasNames = new Set();
-        {% for k in kelas_list %}
-        window.existingKelasNames.add("{{ k.nama_kelas }}");
-        {% endfor %}
-        
-        function checkDuplicateKelas(namaKelas) {
-            if (!namaKelas) return false;
-            if (window.existingKelasNames.has(namaKelas)) {
-                if (duplicateMessage) duplicateMessage.innerHTML = `Kelas "<strong>${escapeHtml(namaKelas)}</strong>" sudah ada di tahun ajaran ini! Silakan gunakan nama lain.`;
-                if (duplicateWarning) duplicateWarning.style.display = 'block';
-                if (btnTambahKelas) btnTambahKelas.disabled = true;
-                return true;
+                const modal = bootstrap.Modal.getInstance(document.getElementById("changePasswordModal"));
+                modal.hide();
+                form.reset();
             } else {
-                if (duplicateWarning) duplicateWarning.style.display = 'none';
-                if (btnTambahKelas) btnTambahKelas.disabled = false;
-                return false;
+                msgDiv.textContent = result.message || "Terjadi kesalahan!";
             }
-        }
-        
-        if (pilihKelasExisting) {
-            pilihKelasExisting.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const namaKelas = this.value;
-                const tingkat = selectedOption.dataset.tingkat;
-                if (namaKelas && namaKelasBaru) {
-                    namaKelasBaru.value = namaKelas;
-                    if (tingkatKelas && tingkat && tingkat !== 'undefined') tingkatKelas.value = tingkat;
-                    if (duplicateMessage) duplicateMessage.innerHTML = `Kelas "<strong>${escapeHtml(namaKelas)}</strong>" sudah ada di tahun ajaran ini.`;
-                    if (duplicateWarning) duplicateWarning.style.display = 'block';
-                    if (btnTambahKelas) btnTambahKelas.disabled = true;
-                } else if (namaKelasBaru) {
-                    namaKelasBaru.value = '';
-                    if (duplicateWarning) duplicateWarning.style.display = 'none';
-                    if (btnTambahKelas) btnTambahKelas.disabled = false;
-                }
-            });
-        }
-        
-        if (namaKelasBaru) namaKelasBaru.addEventListener('input', () => checkDuplicateKelas(namaKelasBaru.value.trim()));
-        if (btnResetForm) {
-            btnResetForm.addEventListener('click', () => {
-                if (pilihKelasExisting) pilihKelasExisting.value = '';
-                if (namaKelasBaru) namaKelasBaru.value = '';
-                if (tingkatKelas) tingkatKelas.value = '';
-                if (duplicateWarning) duplicateWarning.style.display = 'none';
-                if (btnTambahKelas) btnTambahKelas.disabled = false;
-            });
-        }
-        window.checkDuplicateKelas = checkDuplicateKelas;
+        })
+        .catch(err => {
+            console.error(err);
+            msgDiv.textContent = "Terjadi kesalahan saat mengubah password!";
+        });
     }
-    
-    // ========== FUNGSI NAIK KELAS ==========
-    function initializeNaikKelasModal() {
-        const dariKelasSelect = document.getElementById('dariKelasSelect');
-        const keKelasSelect = document.getElementById('keKelasSelect');
-        const opsiNaikKelas = document.getElementById('opsiNaikKelas');
-        const btnProsesNaikKelas = document.getElementById('btnProsesNaikKelas');
-        if (!dariKelasSelect) return;
-        let siswaPerKelas = {};
-        
-        dariKelasSelect.addEventListener('change', function() {
-            const dariKelasId = this.value;
-            const selectedOption = this.options[this.selectedIndex];
-            const dariTingkat = parseInt(selectedOption.dataset.tingkat) || 0;
-            if (!dariKelasId) {
-                if (keKelasSelect) { keKelasSelect.disabled = true; keKelasSelect.innerHTML = '<option value="">-- Pilih Kelas Tujuan --</option>'; }
+
+    // Handler Laporan (Modals)
+    function initializeLaporanModals() {
+        // Laporan Bulanan
+        document.getElementById("laporanForm")?.addEventListener("submit", function (e) {
+            const kelasId = document.getElementById("kelasSelect").value;
+            const bulan = document.getElementById("bulanSelect").value;
+
+            if (!kelasId || !bulan) {
+                alert("Tolong pilih kelas dan bulan terlebih dahulu.");
+                e.preventDefault();
                 return;
             }
-            loadKelasTujuan(dariTingkat);
-            loadSiswaUntukNaikKelas(dariKelasId);
+
+            this.action = `/laporan/rchk/${kelasId}/${bulan}`;
         });
-        
-        if (opsiNaikKelas) opsiNaikKelas.addEventListener('change', function() {
-            document.getElementById('siswaChecklistContainer').style.display = this.value === 'pilih' ? 'block' : 'none';
-            updatePreview();
-        });
-        
-        if (btnProsesNaikKelas) btnProsesNaikKelas.addEventListener('click', () => prosesNaikKelas());
-        
-        function loadKelasTujuan(dariTingkat) {
-            fetch(`/kelas/list_by_tingkat?tingkat=${dariTingkat + 1}`)
-            .then(response => response.json())
-            .then(data => {
-                if (keKelasSelect) {
-                    keKelasSelect.innerHTML = '<option value="">-- Pilih Kelas Tujuan --</option>';
-                    if (data.success && data.kelas && data.kelas.length > 0) {
-                        data.kelas.forEach(kelas => { const opt = document.createElement('option'); opt.value = kelas.id; opt.textContent = `${kelas.nama_kelas} (Tingkat ${kelas.tingkat || dariTingkat + 1})`; keKelasSelect.appendChild(opt); });
-                        keKelasSelect.disabled = false;
-                    } else { keKelasSelect.innerHTML = '<option value="">-- Tidak ada kelas tujuan --</option>'; keKelasSelect.disabled = true; alert(`⚠️ Belum ada kelas untuk tingkat ${dariTingkat + 1}`); }
-                }
-            })
-            .catch(error => { console.error('Error loading kelas tujuan:', error); if (keKelasSelect) keKelasSelect.disabled = true; });
-        }
-        
-        function loadSiswaUntukNaikKelas(kelasId) {
-            fetch(`/siswa/list/${kelasId}`)
-            .then(response => response.json())
-            .then(data => {
-                const checklist = document.getElementById('siswaChecklist');
-                if (!checklist) return;
-                if (data.success && data.siswa) {
-                    siswaPerKelas[kelasId] = data.siswa;
-                    let html = '';
-                    data.siswa.forEach(siswa => {
-                        if (siswa.status === 'Aktif') html += `<div class="form-check"><input class="form-check-input siswa-checkbox" type="checkbox" value="${siswa.id}" id="siswa_${siswa.id}" data-nama="${escapeHtml(siswa.nama_siswa)}" checked><label class="form-check-label" for="siswa_${siswa.id}">${escapeHtml(siswa.nama_siswa)} (NISN: ${escapeHtml(siswa.nisn || '-')})</label></div>`;
-                    });
-                    checklist.innerHTML = html || '<div class="text-muted text-center">Tidak ada siswa aktif di kelas ini</div>';
-                    updatePreview();
-                }
-            })
-            .catch(error => { console.error('Error loading siswa:', error); if (checklist) checklist.innerHTML = '<div class="text-danger">Gagal memuat data siswa</div>'; });
-        }
-        
-        function updatePreview() {
-            const previewText = document.getElementById('previewText');
-            const infoPreview = document.getElementById('infoPreview');
-            const dariKelas = dariKelasSelect.options[dariKelasSelect.selectedIndex]?.text || '-';
-            const keKelas = keKelasSelect.options[keKelasSelect.selectedIndex]?.text || '-';
-            let jumlahSiswa = 0;
-            if (opsiNaikKelas?.value === 'semua') {
-                const kelasId = dariKelasSelect.value;
-                if (kelasId && siswaPerKelas[kelasId]) jumlahSiswa = siswaPerKelas[kelasId].filter(s => s.status === 'Aktif').length;
-                if (previewText) previewText.innerHTML = `Akan menaikkan <strong>${jumlahSiswa} siswa</strong> dari <strong>${dariKelas}</strong> ke <strong>${keKelas}</strong>`;
-            } else {
-                const checkboxes = document.querySelectorAll('.siswa-checkbox:checked');
-                jumlahSiswa = checkboxes.length;
-                const namaSiswa = Array.from(checkboxes).slice(0, 3).map(cb => cb.dataset.nama).join(', ');
-                const more = jumlahSiswa > 3 ? `, +${jumlahSiswa - 3} lainnya` : '';
-                if (previewText) previewText.innerHTML = `Akan menaikkan <strong>${jumlahSiswa} siswa</strong> (${namaSiswa}${more}) dari <strong>${dariKelas}</strong> ke <strong>${keKelas}</strong>`;
+
+        // Laporan Semester
+        document.getElementById("laporanSemesterForm")?.addEventListener("submit", function (e) {
+            const kelasId = document.getElementById("kelasSemesterSelect").value;
+            const semester = document.getElementById("semesterSelect").value;
+
+            if (!kelasId || !semester) {
+                alert("Tolong pilih kelas dan semester terlebih dahulu.");
+                e.preventDefault();
+                return;
             }
-            if (infoPreview) infoPreview.style.display = 'block';
-            const valid = dariKelasSelect.value && keKelasSelect.value && ((opsiNaikKelas?.value === 'semua' && jumlahSiswa > 0) || (opsiNaikKelas?.value === 'pilih' && document.querySelectorAll('.siswa-checkbox:checked').length > 0));
-            if (btnProsesNaikKelas) btnProsesNaikKelas.disabled = !valid;
-        }
+
+            this.action = `/laporan/semester/${kelasId}/${semester}`;
+        });
+
+        // Laporan Tahunan
+        document.getElementById("laporanTahunanForm")?.addEventListener("submit", function (e) {
+            const kelasId = document.getElementById("kelasTahunanSelect").value;
+
+            if (!kelasId) {
+                alert("Tolong pilih kelas terlebih dahulu.");
+                e.preventDefault();
+                return;
+            }
+
+            this.action = `/laporan/tahunan/${kelasId}`;
+        });
+
+        // Laporan Penilaian Siswa - Load siswa ketika kelas dipilih
+        const kelasPenilaianSelect = document.getElementById("kelasPenilaianSelect");
+        const siswaPenilaianSelect = document.getElementById("siswaPenilaianSelect");
         
-        function prosesNaikKelas() {
-            const dariKelasId = dariKelasSelect.value, keKelasId = keKelasSelect.value, opsi = opsiNaikKelas?.value;
-            if (!dariKelasId || !keKelasId) { alert('Pilih kelas asal dan kelas tujuan!'); return; }
-            let siswaIds = [];
-            if (opsi === 'semua') { if (siswaPerKelas[dariKelasId]) siswaIds = siswaPerKelas[dariKelasId].filter(s => s.status === 'Aktif').map(s => s.id); }
-            else { const checkboxes = document.querySelectorAll('.siswa-checkbox:checked'); siswaIds = Array.from(checkboxes).map(cb => parseInt(cb.value)); }
-            if (siswaIds.length === 0) { alert('Tidak ada siswa yang dipilih untuk dinaikkan kelas'); return; }
-            if (!confirm(`Naikkan ${siswaIds.length} siswa ke kelas ${keKelasSelect.options[keKelasSelect.selectedIndex]?.text}?`)) return;
-            const originalText = btnProsesNaikKelas?.innerHTML;
-            if (btnProsesNaikKelas) { btnProsesNaikKelas.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...'; btnProsesNaikKelas.disabled = true; }
-            fetch('/siswa/naik_kelas_massal', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ dari_kelas_id: parseInt(dariKelasId), ke_kelas_id: parseInt(keKelasId), siswa_ids: siswaIds })
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) { alert(`✅ ${result.message}\n\nBerhasil: ${result.data.berhasil.length}\nGagal: ${result.data.gagal.length}`); location.reload(); }
-                else { alert('❌ Gagal: ' + result.message); }
-            })
-            .catch(error => { console.error('Error:', error); alert('❌ Terjadi kesalahan saat memproses naik kelas'); })
-            .finally(() => { if (btnProsesNaikKelas) { btnProsesNaikKelas.innerHTML = originalText; btnProsesNaikKelas.disabled = false; } });
+        if (kelasPenilaianSelect && siswaPenilaianSelect) {
+            kelasPenilaianSelect.addEventListener("change", function() {
+                const kelasId = this.value;
+                loadSiswaForLaporan(kelasId, siswaPenilaianSelect);
+            });
         }
-        
-        document.addEventListener('change', e => { if (e.target.classList?.contains('siswa-checkbox')) updatePreview(); });
+
+        document.getElementById("laporanPenilaianSiswaForm")?.addEventListener("submit", function (e) {
+            const kelasId = document.getElementById("kelasPenilaianSelect").value;
+            const siswaId = document.getElementById("siswaPenilaianSelect").value;
+
+            if (!kelasId || !siswaId) {
+                alert("Harap pilih kelas dan siswa terlebih dahulu!");
+                e.preventDefault();
+                return;
+            }
+
+            this.action = `/laporan/penilaian-siswa/${siswaId}`;
+        });
     }
-    
-    // ========== SEARCH SISWA EXISTING ==========
-    window.searchExistingSiswa = function() {
-        const searchTerm = document.getElementById('searchSiswa')?.value.trim();
-        const kelasId = document.getElementById('kelasDropdown')?.value;
-        if (!searchTerm) { alert('Masukkan nama atau NISN siswa untuk dicari'); return; }
-        if (!kelasId) { alert('Pilih kelas terlebih dahulu'); return; }
-        fetch(`/siswa/search?q=${encodeURIComponent(searchTerm)}&kelas_id=${kelasId}`)
-        .then(response => response.json())
-        .then(data => displaySearchResults(data.siswa))
-        .catch(error => { console.error('Error searching siswa:', error); alert('Gagal mencari siswa'); });
-    };
-    
-    function displaySearchResults(siswaList) {
-        const resultsContainer = document.getElementById('searchResults');
-        if (!resultsContainer) return;
-        if (!siswaList || siswaList.length === 0) {
-            resultsContainer.innerHTML = `<div class="alert alert-warning alert-sm py-1 mb-0"><i class="fas fa-info-circle"></i> Tidak ditemukan siswa dengan kata kunci tersebut.<br><small>Pencarian hanya menampilkan siswa dari sekolah yang sama.</small></div>`;
+
+    // Fungsi load siswa untuk laporan - PERBAIKAN: tanpa async/await
+    function loadSiswaForLaporan(kelasId, siswaSelect) {
+        if (!siswaSelect) return;
+        
+        siswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+        
+        if (!kelasId) {
+            siswaSelect.disabled = true;
             return;
         }
-        let html = `<div class="list-group" style="max-height: 250px; overflow-y: auto;"><div class="list-group-item bg-light py-1"><strong>📋 Hasil Pencarian (${siswaList.length} siswa ditemukan)</strong><br><small class="text-muted">⚠️ Hanya menampilkan siswa dari sekolah yang sama.</small></div>`;
-        siswaList.forEach(siswa => {
-            const kelasSebelumnya = siswa.kelas_sebelumnya || '-', tahunAjaranSebelumnya = siswa.tahun_ajaran_sebelumnya || '-', statusSiswa = siswa.status || 'Aktif', nisn = siswa.nisn || '-';
-            let statusBadge = statusSiswa === 'Aktif' ? '<span class="badge bg-success ms-1">Aktif</span>' : (statusSiswa.includes('Tidak Aktif') || statusSiswa.includes('Naik Kelas') ? '<span class="badge bg-secondary ms-1">Tidak Aktif</span>' : `<span class="badge bg-warning ms-1">${escapeHtml(statusSiswa)}</span>`);
-            html += `<div class="list-group-item d-flex justify-content-between align-items-center py-1" data-siswa-id="${siswa.id}"><div style="flex:1;"><div><strong>${escapeHtml(siswa.nama_siswa)}</strong> ${statusBadge}</div><div class="small text-muted"><span class="me-2">📋 NISN: ${escapeHtml(nisn)}</span><span class="me-2">📚 Kelas: ${escapeHtml(kelasSebelumnya)}</span><span>📅 TA: ${escapeHtml(tahunAjaranSebelumnya)}</span></div></div><div><button type="button" class="btn btn-primary btn-sm" onclick="addExistingSiswa(${siswa.id})">➕ Pindahkan ke Kelas Ini</button></div></div>`;
+
+        fetch(`/siswa/list/${kelasId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.siswa) {
+                data.siswa.forEach(siswa => {
+                    const option = document.createElement("option");
+                    option.value = siswa.id;
+                    option.textContent = siswa.nama_siswa;
+                    siswaSelect.appendChild(option);
+                });
+                siswaSelect.disabled = false;
+            } else {
+                siswaSelect.disabled = true;
+            }
+        })
+        .catch(error => {
+            console.error("Error loading siswa:", error);
+            siswaSelect.disabled = true;
         });
+    }
+
+    // Fungsi untuk mencari siswa yang sudah ada - PERBAIKAN: tanpa async/await
+    window.searchExistingSiswa = function() {
+        const searchTerm = document.getElementById('searchSiswa').value.trim();
+        const kelasId = document.getElementById('kelasDropdown').value;
+        
+        if (!searchTerm) {
+            alert('Masukkan nama atau NISN siswa untuk dicari');
+            return;
+        }
+
+        if (!kelasId) {
+            alert('Pilih kelas terlebih dahulu');
+            return;
+        }
+
+        fetch(`/siswa/search?q=${encodeURIComponent(searchTerm)}&kelas_id=${kelasId}`)
+        .then(response => response.json())
+        .then(data => {
+            displaySearchResults(data.siswa);
+        })
+        .catch(error => {
+            console.error('Error searching siswa:', error);
+            alert('Gagal mencari siswa');
+        });
+    };
+
+    // Fungsi untuk menampilkan hasil pencarian
+    function displaySearchResults(siswaList) {
+        const resultsContainer = document.getElementById('searchResults');
+        
+        if (!siswaList || siswaList.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="alert alert-warning alert-sm py-1 mb-0">
+                    <i class="fas fa-info-circle"></i> Tidak ditemukan siswa dengan kata kunci tersebut.
+                    <br><small>Pencarian hanya menampilkan siswa dari sekolah yang sama.</small>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="list-group" style="max-height: 250px; overflow-y: auto;">
+                <div class="list-group-item bg-light py-1">
+                    <strong>📋 Hasil Pencarian (${siswaList.length} siswa ditemukan)</strong>
+                    <br><small class="text-muted">⚠️ Hanya menampilkan siswa dari sekolah yang sama. Untuk pindah sekolah, gunakan fitur khusus.</small>
+                </div>
+        `;
+
+        siswaList.forEach(siswa => {
+            // Gunakan properti baru dari response API
+            const kelasSebelumnya = siswa.kelas_sebelumnya || '-';
+            const tahunAjaranSebelumnya = siswa.tahun_ajaran_sebelumnya || '-';
+            const statusSiswa = siswa.status || 'Aktif';
+            const nisn = siswa.nisn || '-';
+            
+            // Tentukan badge warna berdasarkan status
+            let statusBadge = '';
+            if (statusSiswa === 'Aktif') {
+                statusBadge = '<span class="badge bg-success ms-1">Aktif</span>';
+            } else if (statusSiswa.includes('Tidak Aktif') || statusSiswa.includes('Naik Kelas')) {
+                statusBadge = '<span class="badge bg-secondary ms-1">Tidak Aktif</span>';
+            } else {
+                statusBadge = '<span class="badge bg-warning ms-1">' + statusSiswa + '</span>';
+            }
+            
+            html += `
+                <div class="list-group-item d-flex justify-content-between align-items-center py-1" data-siswa-id="${siswa.id}">
+                    <div style="flex: 1;">
+                        <div>
+                            <strong>${escapeHtml(siswa.nama_siswa)}</strong> ${statusBadge}
+                        </div>
+                        <div class="small text-muted">
+                            <span class="me-2">📋 NISN: ${escapeHtml(nisn)}</span>
+                            <span class="me-2">📚 Kelas: ${escapeHtml(kelasSebelumnya)}</span>
+                            <span>📅 TA: ${escapeHtml(tahunAjaranSebelumnya)}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="addExistingSiswa(${siswa.id})">
+                            ➕ Pindahkan ke Kelas Ini
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
         html += `</div>`;
         resultsContainer.innerHTML = html;
     }
-    
+
+// Helper function untuk menghindari XSS
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+    // Fungsi untuk menambahkan siswa yang sudah ada ke kelas - PERBAIKAN: tanpa async/await
+    // 🔧 PERBAIKAN: addExistingSiswa - menangani pindah kelas dalam satu sekolah
     window.addExistingSiswa = function(siswaId) {
-        const kelasId = document.getElementById('kelasDropdown')?.value;
-        if (!kelasId) { alert('❌ Pilih kelas terlebih dahulu!'); return; }
+        const kelasId = document.getElementById('kelasDropdown').value;
+        
+        if (!kelasId) {
+            alert('❌ Pilih kelas terlebih dahulu!');
+            return;
+        }
+        
+        // Cari nama siswa dari element yang diklik
         const rowElement = document.querySelector(`.list-group-item[data-siswa-id="${siswaId}"]`);
         let namaSiswa = 'siswa';
-        if (rowElement) { const nameElement = rowElement.querySelector('strong'); if (nameElement) namaSiswa = nameElement.textContent; }
+        if (rowElement) {
+            const nameElement = rowElement.querySelector('strong');
+            if (nameElement) namaSiswa = nameElement.textContent;
+        }
+        
         if (!confirm(`Pindahkan ${namaSiswa} ke kelas ini?\n\n⚠️ Siswa akan dinonaktifkan di kelas lamanya dan dibuat record baru di kelas ini.`)) return;
+
+        // Tampilkan loading indicator
         const btn = event?.target;
         const originalText = btn?.textContent || 'Tambah';
-        if (btn) { btn.textContent = '⏳ Memproses...'; btn.disabled = true; }
+        if (btn) {
+            btn.textContent = '⏳ Memproses...';
+            btn.disabled = true;
+        }
+
         fetch('/siswa/add_to_class', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ siswa_id: siswaId, kelas_id: kelasId })
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                siswa_id: siswaId, 
+                kelas_id: kelasId 
+            })
         })
         .then(response => response.json())
         .then(result => {
             if (result.success) {
+                // Tampilkan pesan sukses yang detail
                 let successMsg = result.message;
-                if (result.siswa_baru) successMsg = `✅ ${result.message}\n📋 Siswa baru dibuat dengan ID: ${result.siswa_baru.id}\n📚 Kelas baru: ${result.siswa_baru.kelas}`;
+                if (result.siswa_baru) {
+                    successMsg = `✅ ${result.message}\n📋 Siswa baru dibuat dengan ID: ${result.siswa_baru.id}\n📚 Kelas baru: ${result.siswa_baru.kelas}`;
+                }
                 alert(successMsg);
+                
+                // Refresh daftar siswa di kelas
                 loadSiswa(kelasId);
-                const searchResults = document.getElementById('searchResults'); if (searchResults) searchResults.innerHTML = '';
-                const searchInput = document.getElementById('searchSiswa'); if (searchInput) searchInput.value = '';
+                
+                // Clear search results
+                const searchResults = document.getElementById('searchResults');
+                if (searchResults) searchResults.innerHTML = '';
+                
+                const searchInput = document.getElementById('searchSiswa');
+                if (searchInput) searchInput.value = '';
+                
             } else {
+                // Handle error dengan pesan spesifik
                 let errorMsg = result.message;
-                if (errorMsg && errorMsg.includes('sekolah lain')) errorMsg = `❌ ${errorMsg}\n\n📌 Gunakan fitur PINDAH SEKOLAH untuk memindahkan siswa antar sekolah.`;
-                else if (errorMsg && errorMsg.includes('sudah terdaftar')) errorMsg = `❌ ${errorMsg}\n\n📌 Siswa sudah ada di kelas ini pada tahun ajaran yang sama.`;
+                
+                if (errorMsg && errorMsg.includes('sekolah lain')) {
+                    errorMsg = `❌ ${errorMsg}\n\n📌 Solusi: Gunakan fitur PINDAH SEKOLAH untuk memindahkan siswa antar sekolah.\n\nFitur ini akan segera tersedia. Hubungi admin sekolah asal untuk proses pengiriman data siswa.`;
+                } else if (errorMsg && errorMsg.includes('sudah terdaftar')) {
+                    errorMsg = `❌ ${errorMsg}\n\n📌 Siswa sudah ada di kelas ini pada tahun ajaran yang sama.`;
+                }
+                
                 alert(errorMsg);
             }
         })
-        .catch(error => { console.error('Error adding siswa:', error); alert('❌ Terjadi kesalahan saat memindahkan siswa. Silakan coba lagi.'); })
-        .finally(() => { if (btn) { btn.textContent = originalText; btn.disabled = false; } });
+        .catch(error => {
+            console.error('Error adding siswa:', error);
+            alert('❌ Terjadi kesalahan saat memindahkan siswa. Silakan coba lagi.');
+        })
+        .finally(() => {
+            if (btn) {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
     };
+
+}); // ← AKHIR DARI DOMContentLoaded
+
+// ========== FUNGSI GLOBAL UNTUK MODAL LAPORAN ==========
+
+// JavaScript untuk Modal Laporan Penilaian Siswa
+document.addEventListener('DOMContentLoaded', function() {
+    initializeLaporanPenilaianSiswaModal();
+});
+
+// Fungsi untuk menginisialisasi modal laporan penilaian siswa
+function initializeLaporanPenilaianSiswaModal() {
+    const tahunAjaranSelect = document.getElementById('tahunAjaranPenilaianSelect');
+    const semesterSelect = document.getElementById('semesterPenilaianSelect');
+    const kelasSelect = document.getElementById('kelasPenilaianSelect');
+    const siswaSelect = document.getElementById('siswaPenilaianSelect');
+    const laporanForm = document.getElementById('laporanPenilaianSiswaForm');
+
+    if (!tahunAjaranSelect) return;
+
+    // Load tahun ajaran saat modal dibuka
+    const modalElement = document.getElementById('laporanPenilaianSiswaModal');
+    if (modalElement) {
+        modalElement.addEventListener('show.bs.modal', function() {
+            loadTahunAjaranForLaporan();
+        });
+    }
+
+    // Event listeners untuk perubahan filter
+    tahunAjaranSelect.addEventListener('change', function() {
+        const tahunAjaranId = this.value;
+        if (tahunAjaranId) {
+            loadKelasByTahunAjaran(tahunAjaranId);
+        } else {
+            resetKelasAndSiswa();
+        }
+    });
+
+    kelasSelect.addEventListener('change', function() {
+        const kelasId = this.value;
+        if (kelasId) {
+            loadSiswaByKelas(kelasId);
+        } else {
+            resetSiswa();
+        }
+    });
+
+    // Handler submit form
+    laporanForm.addEventListener('submit', function(e) {
+        const tahunAjaranId = tahunAjaranSelect.value;
+        const semester = semesterSelect.value;
+        const kelasId = kelasSelect.value;
+        const siswaId = siswaSelect.value;
+
+        if (!tahunAjaranId || !semester || !kelasId || !siswaId) {
+            alert('Harap lengkapi semua filter terlebih dahulu!');
+            e.preventDefault();
+            return;
+        }
+
+        // Set action URL dengan parameter yang diperlukan
+        this.action = `/laporan/penilaian-siswa/${siswaId}?tahun_ajaran_id=${tahunAjaranId}&semester=${semester}`;
+    });
+}
+
+// PERBAIKAN: Fungsi-fungsi async diubah ke then/catch
+function loadTahunAjaranForLaporan() {
+    fetch('/laporan/api/tahun-ajaran')
+    .then(response => response.json())
+    .then(data => {
+        const select = document.getElementById('tahunAjaranPenilaianSelect');
+        select.innerHTML = '<option value="">-- Pilih Tahun Ajaran --</option>';
+        
+        data.tahun_ajaran.forEach(ta => {
+            const option = document.createElement('option');
+            option.value = ta.id;
+            option.textContent = `${ta.tahun_ajaran} (${ta.semester}) - ${ta.status}`;
+            select.appendChild(option);
+        });
+    })
+    .catch(error => {
+        console.error('Error loading tahun ajaran:', error);
+    });
+}
+
+function loadKelasByTahunAjaran(tahunAjaranId) {
+    fetch(`/laporan/api/kelas-by-tahun-ajaran/${tahunAjaranId}`)
+    .then(response => response.json())
+    .then(data => {
+        const select = document.getElementById('kelasPenilaianSelect');
+        select.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+        
+        data.kelas.forEach(kelas => {
+            const option = document.createElement('option');
+            option.value = kelas.id;
+            option.textContent = kelas.nama_kelas;
+            select.appendChild(option);
+        });
+        
+        // Reset siswa select
+        resetSiswa();
+    })
+    .catch(error => {
+        console.error('Error loading kelas:', error);
+    });
+}
+
+function loadSiswaByKelas(kelasId) {
+    fetch(`/laporan/api/siswa-by-kelas/${kelasId}`)
+    .then(response => response.json())
+    .then(data => {
+        const select = document.getElementById('siswaPenilaianSelect');
+        select.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+        
+        if (data.success && data.siswa) {
+            data.siswa.forEach(siswa => {
+                const option = document.createElement('option');
+                option.value = siswa.id;
+                option.textContent = siswa.nama_siswa;
+                select.appendChild(option);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error loading siswa:', error);
+    });
+}
+
+function resetKelasAndSiswa() {
+    const kelasSelect = document.getElementById('kelasPenilaianSelect');
+    const siswaSelect = document.getElementById('siswaPenilaianSelect');
     
-}); // AKHIR DOMContentLoaded
+    kelasSelect.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+    siswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+    kelasSelect.disabled = true;
+    siswaSelect.disabled = true;
+}
+
+function resetSiswa() {
+    const siswaSelect = document.getElementById('siswaPenilaianSelect');
+    siswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+    siswaSelect.disabled = false;
+}
+
+// ============================================================
+// PERBAIKAN: FITUR FORM KELAS (Dropdown Existing + Tingkat)
+// ============================================================
+
+// Element references
+const pilihKelasExisting = document.getElementById('pilihKelasExisting');
+const namaKelasBaru = document.getElementById('namaKelasBaru');
+const tingkatKelas = document.getElementById('tingkatKelas');
+const copyWaliKelas = document.getElementById('copyWaliKelas');
+const btnResetForm = document.getElementById('btnResetForm');
+const duplicateWarning = document.getElementById('duplicateWarning');
+const duplicateMessage = document.getElementById('duplicateMessage');
+
+// Data kelas yang sudah ada (untuk cek duplikasi)
+let existingKelasNames = new Set();
+{% for k in kelas_list %}
+existingKelasNames.add("{{ k.nama_kelas }}");
+{% endfor %}
+
+// Fungsi cek duplikasi
+function checkDuplicateKelas(namaKelas) {
+    if (!namaKelas) return false;
+    if (existingKelasNames.has(namaKelas)) {
+        duplicateMessage.innerHTML = `Kelas "<strong>${namaKelas}</strong>" sudah ada di tahun ajaran ini! Silakan gunakan nama lain.`;
+        duplicateWarning.style.display = 'block';
+        document.getElementById('btnTambahKelas').disabled = true;
+        return true;
+    } else {
+        duplicateWarning.style.display = 'none';
+        document.getElementById('btnTambahKelas').disabled = false;
+        return false;
+    }
+}
+
+// Event: Pilih dari dropdown existing
+if (pilihKelasExisting) {
+    pilihKelasExisting.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const namaKelas = this.value;
+        const tingkat = selectedOption.dataset.tingkat;
+        
+        if (namaKelas) {
+            namaKelasBaru.value = namaKelas;
+            if (tingkat && tingkat !== 'undefined') {
+                tingkatKelas.value = tingkat;
+            }
+            // Tetap tampilkan warning karena ini adalah kelas yang sudah ada
+            duplicateMessage.innerHTML = `Kelas "<strong>${namaKelas}</strong>" sudah ada di tahun ajaran ini.`;
+            duplicateWarning.style.display = 'block';
+            document.getElementById('btnTambahKelas').disabled = true;
+        } else {
+            namaKelasBaru.value = '';
+            duplicateWarning.style.display = 'none';
+            document.getElementById('btnTambahKelas').disabled = false;
+        }
+    });
+}
+
+// Event: Ketik nama kelas baru
+if (namaKelasBaru) {
+    namaKelasBaru.addEventListener('input', function() {
+        checkDuplicateKelas(this.value.trim());
+    });
+}
+
+// Event: Reset form
+if (btnResetForm) {
+    btnResetForm.addEventListener('click', function() {
+        if (pilihKelasExisting) pilihKelasExisting.value = '';
+        if (namaKelasBaru) namaKelasBaru.value = '';
+        if (tingkatKelas) tingkatKelas.value = '';
+        if (copyWaliKelas) copyWaliKelas.checked = true;
+        duplicateWarning.style.display = 'none';
+        document.getElementById('btnTambahKelas').disabled = false;
+    });
+}
+
+// Update fungsi handleKelasSubmit untuk menyertakan tingkat
+function handleKelasSubmit(e) {
+    e.preventDefault();
+    
+    let namaKelas = namaKelasBaru?.value.trim();
+    if (!namaKelas) {
+        alert('Masukkan nama kelas!');
+        return;
+    }
+    
+    // Validasi duplikasi
+    if (existingKelasNames.has(namaKelas)) {
+        alert(`Kelas "${namaKelas}" sudah ada! Silakan gunakan nama lain.`);
+        return;
+    }
+    
+    const tingkat = tingkatKelas?.value;
+    if (!tingkat) {
+        alert('Pilih tingkat kelas!');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append("nama_kelas", namaKelas);
+    formData.append("tingkat", tingkat);
+    formData.append("wali_kelas_id", "{{ current_user.pegawai.id }}");
+    formData.append("tahun_ajaran_id", "{{ active_tahun_ajaran.id if active_tahun_ajaran else '' }}");
+
+    fetch("{{ url_for('kelas.create_kelas') }}", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        if(result.success){
+            alert(result.message);
+            // Tambahkan ke Set untuk cek duplikasi berikutnya
+            existingKelasNames.add(namaKelas);
+            updateKelasTable(result.kelas);
+            // Reset form
+            if (btnResetForm) btnResetForm.click();
+        } else {
+            alert(result.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Terjadi kesalahan saat menyimpan kelas.");
+    });
+}
+
+// Update fungsi updateKelasTable untuk menampilkan tingkat
+function updateKelasTable(kelas) {
+    const kosongRow = kelasTableBody.querySelector("tr td[colspan]");
+    if (kosongRow) kosongRow.parentElement.remove();
+
+    const row = document.createElement("tr");
+    row.setAttribute("data-id", kelas.id);
+    
+    let tingkatText = '';
+    if (kelas.tingkat === 0) tingkatText = 'PAUD/TK';
+    else if (kelas.tingkat) tingkatText = `Kelas ${kelas.tingkat}`;
+    else tingkatText = '-';
+    
+    row.innerHTML = `
+        <td class="nama-kelas">${escapeHtml(kelas.nama_kelas)}</td>
+        <td class="tingkat-kelas">${tingkatText}</td>
+        <td>${escapeHtml(kelas.wali_kelas?.nama || '-')}</td>
+        <td>${escapeHtml(kelas.wali_kelas?.nip || '-')}</td>
+        <td>
+            <button class="btn btn-sm btn-warning edit-btn" data-id="${kelas.id}">Edit</button>
+            <button class="btn btn-sm btn-danger delete-btn" data-id="${kelas.id}">Hapus</button>
+            <button class="btn btn-sm btn-info edit-tingkat-btn" data-id="${kelas.id}" 
+                    data-tingkat="${kelas.tingkat || 1}" data-nama="${escapeHtml(kelas.nama_kelas)}">
+                Edit Tingkat
+            </button>
+        </td>
+    `;
+    kelasTableBody.appendChild(row);
+}
+
+// Fungsi edit tingkat (tambahkan)
+function editTingkat(kelasId, currentTingkat, namaKelas) {
+    const newTingkat = prompt(`Ubah tingkat kelas "${namaKelas}":\n0=PAUD/TK, 1=Kelas1, 2=Kelas2, dst`, currentTingkat);
+    if (newTingkat !== null && !isNaN(newTingkat) && newTingkat !== currentTingkat) {
+        fetch('/kelas/update_tingkat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                kelas_id: kelasId,
+                tingkat: parseInt(newTingkat)
+            })
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                alert('Tingkat kelas berhasil diupdate');
+                location.reload();
+            } else {
+                alert(result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan saat mengupdate tingkat');
+        });
+    }
+}
+
+// Event listener untuk tombol edit tingkat (di dalam handleKelasActions)
+// Tambahkan di fungsi handleKelasActions yang sudah ada:
+function handleKelasActions(e) {
+    const target = e.target;
+    const row = target.closest("tr");
+    const id = row?.dataset.id;
+
+    if (!id) return;
+
+    if(target.classList.contains("delete-btn")){
+        if (!confirm("Hapus kelas ini?")) return;
+        deleteKelas(id, row);
+    }
+
+    if(target.classList.contains("edit-btn")){
+        editKelas(id, row);
+    }
+    
+    // ➕ TAMBAHKAN INI
+    if(target.classList.contains("edit-tingkat-btn")){
+        const tingkat = target.dataset.tingkat;
+        const nama = target.dataset.nama;
+        editTingkat(id, tingkat, nama);
+    }
+}
+// ============================================================
+// 🔧 FITUR NAIK KELAS
+// ============================================================
+
+// Inisialisasi modal naik kelas
+const btnNaikKelas = document.getElementById('btnNaikKelas');
+const dariKelasSelect = document.getElementById('dariKelasSelect');
+const keKelasSelect = document.getElementById('keKelasSelect');
+const opsiNaikKelas = document.getElementById('opsiNaikKelas');
+const siswaChecklistContainer = document.getElementById('siswaChecklistContainer');
+const siswaChecklist = document.getElementById('siswaChecklist');
+const infoPreview = document.getElementById('infoPreview');
+const previewText = document.getElementById('previewText');
+const btnProsesNaikKelas = document.getElementById('btnProsesNaikKelas');
+
+// Data siswa per kelas (cache)
+let siswaPerKelas = {};
+
+// Event: Pilih kelas asal
+if (dariKelasSelect) {
+    dariKelasSelect.addEventListener('change', function() {
+        const dariKelasId = this.value;
+        const selectedOption = this.options[this.selectedIndex];
+        const dariTingkat = parseInt(selectedOption.dataset.tingkat) || 0;
+        
+        if (!dariKelasId) {
+            keKelasSelect.disabled = true;
+            keKelasSelect.innerHTML = '<option value="">-- Pilih Kelas Tujuan --</option>';
+            return;
+        }
+        
+        // Load kelas tujuan (tingkat +1)
+        loadKelasTujuan(dariTingkat, dariKelasId);
+        
+        // Load siswa di kelas asal
+        loadSiswaUntukNaikKelas(dariKelasId);
+    });
+}
+
+// Event: Opsi naik kelas berubah
+if (opsiNaikKelas) {
+    opsiNaikKelas.addEventListener('change', function() {
+        if (this.value === 'pilih') {
+            siswaChecklistContainer.style.display = 'block';
+        } else {
+            siswaChecklistContainer.style.display = 'none';
+            updatePreview();
+        }
+    });
+}
+
+// Fungsi load kelas tujuan
+function loadKelasTujuan(dariTingkat, dariKelasId) {
+    fetch(`/kelas/list_by_tingkat?tingkat=${dariTingkat + 1}`)
+    .then(response => response.json())
+    .then(data => {
+        keKelasSelect.innerHTML = '<option value="">-- Pilih Kelas Tujuan --</option>';
+        
+        if (data.success && data.kelas && data.kelas.length > 0) {
+            data.kelas.forEach(kelas => {
+                // Filter hanya kelas dari sekolah yang sama
+                const option = document.createElement('option');
+                option.value = kelas.id;
+                option.textContent = `${kelas.nama_kelas} (Tingkat ${kelas.tingkat || dariTingkat + 1})`;
+                keKelasSelect.appendChild(option);
+            });
+            keKelasSelect.disabled = false;
+        } else {
+            keKelasSelect.innerHTML = '<option value="">-- Tidak ada kelas tujuan --</option>';
+            keKelasSelect.disabled = true;
+            alert(`⚠️ Belum ada kelas untuk tingkat ${dariTingkat + 1}. Buat kelas dulu di tahun ajaran baru.`);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading kelas tujuan:', error);
+        keKelasSelect.disabled = true;
+    });
+}
+
+// Fungsi load siswa untuk checklist
+function loadSiswaUntukNaikKelas(kelasId) {
+    fetch(`/siswa/list/${kelasId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.siswa) {
+            siswaPerKelas[kelasId] = data.siswa;
+            
+            // Render checklist
+            let html = '';
+            data.siswa.forEach(siswa => {
+                if (siswa.status === 'Aktif') {
+                    html += `
+                        <div class="form-check">
+                            <input class="form-check-input siswa-checkbox" type="checkbox" 
+                                   value="${siswa.id}" id="siswa_${siswa.id}" data-nama="${siswa.nama_siswa}" checked>
+                            <label class="form-check-label" for="siswa_${siswa.id}">
+                                ${siswa.nama_siswa} (NISN: ${siswa.nisn || '-'})
+                            </label>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (html === '') {
+                html = '<div class="text-muted text-center">Tidak ada siswa aktif di kelas ini</div>';
+            }
+            siswaChecklist.innerHTML = html;
+            updatePreview();
+        }
+    })
+    .catch(error => {
+        console.error('Error loading siswa:', error);
+        siswaChecklist.innerHTML = '<div class="text-danger">Gagal memuat data siswa</div>';
+    });
+}
+
+// Update preview
+function updatePreview() {
+    const dariKelas = dariKelasSelect.options[dariKelasSelect.selectedIndex]?.text || '-';
+    const keKelas = keKelasSelect.options[keKelasSelect.selectedIndex]?.text || '-';
+    
+    let jumlahSiswa = 0;
+    
+    if (opsiNaikKelas.value === 'semua') {
+        const kelasId = dariKelasSelect.value;
+        if (kelasId && siswaPerKelas[kelasId]) {
+            jumlahSiswa = siswaPerKelas[kelasId].filter(s => s.status === 'Aktif').length;
+        }
+        previewText.innerHTML = `Akan menaikkan <strong>${jumlahSiswa} siswa</strong> dari <strong>${dariKelas}</strong> ke <strong>${keKelas}</strong>`;
+    } else {
+        const checkboxes = document.querySelectorAll('.siswa-checkbox:checked');
+        jumlahSiswa = checkboxes.length;
+        const namaSiswa = Array.from(checkboxes).slice(0, 3).map(cb => cb.dataset.nama).join(', ');
+        const more = jumlahSiswa > 3 ? `, +${jumlahSiswa - 3} lainnya` : '';
+        previewText.innerHTML = `Akan menaikkan <strong>${jumlahSiswa} siswa</strong> (${namaSiswa}${more}) dari <strong>${dariKelas}</strong> ke <strong>${keKelas}</strong>`;
+    }
+    
+    infoPreview.style.display = 'block';
+    
+    // Enable/disable tombol proses
+    const valid = dariKelasSelect.value && keKelasSelect.value && 
+                  ((opsiNaikKelas.value === 'semua' && jumlahSiswa > 0) ||
+                   (opsiNaikKelas.value === 'pilih' && document.querySelectorAll('.siswa-checkbox:checked').length > 0));
+    btnProsesNaikKelas.disabled = !valid;
+}
+
+// Event listener untuk checkbox
+document.addEventListener('change', function(e) {
+    if (e.target.classList && e.target.classList.contains('siswa-checkbox')) {
+        updatePreview();
+    }
+});
+
+// Event: Proses naik kelas
+if (btnProsesNaikKelas) {
+    btnProsesNaikKelas.addEventListener('click', function() {
+        const dariKelasId = dariKelasSelect.value;
+        const keKelasId = keKelasSelect.value;
+        const opsi = opsiNaikKelas.value;
+        
+        let siswaIds = [];
+        
+        if (opsi === 'semua') {
+            // Ambil semua siswa aktif
+            if (siswaPerKelas[dariKelasId]) {
+                siswaIds = siswaPerKelas[dariKelasId]
+                    .filter(s => s.status === 'Aktif')
+                    .map(s => s.id);
+            }
+        } else {
+            // Ambil siswa yang dicentang
+            const checkboxes = document.querySelectorAll('.siswa-checkbox:checked');
+            siswaIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+        }
+        
+        if (siswaIds.length === 0) {
+            alert('Tidak ada siswa yang dipilih untuk dinaikkan kelas');
+            return;
+        }
+        
+        if (!confirm(`Naikkan ${siswaIds.length} siswa ke kelas ${keKelasSelect.options[keKelasSelect.selectedIndex]?.text}?\n\n⚠️ Siswa akan dinonaktifkan di kelas lama dan dibuat record baru di kelas baru.`)) {
+            return;
+        }
+        
+        // Tampilkan loading
+        const originalText = btnProsesNaikKelas.innerHTML;
+        btnProsesNaikKelas.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+        btnProsesNaikKelas.disabled = true;
+        
+        fetch('/siswa/naik_kelas_massal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                dari_kelas_id: parseInt(dariKelasId),
+                ke_kelas_id: parseInt(keKelasId),
+                siswa_ids: siswaIds
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert(`✅ ${result.message}\n\nBerhasil: ${result.data.berhasil.length}\nGagal: ${result.data.gagal.length}`);
+                
+                // Refresh halaman
+                location.reload();
+            } else {
+                alert('❌ Gagal: ' + result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Terjadi kesalahan saat memproses naik kelas');
+        })
+        .finally(() => {
+            btnProsesNaikKelas.innerHTML = originalText;
+            btnProsesNaikKelas.disabled = false;
+        });
+    });
+}
+
+// Event: checkbox di preview update
+function updateCheckboxPreview() {
+    if (opsiNaikKelas && opsiNaikKelas.value === 'pilih') {
+        updatePreview();
+    }
+}
 </script>
 </body>
 </html>
