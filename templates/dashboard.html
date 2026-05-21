@@ -1729,167 +1729,406 @@ document.addEventListener("DOMContentLoaded", function() {
         `;
     }
     
-    // ========== FUNGSI PENILAIAN ==========
+    // ========== FUNGSI PENILAIAN (DIPERBAIKI) ==========
     function initializePenilaianKebiasaan() {
-        kelasSelectPenilaian.addEventListener("change", () => loadSiswaPenilaian(this.value));
-        bulanSelectPenilaian.addEventListener("change", () => {
-            updateMaxValuesPenilaian();
-            if (kelasSelectPenilaian.value && this.value) loadNilaiPenilaian(kelasSelectPenilaian.value, this.value);
+        console.log("=== INIT PENILAIAN ===");
+        
+        // Event handler untuk pilih kelas
+        kelasSelectPenilaian.addEventListener("change", function(e) {
+            const kelasId = e.target.value;
+            console.log("Kelas dipilih:", kelasId);
+            if (kelasId) {
+                loadSiswaPenilaian(kelasId);
+            } else {
+                if (siswaTableBodyPenilaian) {
+                    siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td></tr>';
+                }
+            }
         });
-        if (siswaTableBodyPenilaian) siswaTableBodyPenilaian.addEventListener("click", handlePenilaianActions);
-        document.addEventListener("input", e => { if (e.target.classList.contains("nilai-input") && e.target.type === "number") validateNilaiInput(e.target); });
+        
+        // Event handler untuk pilih bulan
+        bulanSelectPenilaian.addEventListener("change", function(e) {
+            const bulanValue = e.target.value;
+            console.log("Bulan dipilih:", bulanValue);
+            
+            updateMaxValuesPenilaian(bulanValue);
+            
+            const kelasId = kelasSelectPenilaian.value;
+            if (kelasId && bulanValue) {
+                loadNilaiPenilaian(kelasId, bulanValue);
+            }
+        });
+
+        if (siswaTableBodyPenilaian) {
+            siswaTableBodyPenilaian.addEventListener("click", handlePenilaianActions);
+        }
+        
+        document.addEventListener("input", function(e) {
+            if (e.target.classList.contains("nilai-input") && e.target.type === "number") {
+                validateNilaiInput(e.target);
+            }
+        });
+        
+        // Auto-load jika sudah ada kelas dan bulan terpilih
+        if (kelasSelectPenilaian.value && bulanSelectPenilaian.value) {
+            console.log("Auto-load nilai untuk kelas:", kelasSelectPenilaian.value, "bulan:", bulanSelectPenilaian.value);
+            loadSiswaPenilaian(kelasSelectPenilaian.value);
+        }
     }
-    
+
     function loadSiswaPenilaian(kelasId) {
-        if (!siswaTableBodyPenilaian) return;
-        siswaTableBodyPenilaian.innerHTML = "";
-        if (!kelasId) { siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td></tr>'; return; }
+        console.log("loadSiswaPenilaian dipanggil untuk kelas:", kelasId);
+        
+        if (!siswaTableBodyPenilaian) {
+            console.error("siswaTableBodyPenilaian tidak ditemukan");
+            return;
+        }
+        
+        siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Memuat data siswa...</td></tr>';
+        
+        if (!kelasId) {
+            siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Silakan pilih kelas terlebih dahulu</td></tr>';
+            return;
+        }
+        
         fetch(`/penilaian/siswa/list/${kelasId}`)
         .then(res => res.json())
         .then(siswaList => {
-            if (!siswaList || !siswaList.length) { siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Belum ada siswa di kelas ini</td></tr>'; return; }
+            console.log("Data siswa diterima:", siswaList);
+            
+            if (!siswaList || !siswaList.length) {
+                siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center">Belum ada siswa di kelas ini</td></tr>';
+                return;
+            }
+
+            siswaTableBodyPenilaian.innerHTML = "";
+            
             siswaList.forEach((siswa, idx) => {
                 const row = document.createElement("tr");
                 row.dataset.siswaId = siswa.id;
                 row.dataset.kelasId = kelasId;
                 row.innerHTML = `
                     <td class="text-center">${idx+1}</td>
-                    <td>${escapeHtml(siswa.nama_siswa)}<input type="hidden" name="siswa_id" value="${siswa.id}"><input type="hidden" name="kelas_id" value="${kelasId}"></td>
-                    <td><input type="number" class="form-control nilai-input" min="0" name="bangun_pagi" placeholder="0-31"></td>
-                    <td><input type="number" class="form-control nilai-input" min="0" name="beribadah" placeholder="0-31"></td>
-                    <td><input type="number" class="form-control nilai-input" min="0" name="berolahraga" placeholder="0-31"></td>
-                    <td><input type="number" class="form-control nilai-input" min="0" name="sehat_dan_lemar" placeholder="0-31"></td>
-                    <td><input type="number" class="form-control nilai-input" min="0" name="belajar" placeholder="0-31"></td>
-                    <td><input type="number" class="form-control nilai-input" min="0" name="bermasyarakat" placeholder="0-31"></td>
-                    <td><input type="number" class="form-control nilai-input" min="0" name="tidur_cepat" placeholder="0-31"></td>
-                    <td><input type="text" class="form-control" name="catatan" placeholder="Catatan..."></td>
-                    <td><div class="d-flex gap-1"><button type="button" class="btn btn-primary btn-sm btn-save">Simpan</button><button type="button" class="btn btn-warning btn-sm btn-update" style="display:none;">Update</button><button type="button" class="btn btn-danger btn-sm btn-delete">Hapus Isi</button></div></td>
+                    <td>${escapeHtml(siswa.nama_siswa)}
+                        <input type="hidden" name="siswa_id" value="${siswa.id}">
+                        <input type="hidden" name="kelas_id" value="${kelasId}">
+                    </td>
+                    <td><input type="number" class="form-control form-control-sm nilai-input" min="0" name="bangun_pagi" placeholder="0-31"></td>
+                    <td><input type="number" class="form-control form-control-sm nilai-input" min="0" name="beribadah" placeholder="0-31"></td>
+                    <td><input type="number" class="form-control form-control-sm nilai-input" min="0" name="berolahraga" placeholder="0-31"></td>
+                    <td><input type="number" class="form-control form-control-sm nilai-input" min="0" name="sehat_dan_lemar" placeholder="0-31"></td>
+                    <td><input type="number" class="form-control form-control-sm nilai-input" min="0" name="belajar" placeholder="0-31"></td>
+                    <td><input type="number" class="form-control form-control-sm nilai-input" min="0" name="bermasyarakat" placeholder="0-31"></td>
+                    <td><input type="number" class="form-control form-control-sm nilai-input" min="0" name="tidur_cepat" placeholder="0-31"></td>
+                    <td><input type="text" class="form-control form-control-sm" name="catatan" placeholder="Catatan..."></td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-primary btn-save">Simpan</button>
+                            <button type="button" class="btn btn-warning btn-update" style="display:none;">Update</button>
+                            <button type="button" class="btn btn-danger btn-delete">Hapus</button>
+                        </div>
+                    </td>
                 `;
                 siswaTableBodyPenilaian.appendChild(row);
             });
-            updateMaxValuesPenilaian();
-            if (bulanSelectPenilaian.value) loadNilaiPenilaian(kelasId, bulanSelectPenilaian.value);
+
+            // Update max values berdasarkan bulan yang dipilih
+            const bulanValue = bulanSelectPenilaian?.value;
+            if (bulanValue) {
+                updateMaxValuesPenilaian(bulanValue);
+            }
+
+            // Load nilai yang sudah ada
+            if (kelasSelectPenilaian.value && bulanSelectPenilaian.value) {
+                loadNilaiPenilaian(kelasSelectPenilaian.value, bulanSelectPenilaian.value);
+            }
         })
-        .catch(err => { console.error(err); siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Gagal memuat data siswa</td></tr>'; });
+        .catch(err => {
+            console.error("Error loading siswa:", err);
+            siswaTableBodyPenilaian.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Gagal memuat data siswa</td></tr>';
+        });
     }
-    
-    function updateMaxValuesPenilaian() {
-        const bulanTahun = bulanSelectPenilaian?.value;
-        if (!bulanTahun) return;
-        const maxHari = getDaysInMonth(bulanTahun);
-        document.querySelectorAll('.nilai-input[type="number"]').forEach(input => { input.max = maxHari; input.title = `Nilai maksimal: ${maxHari}`; });
+
+    function updateMaxValuesPenilaian(bulanTahun = null) {
+        let bulanValue = bulanTahun;
+        if (!bulanValue && bulanSelectPenilaian) {
+            bulanValue = bulanSelectPenilaian.value;
+        }
+        
+        if (!bulanValue) return;
+        
+        const maxHari = getDaysInMonth(bulanValue);
+        console.log("Update max values:", bulanValue, "max hari:", maxHari);
+        
+        const inputs = document.querySelectorAll('#siswaTableBody .nilai-input[type="number"]');
+        inputs.forEach(input => {
+            input.max = maxHari;
+            input.title = `Nilai maksimal: ${maxHari} hari`;
+        });
     }
-    
+
+    function getDaysInMonth(bulanTahun) {
+        const [tahun, bulan] = bulanTahun.split('-').map(Number);
+        return new Date(tahun, bulan, 0).getDate();
+    }
+
     function loadNilaiPenilaian(kelasId, bulan) {
+        console.log("loadNilaiPenilaian dipanggil:", kelasId, bulan);
+        
         fetch(`/penilaian/kebiasaan/get/${kelasId}/${bulan}`)
         .then(res => res.json())
         .then(data => {
-            if (siswaTableBodyPenilaian) {
-                siswaTableBodyPenilaian.querySelectorAll("tr").forEach(tr => {
-                    tr.querySelectorAll("input").forEach(i => { if (!["siswa_id","kelas_id"].includes(i.name)) i.value = ""; i.removeAttribute("readonly"); });
-                    const saveBtn = tr.querySelector(".btn-save"), updateBtn = tr.querySelector(".btn-update");
-                    if (saveBtn) saveBtn.style.display = "inline-block";
-                    if (updateBtn) updateBtn.style.display = "none";
+            console.log("Data nilai diterima:", data);
+            
+            if (!siswaTableBodyPenilaian) return;
+            
+            // Reset semua baris terlebih dahulu
+            siswaTableBodyPenilaian.querySelectorAll("tr").forEach(tr => {
+                tr.querySelectorAll("input").forEach(i => {
+                    if (!["siswa_id","kelas_id"].includes(i.name)) {
+                        i.value = "";
+                    }
+                    i.removeAttribute("readonly");
                 });
+                const saveBtn = tr.querySelector(".btn-save");
+                const updateBtn = tr.querySelector(".btn-update");
+                if (saveBtn) saveBtn.style.display = "inline-block";
+                if (updateBtn) updateBtn.style.display = "none";
+            });
+            
+            // Isi data yang ada
+            if (data && data.length) {
                 data.forEach(row => {
                     const tr = siswaTableBodyPenilaian.querySelector(`tr[data-siswa-id="${row.siswa_id}"]`);
                     if (!tr) return;
-                    tr.querySelector('[name="bangun_pagi"]').value = row.bangun_pagi || "";
-                    tr.querySelector('[name="beribadah"]').value = row.beribadah || "";
-                    tr.querySelector('[name="berolahraga"]').value = row.berolahraga || "";
-                    tr.querySelector('[name="sehat_dan_lemar"]').value = row.sehat_dan_lemar || "";
-                    tr.querySelector('[name="belajar"]').value = row.belajar || "";
-                    tr.querySelector('[name="bermasyarakat"]').value = row.bermasyarakat || "";
-                    tr.querySelector('[name="tidur_cepat"]').value = row.tidur_cepat || "";
-                    tr.querySelector('[name="catatan"]').value = row.catatan || "";
-                    const hasData = row.bangun_pagi || row.beribadah || row.berolahraga || row.sehat_dan_lemar || row.belajar || row.bermasyarakat || row.tidur_cepat || row.catatan;
+                    
+                    const bangunPagi = tr.querySelector('[name="bangun_pagi"]');
+                    const beribadah = tr.querySelector('[name="beribadah"]');
+                    const berolahraga = tr.querySelector('[name="berolahraga"]');
+                    const sehatDanLemar = tr.querySelector('[name="sehat_dan_lemar"]');
+                    const belajar = tr.querySelector('[name="belajar"]');
+                    const bermasyarakat = tr.querySelector('[name="bermasyarakat"]');
+                    const tidurCepat = tr.querySelector('[name="tidur_cepat"]');
+                    const catatan = tr.querySelector('[name="catatan"]');
+                    
+                    if (bangunPagi) bangunPagi.value = row.bangun_pagi || "";
+                    if (beribadah) beribadah.value = row.beribadah || "";
+                    if (berolahraga) berolahraga.value = row.berolahraga || "";
+                    if (sehatDanLemar) sehatDanLemar.value = row.sehat_dan_lemar || "";
+                    if (belajar) belajar.value = row.belajar || "";
+                    if (bermasyarakat) bermasyarakat.value = row.bermasyarakat || "";
+                    if (tidurCepat) tidurCepat.value = row.tidur_cepat || "";
+                    if (catatan) catatan.value = row.catatan || "";
+                    
+                    // Cek apakah ada data
+                    const hasData = row.bangun_pagi || row.beribadah || row.berolahraga || 
+                                   row.sehat_dan_lemar || row.belajar || row.bermasyarakat || 
+                                   row.tidur_cepat || row.catatan;
+                    
                     if (hasData) {
-                        tr.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
-                        const saveBtn = tr.querySelector(".btn-save"), updateBtn = tr.querySelector(".btn-update");
+                        tr.querySelectorAll("input").forEach(i => {
+                            if (!["siswa_id","kelas_id"].includes(i.name)) {
+                                i.setAttribute("readonly", true);
+                            }
+                        });
+                        const saveBtn = tr.querySelector(".btn-save");
+                        const updateBtn = tr.querySelector(".btn-update");
                         if (saveBtn) saveBtn.style.display = "none";
                         if (updateBtn) updateBtn.style.display = "inline-block";
-                    } else {
-                        const saveBtn = tr.querySelector(".btn-save"), updateBtn = tr.querySelector(".btn-update");
-                        if (saveBtn) saveBtn.style.display = "inline-block";
-                        if (updateBtn) updateBtn.style.display = "none";
                     }
                 });
             }
         })
-        .catch(err => console.error("Gagal load nilai:", err));
+        .catch(err => {
+            console.error("Gagal load nilai:", err);
+        });
     }
-    
+
     function handlePenilaianActions(e) {
         const row = e.target.closest("tr");
         if (!row) return;
-        const siswaId = row.dataset.siswaId, kelasId = row.dataset.kelasId, bulan = bulanSelectPenilaian?.value;
-        if (!bulan) { alert("Pilih bulan terlebih dahulu"); return; }
+        
+        const siswaId = row.dataset.siswaId;
+        const kelasId = row.dataset.kelasId;
+        const bulan = bulanSelectPenilaian?.value;
+        
+        if (!bulan) { 
+            alert("Pilih bulan terlebih dahulu"); 
+            return; 
+        }
+
+        // Validasi nilai sebelum simpan
         const maxHari = getDaysInMonth(bulan);
+        const inputs = row.querySelectorAll('.nilai-input[type="number"]');
         let valid = true;
-        row.querySelectorAll('.nilai-input[type="number"]').forEach(input => {
+        
+        inputs.forEach(input => {
             const value = parseInt(input.value) || 0;
-            if (value > maxHari) { alert(`Nilai ${input.name} tidak boleh lebih dari ${maxHari}`); input.focus(); valid = false; }
+            if (value > maxHari) {
+                alert(`Nilai tidak boleh lebih dari ${maxHari} (jumlah hari dalam bulan)`);
+                input.focus();
+                valid = false;
+            }
         });
+        
         if (!valid) return;
+
+        // TOMBOL SIMPAN
         if (e.target.classList.contains("btn-save")) {
             const formData = new FormData();
             formData.append("siswa_id", siswaId);
             formData.append("kelas_id", kelasId);
             formData.append("bulan", bulan);
-            row.querySelectorAll("input").forEach(i => { if (!["siswa_id","kelas_id"].includes(i.name)) formData.append(i.name, i.value || ""); });
+            row.querySelectorAll("input").forEach(i => {
+                if (!["siswa_id","kelas_id"].includes(i.name)) {
+                    formData.append(i.name, i.value || "");
+                }
+            });
+
             const originalText = e.target.textContent;
             e.target.textContent = "Menyimpan...";
             e.target.disabled = true;
-            fetch("/penilaian/kebiasaan/save_row", { method: "POST", body: formData })
+
+            fetch("/penilaian/kebiasaan/save_row", {
+                method: "POST", 
+                body: formData
+            })
             .then(res => res.json())
             .then(result => {
                 alert(result.message);
                 if (result.success) {
-                    row.querySelectorAll("input").forEach(i => i.setAttribute("readonly", true));
-                    const saveBtn = row.querySelector(".btn-save"), updateBtn = row.querySelector(".btn-update");
-                    if (saveBtn) { saveBtn.style.display = "none"; saveBtn.textContent = "Simpan"; saveBtn.disabled = false; }
-                    if (updateBtn) { updateBtn.style.display = "inline-block"; updateBtn.disabled = false; }
+                    // Input menjadi readonly
+                    row.querySelectorAll("input").forEach(i => {
+                        if (!["siswa_id","kelas_id"].includes(i.name)) {
+                            i.setAttribute("readonly", true);
+                        }
+                    });
+                    
+                    // Tombol SIMPAN hilang, tombol UPDATE muncul
+                    const saveBtn = row.querySelector(".btn-save");
+                    const updateBtn = row.querySelector(".btn-update");
+                    if (saveBtn) {
+                        saveBtn.style.display = "none";
+                        saveBtn.disabled = false;
+                    }
+                    if (updateBtn) {
+                        updateBtn.style.display = "inline-block";
+                        updateBtn.disabled = false;
+                    }
                 }
             })
-            .catch(err => { console.error(err); alert("Terjadi kesalahan saat menyimpan"); })
-            .finally(() => { e.target.textContent = originalText; e.target.disabled = false; });
+            .catch(err => { 
+                console.error(err); 
+                alert("Terjadi kesalahan saat menyimpan"); 
+            })
+            .finally(() => {
+                e.target.textContent = originalText;
+                e.target.disabled = false;
+            });
         }
+
+        // TOMBOL UPDATE (edit data yang sudah ada)
         if (e.target.classList.contains("btn-update")) {
-            row.querySelectorAll("input").forEach(i => i.removeAttribute("readonly"));
-            const saveBtn = row.querySelector(".btn-save"), updateBtn = row.querySelector(".btn-update");
-            if (saveBtn) { saveBtn.style.display = "inline-block"; saveBtn.disabled = false; }
-            if (updateBtn) updateBtn.style.display = "none";
-            row.querySelector('.nilai-input')?.focus();
+            // Hapus readonly dari semua input
+            row.querySelectorAll("input").forEach(i => {
+                if (!["siswa_id","kelas_id"].includes(i.name)) {
+                    i.removeAttribute("readonly");
+                }
+            });
+            
+            // Tombol UPDATE hilang, tombol SIMPAN muncul
+            const saveBtn = row.querySelector(".btn-save");
+            const updateBtn = row.querySelector(".btn-update");
+            if (saveBtn) {
+                saveBtn.style.display = "inline-block";
+                saveBtn.disabled = false;
+            }
+            if (updateBtn) {
+                updateBtn.style.display = "none";
+            }
+            
+            // Fokus ke input pertama
+            const firstInput = row.querySelector('.nilai-input');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 100);
+            }
         }
+
+        // TOMBOL DELETE
         if (e.target.classList.contains("btn-delete")) {
             if (!confirm("Hapus semua nilai kebiasaan siswa ini?")) return;
+            
             const originalText = e.target.textContent;
             e.target.textContent = "Menghapus...";
             e.target.disabled = true;
-            fetch(`/penilaian/kebiasaan/delete_row/${siswaId}/${bulan}`, { method: "POST" })
+            
+            fetch(`/penilaian/kebiasaan/delete_row/${siswaId}/${bulan}`, {
+                method: "POST"
+            })
             .then(res => res.json())
             .then(result => {
                 alert(result.message);
                 if (result.success) {
-                    row.querySelectorAll("input").forEach(i => { if(!["siswa_id","kelas_id"].includes(i.name)) i.value=""; i.removeAttribute("readonly"); });
-                    const saveBtn = row.querySelector(".btn-save"), updateBtn = row.querySelector(".btn-update");
-                    if (saveBtn) { saveBtn.style.display = "inline-block"; saveBtn.disabled = false; }
-                    if (updateBtn) updateBtn.style.display = "none";
+                    // Kosongkan semua input
+                    row.querySelectorAll("input").forEach(i => { 
+                        if(!["siswa_id","kelas_id"].includes(i.name)) {
+                            i.value = ""; 
+                        }
+                    });
+                    
+                    // Hapus readonly
+                    row.querySelectorAll("input").forEach(i => {
+                        if(!["siswa_id","kelas_id"].includes(i.name)) {
+                            i.removeAttribute("readonly");
+                        }
+                    });
+                    
+                    // Tampilkan tombol SIMPAN, sembunyikan UPDATE
+                    const saveBtn = row.querySelector(".btn-save");
+                    const updateBtn = row.querySelector(".btn-update");
+                    if (saveBtn) {
+                        saveBtn.style.display = "inline-block";
+                        saveBtn.disabled = false;
+                    }
+                    if (updateBtn) {
+                        updateBtn.style.display = "none";
+                    }
                 }
             })
-            .catch(err => { console.error(err); alert("Terjadi kesalahan saat hapus data"); })
-            .finally(() => { e.target.textContent = originalText; e.target.disabled = false; });
+            .catch(err => { 
+                console.error(err); 
+                alert("Terjadi kesalahan saat hapus data"); 
+            })
+            .finally(() => {
+                e.target.textContent = originalText;
+                e.target.disabled = false;
+            });
         }
     }
-    
+
     function validateNilaiInput(input) {
-        const bulanTahun = bulanSelectPenilaian?.value;
-        if (!bulanTahun) { alert("Pilih bulan terlebih dahulu"); input.value = ""; return; }
+        const bulanSelect = document.getElementById("bulanSelectPenilaian");
+        if (!bulanSelect || !bulanSelect.value) {
+            return;
+        }
+        
+        const bulanTahun = bulanSelect.value;
         const maxHari = getDaysInMonth(bulanTahun);
         let val = parseInt(input.value);
-        if (isNaN(val)) { input.value = ""; return; }
-        if (val > maxHari) { input.value = maxHari; alert(`Nilai maksimal untuk bulan ini adalah ${maxHari} hari`); }
-        if (val < 0) input.value = 0;
+        
+        if (isNaN(val)) {
+            input.value = "";
+            return;
+        }
+        
+        if (val > maxHari) {
+            input.value = maxHari;
+            alert(`Nilai maksimal untuk bulan ini adalah ${maxHari} hari`);
+        }
+        
+        if (val < 0) {
+            input.value = 0;
+        }
     }
     
     // ========== FUNGSI CHANGE PASSWORD ==========
