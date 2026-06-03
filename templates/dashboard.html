@@ -2400,15 +2400,28 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // ========== SEARCH SISWA EXISTING ==========
     window.searchExistingSiswa = function() {
-        const searchTerm = document.getElementById('searchSiswa')?.value.trim();
-        const kelasId = document.getElementById('kelasDropdown')?.value;
-        if (!searchTerm) { alert('Masukkan nama atau NISN siswa untuk dicari'); return; }
-        if (!kelasId) { alert('Pilih kelas terlebih dahulu'); return; }
-        fetch(`/siswa/search?q=${encodeURIComponent(searchTerm)}&kelas_id=${kelasId}`)
-        .then(response => response.json())
-        .then(data => displaySearchResults(data.siswa))
-        .catch(error => { console.error('Error searching siswa:', error); alert('Gagal mencari siswa'); });
-    };
+    const searchTerm = document.getElementById('searchSiswa')?.value.trim();
+    const kelasId = document.getElementById('kelasDropdown')?.value;
+    
+    if (!searchTerm) { 
+        alert('Masukkan nama atau NISN siswa untuk dicari'); 
+        return; 
+    }
+    
+    if (!kelasId) { 
+        alert('Pilih kelas terlebih dahulu'); 
+        return; 
+    }
+    
+    // ✅ PERBAIKAN: Hapus parameter &kelas_id= dari URL
+    fetch(`/siswa/search?q=${encodeURIComponent(searchTerm)}`)
+    .then(response => response.json())
+    .then(data => displaySearchResults(data.siswa))
+    .catch(error => { 
+        console.error('Error searching siswa:', error); 
+        alert('Gagal mencari siswa'); 
+    });
+};
     
     function displaySearchResults(siswaList) {
         const resultsContainer = document.getElementById('searchResults');
