@@ -369,8 +369,10 @@ def add_siswa_to_class():
     existing = Siswa.query.filter(
         Siswa.nisn == siswa.nisn,
         Siswa.kelas.has(
-            Kelas.tahun_ajaran_id == kelas_tujuan.tahun_ajaran_id,
-            Kelas.sekolah_id == kelas_tujuan.sekolah_id
+            and_(
+                Kelas.tahun_ajaran_id == kelas_tujuan.tahun_ajaran_id,
+                Kelas.sekolah_id == kelas_tujuan.sekolah_id
+            )
         ),
         Siswa.id != siswa_id
     ).first()
@@ -393,7 +395,7 @@ def add_siswa_to_class():
     siswa_lama_nama = siswa.nama_siswa
     
     # Nonaktifkan record lama
-    siswa.status = f"Tidak Aktif (Pindah ke {kelas_tujuan.nama_kelas})"
+    siswa.status = f"Pindah ke {kelas_tujuan.nama_kelas}"
     
     # Buat record baru
     siswa_baru = Siswa(
